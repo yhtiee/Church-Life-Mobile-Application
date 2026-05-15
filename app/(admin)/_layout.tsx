@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { View, Text, Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,14 +11,15 @@ type TabConfig = {
   iconFocused: keyof typeof Ionicons.glyphMap;
 };
 
-const TABS: TabConfig[] = [
-  { name: 'index', title: 'Home', icon: 'home-outline', iconFocused: 'home' },
-  { name: 'groups', title: 'Groups', icon: 'people-outline', iconFocused: 'people' },
-  { name: 'finance', title: 'Finance', icon: 'wallet-outline', iconFocused: 'wallet' },
+const ADMIN_TABS: TabConfig[] = [
+  { name: 'index', title: 'Home', icon: 'grid-outline', iconFocused: 'grid' },
+  { name: 'members', title: 'Members', icon: 'people-outline', iconFocused: 'people' },
+  { name: 'finances', title: 'Finances', icon: 'stats-chart-outline', iconFocused: 'stats-chart' },
+  { name: 'groups', title: 'Groups', icon: 'business-outline', iconFocused: 'business' },
   { name: 'profile', title: 'Profile', icon: 'person-outline', iconFocused: 'person' },
 ];
 
-export default function TabsLayout() {
+export default function AdminLayout() {
   const { colors, typography } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -44,19 +45,19 @@ export default function TabsLayout() {
         },
         tabBarLabelStyle: {
           fontFamily: typography.fontFamily.medium,
-          fontSize: 11,
+          fontSize: 9, // Slightly smaller since there are 6 tabs
           marginTop: -2,
         },
       }}
     >
-      {TABS.map((tab) => (
+      {ADMIN_TABS.map((tab) => (
         <Tabs.Screen
           key={tab.name}
           name={tab.name}
           options={{
             title: tab.title,
             tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
-              <Ionicons name={focused ? tab.iconFocused : tab.icon} size={22} color={color} />
+              <Ionicons name={focused ? tab.iconFocused : tab.icon} size={20} color={color} />
             ),
           }}
         />
