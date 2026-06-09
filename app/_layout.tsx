@@ -7,8 +7,14 @@ import 'react-native-reanimated';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { FeedbackProvider } from '@/context/FeedbackContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 export const unstable_settings = { anchor: '(tabs)' };
+
+const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -32,6 +38,10 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, isLoading, segments, user?.role]);
 
+  if (isLoading) {
+    return <LoadingSpinner fullScreen />;
+  }
+
   return (
     <NavThemeProvider value={resolvedMode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -48,11 +58,15 @@ function RootLayoutNav() {
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider>
-        <AuthProvider>
-          <RootLayoutNav />
-        </AuthProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <FeedbackProvider>
+              <RootLayoutNav />
+            </FeedbackProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

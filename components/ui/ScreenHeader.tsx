@@ -1,128 +1,238 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StyleProp, ViewStyle } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import {
+  View, Text, StyleSheet, TouchableOpacity,
+  StyleProp, ViewStyle,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface ScreenHeaderProps {
+  /** Screen title — shown when showGreeting is false */
   title?: string;
-  subtitle?: string;
+  /** Shown on home — shows time-based greeting + user's name */
   showGreeting?: boolean;
+  /** Whether to show the back button */
+  showBack?: boolean;
+  /** Custom right element */
   rightElement?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  /** Called when back button is pressed; defaults to router.back() */
+  onBack?: () => void;
 }
 
-export function ScreenHeader({ title, subtitle, showGreeting, rightElement, style }: ScreenHeaderProps) {
-  const { typography } = useTheme();
+export function ScreenHeader({
+  title,
+  showGreeting,
+  showBack = true,
+  rightElement,
+  style,
+  onBack,
+}: ScreenHeaderProps) {
+  const { colors, typography, isDark } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
 
-  // Calculate greeting
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const greeting =
+    hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
-  return (
-    <LinearGradient
-      colors={['#0A1929', '#1D3557']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 0 }}
-      style={[styles.container, style]}
-    >
-      <View style={{ flex: 1 }}>
-        {showGreeting ? (
-          <>
-            <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.regular, color: 'rgba(255,255,255,0.65)' }}>
-              {greeting},{' '}
-              <Text style={{ fontFamily: typography.fontFamily.semiBold, color: 'rgba(255,255,255,0.9)' }}>
-                {user?.fullName?.split(' ')[0] ?? 'Parishioner'}
+  const handleBack = () => {
+    if (onBack) onBack();
+    else router.back();
+  };
+
+  // ── Home greeting header ─────────────────────────────────────────────────
+  if (showGreeting) {
+    return (
+      <Animated.View
+        entering={FadeInDown.duration(500)}
+        style={[
+          styles.greetingWrapper,
+          { backgroundColor: colors.background },
+          style as any,
+        ]}
+      >
+        {/* Text area */}
+        <View style={{ flex: 1 }}>
+          <Text
+            style={[
+              styles.greetingLabel,
+              { color: colors.textMuted, fontFamily: typography.fontFamily.regular },
+            ]}
+          >
+            {greeting} 👋
+          </Text>
+          <Text
+            style={[
+              styles.greetingName,
+              { color: colors.text, fontFamily: typography.fontFamily.extraBold },
+            ]}
+            numberOfLines={1}
+          >
+            {user?.fullName?.split(' ')[0] ?? 'Parishioner'}
+          </Text>
+          {user?.parishName && user.hasParishAccess && (
+            <View style={styles.parishRow}>
+              <Ionicons name="location-outline" size={11} color={colors.primary} />
+              <Text
+                style={[
+                  styles.parishLine,
+                  { color: colors.primary, fontFamily: typography.fontFamily.medium },
+                ]}
+              >
+                {user.parishName}
               </Text>
-            </Text>
-            <Text style={{ fontSize: 17, fontFamily: typography.fontFamily.bold, color: '#FFFFFF', marginTop: 2 }}>
-              {user?.hasParishAccess ? (user?.parishName ?? 'ChurchLife') : 'ChurchLife'}
-            </Text>
-            {!user?.hasParishAccess && (
-              <View style={styles.awaitingBadge}>
-                <Ionicons name="time-outline" size={10} color="#D4AF37" />
-                <Text style={{ fontSize: 10, fontFamily: typography.fontFamily.medium, color: '#D4AF37', marginLeft: 4 }}>
-                  Awaiting Parish Approval
-                </Text>
-              </View>
-            )}
-          </>
-        ) : (
-          <>
-            <Text style={{ fontSize: 17, fontFamily: typography.fontFamily.bold, color: '#FFFFFF', marginTop: 2 }}>
-              {title}
-            </Text>
-          </>
-        )}
-      </View>
+            </View>
+          )}
+        </View>
 
-      {/* Default right element is the notification bell (and admin icon) unless overridden to null */}
-      {rightElement !== undefined ? rightElement : (
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <TouchableOpacity 
-            style={styles.iconBtn}
+        {/* Right: notification + avatar */}
+        <View style={styles.rightArea}>
+          <TouchableOpacity
+            style={[styles.notifBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => router.push('/(modals)/notifications')}
           >
-            <View style={styles.badge} />
-            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+            <Ionicons name="notifications-outline" size={21} color={colors.text} />
+            {/* Unread dot */}
+            <View style={[styles.notifDot, { borderColor: colors.background }]} />
           </TouchableOpacity>
-
-          {/* Admin shortcut */}
-          {/* {user?.role === 'parish_admin' && (
-            <TouchableOpacity
-              onPress={() => router.push('/(admin)')}
-              style={[styles.iconBtn, { backgroundColor: 'rgba(212,175,55,0.2)' }]}
-            >
-              <Ionicons name="settings-outline" size={20} color="#D4AF37" />
-            </TouchableOpacity>
-          )} */}
+          <Avatar
+            name={user?.fullName ?? 'User'}
+            size={42}
+            ring={colors.primary}
+          />
         </View>
+      </Animated.View>
+    );
+  }
+
+  // ── Secondary screen header ───────────────────────────────────────────────
+  return (
+    <View
+      style={[
+        styles.secondaryWrapper,
+        { backgroundColor: colors.background, borderBottomColor: colors.divider },
+        style as any,
+      ]}
+    >
+      {/* Back button */}
+      {
+        showBack && (
+          <TouchableOpacity
+            style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            onPress={handleBack}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
+          </TouchableOpacity>
+        )
+      }
+
+      {/* Title */}
+      <Text
+        style={[
+          styles.secondaryTitle,
+          { color: colors.text, fontFamily: typography.fontFamily.bold },
+        ]}
+        numberOfLines={1}
+      >
+        {title ?? ''}
+      </Text>
+
+      {/* Right: notification bell */}
+      {rightElement !== undefined ? (
+        rightElement
+      ) : (
+        <TouchableOpacity
+          style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+          onPress={() => router.push('/(modals)/notifications')}
+        >
+          <Ionicons name="notifications-outline" size={21} color={colors.text} />
+        </TouchableOpacity>
       )}
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  // ── Greeting (Home) ────────────────────────────────────────────────────────
+  greetingWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 22,
+    paddingTop: 16,
+    paddingBottom: 14,
   },
-  awaitingBadge: {
+  greetingLabel: {
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  greetingName: {
+    fontSize: 26,
+    letterSpacing: -0.5,
+  },
+  parishRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
+    gap: 4,
     marginTop: 4,
   },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+  parishLine: {
+    fontSize: 12,
+    letterSpacing: 0.2,
+  },
+  rightArea: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  notifBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 16,
+    borderWidth: 1,
   },
-  badge: {
+  notifDot: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    top: 9,
+    right: 9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: '#E53E3E',
     zIndex: 1,
+    borderWidth: 1.5,
+  },
+
+  // ── Secondary screen header ───────────────────────────────────────────────
+  secondaryWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  secondaryTitle: {
+    flex: 1,
+    fontSize: 17,
+    textAlign: 'center',
+    marginHorizontal: 8,
+    letterSpacing: -0.2,
+  },
+  iconBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#0A1929',
   },
 });

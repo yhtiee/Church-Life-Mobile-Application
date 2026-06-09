@@ -1,82 +1,303 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
-import { ANNOUNCEMENTS } from '@/constants/mockData';
-import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useAnnouncementsQuery } from '@/hooks/queries/useAnnouncements';
+import { ANNOUNCEMENTS, Announcement } from '@/constants/mockData';
+
+import { EmptyState } from '@/components/ui/EmptyState';
+
+const CATEGORY_COLORS: Record<string, string> = {
+  Liturgy:   '#2A6FDB',
+  Events:    '#7C3AED',
+  Finance:   '#D97706',
+  Groups:    '#059669',
+  Education: '#DC2626',
+};
+
+const HERO_IMAGES = [
+  require('@/assets/images/church_exterior_hero.png'),
+  require('@/assets/images/church_interior_hero.png'),
+  require('@/assets/images/church_community_hero.png'),
+  require('@/assets/images/bible_study_hero.png'),
+];
+
+const FILTERS = ['All', 'Liturgy', 'Events', 'Finance', 'Groups', 'Education'];
 
 export default function AnnouncementsModal() {
   const { colors, typography, radius } = useTheme();
+  const router = useRouter();
+  const [activeFilter, setActiveFilter] = useState('All');
+
+  const { data: announcements = [], isLoading: loading, refetch, isRefetching } = useAnnouncementsQuery();
+
+  const filtered = activeFilter === 'All'
+    ? announcements
+    : announcements.filter((a) => a.category === activeFilter);
 
   return (
-    <ScreenWrapper edges={['left', 'right', 'bottom']}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        
-        <Text style={[styles.title, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-          Parish Announcements
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-          Keep up with the latest updates from the parish and your various groups.
-        </Text>
-
-        <View style={styles.list}>
-          {ANNOUNCEMENTS.map((item) => (
-            <Card key={item.id} elevation="sm" style={styles.announcementCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.headerLeft}>
-                  <Badge 
-                    label={item.category} 
-                    variant={item.important ? 'danger' : 'muted'} 
-                    size="sm" 
-                  />
-                  <Text style={[styles.date, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
-                    {item.date}
-                  </Text>
-                </View>
-                {item.important && (
-                  <Ionicons name="alert-circle" size={18} color={colors.danger} />
-                )}
-              </View>
-
-              <Text style={[styles.cardTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-                {item.title}
-              </Text>
-              
-              <Text style={[styles.cardBody, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-                {item.body}
-              </Text>
-
-              <View style={[styles.footer, { borderTopColor: colors.divider }]}>
-                <View style={styles.authorBox}>
-                  <Ionicons name="person-outline" size={14} color={colors.textMuted} />
-                  <Text style={[styles.author, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
-                    {item.author}
-                  </Text>
-                </View>
-              </View>
-            </Card>
-          ))}
+    <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+      <ScreenHeader title="Announcements" />
+      {loading ? (
+        <View style={styles.loadingWrapper}>
+          <LoadingSpinner size="large" />
         </View>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={refetch}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+        >
 
+        {/* Filter chips */}
+        <Animated.View entering={FadeInDown.delay(80).duration(350)}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
+            {FILTERS.map((f) => {
+              const active = activeFilter === f;
+              return (
+                <TouchableOpacity
+                  key={f}
+                  onPress={() => setActiveFilter(f)}
+                  style={[
+                    styles.filterChip,
+                    {
+                      backgroundColor: active ? colors.primary : colors.surface,
+                      borderColor: active ? colors.primary : colors.border,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      {
+                        color: active ? '#FFFFFF' : colors.textSecondary,
+                        fontFamily: typography.fontFamily.semiBold,
+                      },
+                    ]}
+                  >
+                    {f}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </Animated.View>
+
+        {/* Announcement list */}
+        <View style={styles.list}>
+          {filtered.length === 0 ? (
+            <EmptyState
+              icon="megaphone-outline"
+              title="No Announcements"
+              message="Check back later for news, updates, and upcoming parish events."
+            />
+          ) : (
+            filtered.map((item, index) => {
+              const catColor = CATEGORY_COLORS[item.category] ?? colors.primary;
+              return (
+                <Animated.View
+                  key={item.id}
+                  entering={FadeInDown.delay(index * 70 + 140).duration(400)}
+                >
+                  <TouchableOpacity
+                    activeOpacity={0.88}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(modals)/announcement-detail',
+                        params: { id: item.id },
+                      })
+                    }
+                    style={[
+                      styles.card,
+                      {
+                        backgroundColor: colors.surface,
+                        borderColor: colors.border,
+                        borderLeftColor: item.important ? '#D4AF37' : catColor,
+                      },
+                    ]}
+                  >
+                    {/* Thumbnail */}
+                    <View style={styles.thumbWrapper}>
+                      <Image
+                        source={HERO_IMAGES[index % HERO_IMAGES.length]}
+                        style={styles.thumb}
+                        contentFit="cover"
+                      />
+                      <View style={[styles.thumbOverlay, { backgroundColor: catColor + 'CC' }]}>
+                        <Ionicons name="newspaper-outline" size={18} color="#FFFFFF" />
+                      </View>
+                    </View>
+
+                    {/* Content */}
+                    <View style={styles.cardBody}>
+                      {/* Top row */}
+                      <View style={styles.cardTopRow}>
+                        <View style={[styles.categoryPill, { backgroundColor: catColor + '18' }]}>
+                          <Text style={[styles.categoryPillText, { color: catColor, fontFamily: typography.fontFamily.bold }]}>
+                            {item.category}
+                          </Text>
+                        </View>
+                        {item.important && (
+                          <View style={styles.importantBadge}>
+                            <Ionicons name="alert-circle" size={12} color="#D4AF37" />
+                            <Text style={[styles.importantText, { fontFamily: typography.fontFamily.semiBold }]}>
+                              Important
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      <Text
+                        style={[styles.cardTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}
+                        numberOfLines={2}
+                      >
+                        {item.title}
+                      </Text>
+                      <Text
+                        style={[styles.cardExcerpt, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}
+                        numberOfLines={2}
+                      >
+                        {item.body}
+                      </Text>
+
+                      {/* Footer */}
+                      <View style={[styles.cardFooter, { borderTopColor: colors.divider }]}>
+                        <Ionicons name="calendar-outline" size={12} color={colors.textMuted} />
+                        <Text style={[styles.dateText, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
+                          {item.date}
+                        </Text>
+                        <Text style={[styles.authorText, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]}>
+                          · {item.author}
+                        </Text>
+                        <View style={{ flex: 1 }} />
+                        <Text style={[styles.readMore, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
+                          Read →
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })
+          )}
+        </View>
       </ScrollView>
+      )}
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 40 },
-  title: { fontSize: 24, marginBottom: 8 },
-  subtitle: { fontSize: 14, lineHeight: 22, marginBottom: 24 },
-  list: { gap: 16 },
-  announcementCard: { padding: 16 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  date: { fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 },
-  cardTitle: { fontSize: 17, marginBottom: 8, lineHeight: 24 },
-  cardBody: { fontSize: 14, lineHeight: 22, marginBottom: 16 },
-  footer: { paddingTop: 12, borderTopWidth: StyleSheet.hairlineWidth },
-  authorBox: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  author: { fontSize: 12 },
+  scroll: { paddingBottom: 48 },
+  intro: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16 },
+  introTitle: { fontSize: 22, letterSpacing: -0.3, marginBottom: 4 },
+  introSub: { fontSize: 14, lineHeight: 20 },
+
+  filterRow: {
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  filterChipText: {
+    fontSize: 12,
+    letterSpacing: 0.2,
+  },
+
+  list: { paddingHorizontal: 20, gap: 14 },
+
+  card: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderLeftWidth: 1,
+    overflow: 'hidden',
+    flexDirection: 'row',
+  },
+  thumbWrapper: {
+    width: 80,
+    position: 'relative',
+  },
+  thumb: {
+    width: 80,
+    height: '100%',
+  },
+  thumbOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardBody: {
+    flex: 1,
+    padding: 12,
+  },
+  cardTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 6,
+  },
+  categoryPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  categoryPillText: {
+    fontSize: 10,
+    letterSpacing: 0.3,
+  },
+  importantBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  importantText: {
+    fontSize: 10,
+    color: '#D4AF37',
+  },
+  cardTitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 4,
+  },
+  cardExcerpt: {
+    fontSize: 12,
+    lineHeight: 18,
+    marginBottom: 10,
+  },
+  cardFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+  },
+  dateText: { fontSize: 11 },
+  authorText: { fontSize: 11 },
+  readMore: { fontSize: 11 },
+  loadingWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });

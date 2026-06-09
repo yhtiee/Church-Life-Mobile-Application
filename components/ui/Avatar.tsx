@@ -1,67 +1,73 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ImageSourcePropType } from 'react-native';
-import { useTheme } from '@/context/ThemeContext';
+import { View, Text, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Gradients, Shadow } from '@/constants/theme';
 
 interface AvatarProps {
   name: string;
   size?: number;
-  imageUri?: string;
-  backgroundColor?: string;
+  ring?: string;
+  shadow?: boolean;
 }
 
-function getInitials(name: string) {
-  const parts = name.trim().split(' ').filter(Boolean);
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((n) => n[0].toUpperCase())
+    .join('');
 }
 
-const BG_COLORS = [
-  '#1A2A5E', '#7B1D3A', '#C9A84C',
-  '#27AE60', '#2980B9', '#8E44AD',
-];
-
-function hashColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  return BG_COLORS[Math.abs(hash) % BG_COLORS.length];
-}
-
-export function Avatar({ name, size = 44, imageUri, backgroundColor }: AvatarProps) {
-  const { typography } = useTheme();
+export function Avatar({ name, size = 44, ring, shadow = false }: AvatarProps) {
   const initials = getInitials(name);
-  const bg = backgroundColor ?? hashColor(name);
-  const fontSize = Math.round(size * 0.38);
-
-  if (imageUri) {
-    return (
-      <Image
-        source={{ uri: imageUri }}
-        style={{ width: size, height: size, borderRadius: size / 2 }}
-      />
-    );
-  }
+  const fontSize = size * 0.36;
+  const ringWidth = ring ? 2.5 : 0;
+  const outerSize = size + ringWidth * 2 + (ring ? 4 : 0);
 
   return (
     <View
       style={[
-        styles.container,
-        { width: size, height: size, borderRadius: size / 2, backgroundColor: bg },
+        {
+          width: outerSize,
+          height: outerSize,
+          borderRadius: outerSize / 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: ring ?? 'transparent',
+        },
+        shadow ? Shadow.md : {},
       ]}
     >
-      <Text
-        style={{
-          color: '#FFFFFF',
-          fontSize,
-          fontFamily: typography.fontFamily.bold,
-          letterSpacing: 0.5,
-        }}
+      <LinearGradient
+        colors={Gradients.heroBlue}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[
+          styles.circle,
+          { width: size, height: size, borderRadius: size / 2 },
+        ]}
       >
-        {initials}
-      </Text>
+        <Text
+          style={[
+            styles.initials,
+            { fontSize, color: '#FFFFFF' },
+          ]}
+        >
+          {initials}
+        </Text>
+      </LinearGradient>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center' },
+  circle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  initials: {
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
 });

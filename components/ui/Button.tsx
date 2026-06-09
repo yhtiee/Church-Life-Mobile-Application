@@ -8,7 +8,10 @@ import {
   TextStyle,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
+import { Gradients, Animation } from '@/constants/theme';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'accent';
 type Size = 'sm' | 'md' | 'lg';
@@ -40,62 +43,113 @@ export function Button({
 }: ButtonProps) {
   const { colors, typography, radius } = useTheme();
 
-  const variantStyles: Record<Variant, { bg: string; text: string; border?: string }> = {
-    primary: { bg: colors.primary, text: '#FFFFFF' },
-    secondary: { bg: colors.surface, text: colors.primary, border: colors.border },
-    ghost: { bg: 'transparent', text: colors.primary, border: 'transparent' },
-    danger: { bg: colors.danger, text: '#FFFFFF' },
-    accent: { bg: colors.accent, text: '#FFFFFF' },
-  };
-
   const sizeStyles: Record<Size, { height: number; fontSize: number; px: number }> = {
     sm: { height: 36, fontSize: 13, px: 14 },
     md: { height: 48, fontSize: 15, px: 20 },
-    lg: { height: 56, fontSize: 17, px: 28 },
+    lg: { height: 58, fontSize: 17, px: 28 },
   };
 
-  const { bg, text, border } = variantStyles[variant];
   const { height, fontSize, px } = sizeStyles[size];
   const isDisabled = disabled || loading;
 
+  const isGradient = variant === 'primary' || variant === 'accent';
+
+  const flatBg: Record<Variant, string> = {
+    primary:   colors.primary,
+    secondary: colors.surface,
+    ghost:     'transparent',
+    danger:    colors.danger,
+    accent:    colors.primary,
+  };
+
+  const textColor: Record<Variant, string> = {
+    primary:   '#FFFFFF',
+    secondary: colors.primary,
+    ghost:     colors.primary,
+    danger:    '#FFFFFF',
+    accent:    '#FFFFFF',
+  };
+
+  const borderColor: Record<Variant, string | undefined> = {
+    primary:   undefined,
+    secondary: colors.border,
+    ghost:     'transparent',
+    danger:    undefined,
+    accent:    undefined,
+  };
+
+  const handlePress = () => {
+    // Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
+
+  const inner = (
+    <View style={styles.inner}>
+      {icon && <View style={styles.icon}>{icon}</View>}
+      {loading ? (
+        <ActivityIndicator color={textColor[variant]} size="small" />
+      ) : (
+        <Text
+          style={[
+            {
+              color: textColor[variant],
+              fontSize,
+              fontFamily: typography.fontFamily.semiBold,
+              letterSpacing: 0.5,
+            },
+            labelStyle,
+          ]}
+        >
+          {label}
+        </Text>
+      )}
+    </View>
+  );
+
   return (
     <TouchableOpacity
-      onPress={onPress}
-      activeOpacity={0.75}
+      onPress={handlePress}
       disabled={isDisabled}
+      activeOpacity={0.8}
       style={[
-        styles.base,
         {
-          height,
-          paddingHorizontal: px,
-          borderRadius: radius.md,
-          backgroundColor: bg,
-          borderWidth: border ? 1 : 0,
-          borderColor: border,
           width: fullWidth ? '100%' : undefined,
-          opacity: isDisabled ? 0.55 : 1,
+          opacity: isDisabled ? 0.5 : 1,
         },
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={text} size="small" />
+      {isGradient ? (
+        <LinearGradient
+          colors={['#2A6FDB', '#4A8FFF']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[
+            styles.base,
+            {
+              height,
+              paddingHorizontal: px,
+              borderRadius: radius.lg,
+            },
+          ]}
+        >
+          {inner}
+        </LinearGradient>
       ) : (
-        <View style={styles.inner}>
-          {icon && <View style={styles.icon}>{icon}</View>}
-          <Text
-            style={[
-              {
-                color: text,
-                fontSize,
-                fontFamily: typography.fontFamily.semiBold,
-                letterSpacing: 0.2,
-              },
-              labelStyle,
-            ]}
-          >
-            {label}
-          </Text>
+        <View
+          style={[
+            styles.base,
+            {
+              height,
+              paddingHorizontal: px,
+              borderRadius: radius.lg,
+              backgroundColor: flatBg[variant],
+              borderWidth: borderColor[variant] ? 1 : 0,
+              borderColor: borderColor[variant],
+            },
+          ]}
+        >
+          {inner}
         </View>
       )}
     </TouchableOpacity>

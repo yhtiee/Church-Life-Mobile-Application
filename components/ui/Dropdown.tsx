@@ -7,9 +7,11 @@ import {
   FlatList,
   TextInput,
   StyleSheet,
-  SafeAreaView,
+  TouchableWithoutFeedback,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 
 interface DropdownOption {
@@ -38,6 +40,7 @@ export function Dropdown({
   error,
 }: DropdownProps) {
   const { colors, typography, radius } = useTheme();
+  const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -49,6 +52,19 @@ export function Dropdown({
           (o.subtitle ?? '').toLowerCase().includes(query.toLowerCase())
       )
     : options;
+
+  const close = () => {
+    setOpen(false);
+    setQuery('');
+  };
+
+  // Cap the sheet height so it never covers the full screen
+  const MAX_ITEMS_VISIBLE = 6;
+  const ITEM_HEIGHT = 56;
+  const HEADER_HEIGHT = 56;
+  const SEARCH_HEIGHT = searchable ? 60 : 0;
+  const listHeight = Math.min(filtered.length, MAX_ITEMS_VISIBLE) * ITEM_HEIGHT;
+  const sheetHeight = HEADER_HEIGHT + SEARCH_HEIGHT + listHeight + insets.bottom + 16;
 
   return (
     <View style={styles.wrapper}>
@@ -71,7 +87,7 @@ export function Dropdown({
           styles.trigger,
           {
             backgroundColor: colors.surface,
-            borderRadius: radius.sm,
+            borderRadius: radius.md,
             borderColor: error ? colors.danger : colors.border,
           },
         ]}
@@ -93,21 +109,40 @@ export function Dropdown({
         <Text style={{ color: colors.danger, fontSize: 12, marginTop: 4 }}>{error}</Text>
       )}
 
-      <Modal visible={open} animationType="slide" presentationStyle="pageSheet">
-        <SafeAreaView style={[styles.modal, { backgroundColor: colors.background }]}>
+      {/* ── Bottom-sheet modal ── */}
+      <Modal visible={open} transparent animationType="fade" statusBarTranslucent>
+        {/* Backdrop — tap to dismiss */}
+        <TouchableWithoutFeedback onPress={close}>
+          <View style={styles.backdrop} />
+        </TouchableWithoutFeedback>
+
+        {/* Sheet */}
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.surface,
+              height: sheetHeight,
+              paddingBottom: insets.bottom + 8,
+            },
+          ]}
+        >
+          {/* Drag handle */}
+          <View style={[styles.handle, { backgroundColor: colors.border }]} />
+
           {/* Header */}
-          <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+          <View style={[styles.sheetHeader, { borderBottomColor: colors.divider }]}>
             <Text
               style={{
                 fontFamily: typography.fontFamily.semiBold,
-                fontSize: 17,
+                fontSize: 16,
                 color: colors.text,
               }}
             >
               {label ?? 'Select'}
             </Text>
-            <TouchableOpacity onPress={() => { setOpen(false); setQuery(''); }}>
-              <Ionicons name="close" size={24} color={colors.icon} />
+            <TouchableOpacity onPress={close} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="close" size={22} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
@@ -132,18 +167,18 @@ export function Dropdown({
             </View>
           )}
 
-          {/* Options */}
+          {/* Options list */}
           <FlatList
             data={filtered}
             keyExtractor={(item) => item.value}
+            showsVerticalScrollIndicator={false}
             renderItem={({ item }) => {
               const isSelected = item.value === value;
               return (
                 <TouchableOpacity
                   onPress={() => {
                     onChange(item.value, item);
-                    setOpen(false);
-                    setQuery('');
+                    close();
                   }}
                   style={[
                     styles.option,
@@ -185,7 +220,7 @@ export function Dropdown({
               );
             }}
           />
-        </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
@@ -193,6 +228,8 @@ export function Dropdown({
 
 const styles = StyleSheet.create({
   wrapper: { marginBottom: 16 },
+
+  // Trigger button
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -200,20 +237,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
   },
-  modal: { flex: 1 },
-  modalHeader: {
+
+  // Backdrop
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+
+  // Bottom sheet
+  sheet: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',
+  },
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  sheetHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     marginHorizontal: 16,
-    marginVertical: 12,
+    marginVertical: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 10,
@@ -222,7 +283,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });

@@ -2,6 +2,7 @@
   "expo": {
     "name": "churchlife-app",
     "slug": "churchlife-app",
+    "owner": "mobile-applications-yhutiee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/cross-dove-background.png",
@@ -9,7 +10,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yhutiee.churchlifeapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +24,8 @@
         "monochromeImage": "./assets/images/cross-dove-background.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.yhutiee.churchlifeapp"
     },
     "web": {
       "output": "static",
@@ -43,6 +49,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "12a6011e-a147-4f6a-8079-1fce02a0c018"
+      }
     }
   }
 }

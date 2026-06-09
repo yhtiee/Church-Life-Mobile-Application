@@ -1,7 +1,13 @@
 import React from 'react';
-import { View, ViewProps } from 'react-native';
+import { Pressable, View, ViewProps, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
-import { Shadow } from '@/constants/theme';
+import { Shadow, Animation } from '@/constants/theme';
 
 type Elevation = 'none' | 'sm' | 'md' | 'lg' | 'xl';
 
@@ -9,38 +15,98 @@ interface CardProps extends ViewProps {
   children: React.ReactNode;
   elevation?: Elevation;
   backgroundColor?: string;
+  gradient?: readonly string[];
   padding?: number;
   borderRadius?: number;
+  pressable?: boolean;
+  glowColor?: string;
+  onPress?: () => void;
 }
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function Card({
   children,
   elevation = 'sm',
   backgroundColor,
+  gradient,
   padding = 16,
   borderRadius,
+  pressable = false,
+  glowColor,
+  onPress,
   style,
   ...rest
 }: CardProps) {
   const { colors, radius } = useTheme();
-  const shadowStyle = elevation === 'none' ? {} : Shadow[elevation];
+  const scale = useSharedValue(1);
 
-  return (
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePressIn = () => {
+    if (pressable) scale.value = withSpring(0.97, Animation.spring);
+  };
+  const handlePressOut = () => {
+    if (pressable) scale.value = withSpring(1, Animation.spring);
+  };
+
+  const shadowStyle = elevation === 'none' ? {} : {
+    ...Shadow[elevation],
+    ...(glowColor ? { shadowColor: glowColor } : {}),
+  };
+
+  const cardBg = backgroundColor ?? colors.surface;
+  const br = borderRadius ?? radius.lg;
+
+  const innerContent = gradient ? (
+    <LinearGradient
+      colors={gradient as any}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.inner, { borderRadius: br, padding }]}
+    >
+      {children}
+    </LinearGradient>
+  ) : (
     <View
       style={[
+        styles.inner,
         {
-          backgroundColor: backgroundColor ?? colors.surface,
-          borderRadius: borderRadius ?? radius.md,
+          backgroundColor: cardBg,
+          borderRadius: br,
           padding,
-          borderWidth: 1,
+          borderWidth: StyleSheet.hairlineWidth,
           borderColor: colors.border,
         },
-        shadowStyle,
-        style,
       ]}
-      {...rest}
     >
       {children}
     </View>
   );
+
+  if (pressable || onPress) {
+    return (
+      <AnimatedPressable
+        onPress={onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        style={[animatedStyle, shadowStyle, { borderRadius: br }, style]}
+        {...(rest as any)}
+      >
+        {innerContent}
+      </AnimatedPressable>
+    );
+  }
+
+  return (
+    <View style={[shadowStyle, { borderRadius: br }, style]} {...rest}>
+      {innerContent}
+    </View>
+  );
 }
+
+const styles = StyleSheet.create({
+  inner: { overflow: 'hidden' },
+});

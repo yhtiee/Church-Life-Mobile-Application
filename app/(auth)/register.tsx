@@ -9,12 +9,14 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth, Sex, BirthdayMonth, RegisterPayload } from '@/context/AuthContext';
+import { useToast } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { PARISHES } from '@/constants/parishes';
-import { OPEN_GROUPS } from '@/constants/groups';
+import { getGroupMetadata } from '@/constants/groups';
+import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -29,10 +31,13 @@ export default function RegisterScreen() {
   const { colors, typography, radius } = useTheme();
   const { register } = useAuth();
   const router = useRouter();
+  const showToast = useToast();
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const { data: openGroups = [], isLoading: loadingGroups } = useOpenGroupsQuery();
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -76,14 +81,26 @@ export default function RegisterScreen() {
   const handleNext = () => {
     setError('');
     const err = validateStep1();
-    if (err) { setError(err); return; }
+    if (err) {
+      setError(err);
+      showToast(err, 'error');
+      return;
+    }
     setStep(1);
   };
 
   const handleSubmit = async () => {
     setError('');
-    if (!noParish && !parishId) { setError('Please select your parish or tick "I don\'t see my parish".'); return; }
-    if (!groupId) { setError('Please select your church group.'); return; }
+    if (!noParish && !parishId) {
+      setError('Please select your parish or tick "I don\'t see my parish".');
+      showToast('Please select your parish or tick "I don\'t see my parish".', 'error');
+      return;
+    }
+    if (!groupId) {
+      setError('Please select your church group.');
+      showToast('Please select your church group.', 'error');
+      return;
+    }
     setLoading(true);
     const payload: RegisterPayload = {
       fullName, baptismalName: baptismalName || undefined,
@@ -94,7 +111,12 @@ export default function RegisterScreen() {
     };
     const result = await register(payload);
     setLoading(false);
-    if (!result.success) setError(result.error ?? 'Registration failed.');
+    if (!result.success) {
+      setError(result.error ?? 'Registration failed.');
+      showToast(result.error ?? 'Registration failed.', 'error');
+    } else {
+      showToast('Account created successfully!', 'success');
+    }
   };
 
   const progressWidth = progressAnim.interpolate({
@@ -141,14 +163,14 @@ export default function RegisterScreen() {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
           {/* Error banner */}
-          {!!error && (
+          {/* {!!error && (
             <View style={[styles.errorBox, { backgroundColor: colors.dangerBg, borderRadius: radius.sm }]}>
               <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
               <Text style={{ color: colors.danger, fontSize: 13, fontFamily: typography.fontFamily.regular, flex: 1, marginLeft: 8 }}>
                 {error}
               </Text>
             </View>
-          )}
+          )} */}
 
           {/* ── STEP 1 ── */}
           {step === 0 && (
@@ -267,7 +289,7 @@ export default function RegisterScreen() {
               >
                 <Ionicons name={noParish ? 'checkbox' : 'square-outline'} size={20} color={noParish ? colors.primary : colors.icon} />
                 <Text style={{ marginLeft: 10, fontSize: 14, fontFamily: typography.fontFamily.medium, color: noParish ? colors.primary : colors.text }}>
-                  I don't see my parish
+                  {`I don’t see my parish`}
                 </Text>
               </TouchableOpacity>
 
@@ -285,37 +307,48 @@ export default function RegisterScreen() {
                 Church Group *
               </Text>
               <View style={styles.groupGrid}>
-                {OPEN_GROUPS.map((g) => {
-                  const selected = groupId === g.id;
-                  return (
-                    <TouchableOpacity
-                      key={g.id}
-                      onPress={() => setGroupId(g.id)}
-                      activeOpacity={0.75}
-                      style={[styles.groupCard, {
-                        width: (SCREEN_WIDTH - 40 - 12) / 2,
-                        borderColor: selected ? g.color : colors.border,
-                        backgroundColor: selected ? g.color + '15' : colors.surface,
-                        borderRadius: radius.md,
-                      }]}
-                    >
-                      <View style={[styles.groupIconCircle, { backgroundColor: selected ? g.color + '25' : colors.surfaceMuted }]}>
-                        <Ionicons name={g.icon as any} size={24} color={selected ? g.color : colors.icon} />
-                      </View>
-                      <Text style={{ fontFamily: typography.fontFamily.bold, fontSize: 13, color: selected ? g.color : colors.text, marginTop: 10, textAlign: 'center' }}>
-                        {g.shortName}
-                      </Text>
-                      <Text style={{ fontFamily: typography.fontFamily.regular, fontSize: 11, color: colors.textMuted, marginTop: 3, textAlign: 'center', lineHeight: 15 }} numberOfLines={2}>
-                        {g.name}
-                      </Text>
-                      {selected && (
-                        <View style={[styles.checkBadge, { backgroundColor: g.color }]}>
-                          <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                {loadingGroups ? (
+                  <View style={{ padding: 20, alignItems: 'center', width: '100%' }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: typography.fontFamily.regular }}>Loading groups...</Text>
+                  </View>
+                ) : openGroups.length === 0 ? (
+                  <View style={{ padding: 20, alignItems: 'center', width: '100%' }}>
+                    <Text style={{ color: colors.textSecondary, fontFamily: typography.fontFamily.regular }}>No groups available.</Text>
+                  </View>
+                ) : (
+                  openGroups.map((g) => {
+                    const selected = groupId === g.id;
+                    const meta = getGroupMetadata(g.name);
+                    return (
+                      <TouchableOpacity
+                        key={g.id}
+                        onPress={() => setGroupId(g.id)}
+                        activeOpacity={0.75}
+                        style={[styles.groupCard, {
+                          width: (SCREEN_WIDTH - 40 - 12) / 2,
+                          borderColor: selected ? meta.color : colors.border,
+                          backgroundColor: selected ? meta.color + '15' : colors.surface,
+                          borderRadius: radius.md,
+                        }]}
+                      >
+                        <View style={[styles.groupIconCircle, { backgroundColor: selected ? meta.color + '25' : colors.surfaceMuted }]}>
+                          <Ionicons name={meta.icon as any} size={24} color={selected ? meta.color : colors.icon} />
                         </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
+                        <Text style={{ fontFamily: typography.fontFamily.bold, fontSize: 13, color: selected ? meta.color : colors.text, marginTop: 10, textAlign: 'center' }}>
+                          {meta.shortName}
+                        </Text>
+                        <Text style={{ fontFamily: typography.fontFamily.regular, fontSize: 11, color: colors.textMuted, marginTop: 3, textAlign: 'center', lineHeight: 15 }} numberOfLines={2}>
+                          {g.name}
+                        </Text>
+                        {selected && (
+                          <View style={[styles.checkBadge, { backgroundColor: meta.color }]}>
+                            <Ionicons name="checkmark" size={11} color="#FFFFFF" />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
               </View>
 
               <Button label="Create Account" onPress={handleSubmit} loading={loading} fullWidth size="lg" style={{ marginTop: 8 }} />

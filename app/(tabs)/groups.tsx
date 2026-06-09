@@ -1,252 +1,267 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
-  ScrollView, View, Text, StyleSheet, TouchableOpacity,
+  ScrollView, View, Text, StyleSheet, TouchableOpacity, RefreshControl,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { Badge } from '@/components/ui/Badge';
-import { Card } from '@/components/ui/Card';
-import { Divider } from '@/components/ui/Divider';
-import { OPEN_GROUPS, SECURED_GROUPS } from '@/constants/groups';
-import { MOCK_GROUP_UPDATES, GROUP_MEETING_TIMES } from '@/constants/mockData';
+import { getGroupMetadata } from '@/constants/groups';
+import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { useJoinOpenGroupMutation } from '@/hooks/mutations/useGroups';
+import { useAlert } from '@/context/FeedbackContext';
 
 export default function GroupsScreen() {
   const { colors, typography, radius } = useTheme();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const router = useRouter();
+  const { showAlert } = useAlert();
 
-  const myGroup = OPEN_GROUPS.find((g) => g.id === user?.groupId);
-  const myUpdates = MOCK_GROUP_UPDATES.filter((u) => u.groupId === user?.groupId);
-  const meetingTimes = myGroup ? (GROUP_MEETING_TIMES[myGroup.id] ?? []) : [];
+  const { data: groups = [], isLoading, refetch, isRefetching } = useGroupsQuery();
+  const { mutateAsync: joinOpenGroup } = useJoinOpenGroupMutation();
 
-  // Expandable update bodies
+  const openGroups = groups.filter((g) => !g.is_secure);
+  const securedGroups = groups.filter((g) => g.is_secure);
+
+  const handleJoinGroup = (group: any) => {
+    if (!user?.id) return;
+    showAlert({
+      title: `Join ${group.name}?`,
+      message: `Are you sure you want to join this group?`,
+      type: 'success',
+      buttonLabel: 'Yes, Join',
+      onPress: async () => {
+        try {
+          await joinOpenGroup({
+            userId: user.id,
+            groupId: group.id,
+          });
+          showAlert({
+            title: 'Welcome!',
+            message: `You are now a member of ${group.name}.`,
+            type: 'success',
+          });
+        } catch (err: any) {
+          showAlert({
+            title: 'Failed to Join',
+            message: err.message || 'An error occurred. Please try again.',
+            type: 'error',
+          });
+        }
+      },
+      secondaryButtonLabel: 'Cancel',
+      onSecondaryPress: () => {},
+    });
+  };
+
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const toggleExpand = (id: string) =>
     setExpandedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
+      <ScreenHeader title="Community & Groups" showBack={false} />
 
-      <ScreenHeader 
-        title="Community & Groups" 
-      />
-
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-
-        {myGroup ? (
-          <TouchableOpacity 
-            activeOpacity={0.9}
-            onPress={() => router.push('/(modals)/group-chat')}
-            style={[styles.featuredCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}
-          >
-
-            {/* Group hero strip */}
-            <LinearGradient
-              colors={[myGroup.color, myGroup.color + 'BB']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={[styles.heroStrip, { borderTopLeftRadius: radius.lg, borderTopRightRadius: radius.lg }]}
-            >
-              {/* Cross watermark */}
-              <View style={styles.crossWrap} pointerEvents="none">
-                <View style={styles.crossV} />
-                <View style={styles.crossH} />
-              </View>
-
-              {/* Badge top-right */}
-              <View style={styles.myGroupBadge}>
-                <Ionicons name="star" size={10} color={myGroup.color} />
-                <Text style={{ fontSize: 10, fontFamily: typography.fontFamily.bold, color: myGroup.color, marginLeft: 4 }}>
-                  My Group
-                </Text>
-              </View>
-
-              {/* Icon + name */}
-              <View style={[styles.heroIcon, { backgroundColor: 'rgba(255,255,255,0.18)' }]}>
-                <Ionicons name={myGroup.icon as any} size={32} color="#FFFFFF" />
-              </View>
-              <Text style={{ fontSize: 18, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 12, textAlign: 'center' }}>
-                {myGroup.name}
-              </Text>
-              <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.semiBold, color: 'rgba(255,255,255,0.7)', letterSpacing: 2, textTransform: 'uppercase', marginTop: 4 }}>
-                {myGroup.shortName}
-              </Text>
-            </LinearGradient>
-
-            {/* Meeting times */}
-            {meetingTimes.length > 0 && (
-              <View style={[styles.meetingRow, { borderBottomColor: colors.divider }]}>
-                <Ionicons name="time-outline" size={13} color={colors.primary} />
-                <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.semiBold, color: colors.primary, marginLeft: 5, marginRight: 10, letterSpacing: 0.3 }}>
-                  Meetings
-                </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  {meetingTimes.map((t) => (
-                    <View key={t} style={[styles.timeChip, { backgroundColor: colors.primaryLight }]}>
-                      <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.medium, color: colors.primary }}>{t}</Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Updates feed */}
-            <View style={styles.updatesSection}>
-              {/* Feed header */}
-              <View style={[styles.feedHeader, { borderBottomColor: colors.divider }]}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                  <Ionicons name="newspaper-outline" size={13} color={colors.primary} />
-                  <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.semiBold, color: colors.primary, letterSpacing: 0.3 }}>
-                    Latest Updates
-                  </Text>
-                </View>
-                <View style={styles.readOnlyChip}>
-                  <Ionicons name="lock-closed" size={10} color={colors.textMuted} />
-                  <Text style={{ fontSize: 10, fontFamily: typography.fontFamily.medium, color: colors.textMuted, marginLeft: 4 }}>
-                    Admin posts only
-                  </Text>
-                </View>
-              </View>
-
-              {/* Update items */}
-              {myUpdates.length === 0 ? (
-                <View style={styles.emptyUpdates}>
-                  <Ionicons name="chatbubble-ellipses-outline" size={28} color={colors.border} />
-                  <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted, marginTop: 8 }}>
-                    No updates yet
-                  </Text>
-                </View>
-              ) : (
-                myUpdates.map((update, i) => {
-                  const expanded = expandedIds.has(update.id);
-                  const isLast = i === myUpdates.length - 1;
-                  return (
-                    <View
-                      key={update.id}
-                      style={[
-                        styles.updateItem,
-                        {
-                          borderBottomColor: colors.divider,
-                          borderBottomWidth: isLast ? 0 : StyleSheet.hairlineWidth,
-                        },
-                      ]}
-                    >
-                      <View style={styles.updateHeader}>
-                        <Text style={{ flex: 1, fontSize: 14, fontFamily: typography.fontFamily.bold, color: colors.text }}>
-                          {update.title}
-                        </Text>
-                        <View style={[styles.dateBadge, { backgroundColor: colors.surfaceMuted }]}>
-                          <Text style={{ fontSize: 10, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>
-                            {update.date}
-                          </Text>
-                        </View>
-                      </View>
-                      <Text
-                        style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 6, lineHeight: 20 }}
-                        numberOfLines={expanded ? undefined : 2}
-                      >
-                        {update.body}
-                      </Text>
-                      <View style={styles.updateFooter}>
-                        <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>
-                          — {update.author}
-                        </Text>
-                        <TouchableOpacity onPress={() => toggleExpand(update.id)}>
-                          <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.semiBold, color: colors.primary }}>
-                            {expanded ? 'Show less' : 'Read more'}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  );
-                })
-              )}
-            </View>
-          </TouchableOpacity>
-        ) : (
-          /* No group assigned */
-          <Card elevation="sm" style={[styles.noGroupCard, { borderRadius: radius.lg }]}>
-            <Ionicons name="people-outline" size={32} color={colors.border} />
-            <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.semiBold, color: colors.text, marginTop: 12 }}>
-              No Group Assigned
-            </Text>
-            <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 6, textAlign: 'center', lineHeight: 20 }}>
-              You haven't been assigned to a church group yet. Contact the parish office for assistance.
-            </Text>
-          </Card>
-        )}
-
-        {/* ════════════════════════════════════════════════════
-            SECURED GROUPS DIVIDER
-        ════════════════════════════════════════════════════ */}
-        <View style={styles.dividerSection}>
-          <Divider />
-          <View style={[styles.dividerLabel, { backgroundColor: colors.background }]}>
-            <Ionicons name="lock-closed" size={12} color={colors.textMuted} />
-            <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.semiBold, color: colors.textMuted, marginLeft: 6, letterSpacing: 0.8, textTransform: 'uppercase' }}>
-              Secured Groups
-            </Text>
-          </View>
-        </View>
-        <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted, marginBottom: 14, lineHeight: 19 }}>
-          These groups require admin approval to join. Tap a group to submit your request.
+      <ScrollView
+        contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        {/* ── Open Groups section label ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
+          Open Groups
         </Text>
 
-        {/* ════════════════════════════════════════════════════
-            SECURED GROUPS LIST
-        ════════════════════════════════════════════════════ */}
-        {SECURED_GROUPS.map((group, i) => (
-          <TouchableOpacity
-            key={group.id}
-            activeOpacity={0.75}
-            onPress={() => router.push({ pathname: '/(modals)/group-access-request', params: { groupId: group.id } })}
-            style={[
-              styles.lockedRow,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderLeftColor: group.color,
-                borderRadius: radius.md,
-                marginBottom: i < SECURED_GROUPS.length - 1 ? 10 : 0,
-              },
-            ]}
+        {/* ── Open Groups list ── */}
+        {isLoading ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: typography.fontFamily.regular }}>Loading open groups...</Text>
+          </View>
+        ) : openGroups.length === 0 ? (
+          <View style={[styles.noGroupCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="people-outline" size={36} color={colors.textMuted} />
+            <Text style={[styles.noGroupTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, marginTop: 12 }]}>
+              No Open Groups
+            </Text>
+            <Text style={[styles.noGroupBody, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+              There are no open groups available at the moment.
+            </Text>
+          </View>
+        ) : (
+          openGroups.map((group, i) => {
+            const isMyGroup = user?.id ? group.member_ids?.includes(user.id) : false;
+            const isLast = i === openGroups.length - 1;
+            const meta = getGroupMetadata(group.name);
+
+            return (
+              <Animated.View key={group.id} entering={FadeInDown.delay(i * 60).duration(400)}>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() => {
+                    if (isMyGroup) {
+                      router.push({
+                        pathname: '/(modals)/group-chat',
+                        params: { groupId: group.id, groupName: group.name },
+                      });
+                    } else {
+                      handleJoinGroup(group);
+                    }
+                  }}
+                  style={[
+                    styles.groupRow,
+                    {
+                      backgroundColor: isMyGroup ? colors.primaryLight : colors.surface,
+                      borderColor: isMyGroup ? colors.primary : colors.border,
+                      borderWidth: isMyGroup ? 2 : 1,
+                      borderRadius: radius.md,
+                      marginBottom: isLast ? 0 : 10,
+                    },
+                  ]}
+                >
+                  {/* Left — colored icon square */}
+                  <View style={[styles.groupIconBox, { backgroundColor: meta.color + '18' }]}>
+                    <Ionicons name={meta.icon as any} size={22} color={meta.color} />
+                  </View>
+
+                  {/* Middle — name & description */}
+                  <View style={styles.groupMeta}>
+                    <Text style={[styles.groupName, { color: colors.text, fontFamily: typography.fontFamily.bold }]} numberOfLines={2}>
+                      {group.name}
+                    </Text>
+                    <Text style={[styles.groupDesc, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]} numberOfLines={1}>
+                      {group.description}
+                    </Text>
+                  </View>
+
+                  {/* Right — Joined / Join pill */}
+                  {isMyGroup ? (
+                    <View style={[styles.joinedPill, { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
+                      <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
+                      <Text style={[styles.joinedText, { color: '#FFFFFF', fontFamily: typography.fontFamily.semiBold }]}>
+                        Joined
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.joinPill, { backgroundColor: meta.color + '18', borderColor: meta.color + '40' }]}>
+                      <Text style={[styles.joinText, { color: meta.color, fontFamily: typography.fontFamily.semiBold }]}>
+                        Join
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })
+        )}
+
+        {/* ── No group assigned state ── */}
+        {/* {!myGroup && !isLoading && (
+          <Animated.View
+            entering={ZoomIn.duration(400)}
+            style={[styles.noGroupCard, { backgroundColor: colors.surface, borderColor: colors.border, marginTop: 16 }]}
           >
-            {/* Icon */}
-            <View style={[styles.lockedIcon, { backgroundColor: group.color + '18' }]}>
-              <Ionicons name={group.icon as any} size={20} color={group.color} />
+            <View style={[styles.noGroupIconCircle, { backgroundColor: colors.surfaceMuted }]}>
+              <Ionicons name="people-outline" size={36} color={colors.textMuted} />
             </View>
+            <Text style={[styles.noGroupTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+              No Group Assigned
+            </Text>
+            <Text style={[styles.noGroupBody, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+              {`You haven't been assigned to a church group yet. Contact the parish office for assistance.`}
+            </Text>
+          </Animated.View>
+        )} */}
 
-            {/* Text */}
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={{ fontSize: 14, fontFamily: typography.fontFamily.bold, color: colors.text }}>
-                {group.name}
-              </Text>
-              <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 2 }} numberOfLines={1}>
-                {group.description}
-              </Text>
-            </View>
+        {/* ── Secured Groups ── */}
+        <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold, marginTop: 28 }]}>
+          Secured Groups
+        </Text>
+        <Text style={[styles.securedSubtext, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]}>
+          These groups require admin approval to join.
+        </Text>
 
-            {/* Right side */}
-            <View style={styles.lockedRight}>
-              <View style={[styles.approvalChip, { backgroundColor: colors.warningBg }]}>
-                <Ionicons name="lock-closed" size={9} color={colors.warning} />
-                <Text style={{ fontSize: 9, fontFamily: typography.fontFamily.semiBold, color: colors.warning, marginLeft: 3 }}>
-                  Approval Required
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={14} color={colors.border} style={{ marginTop: 4 }} />
-            </View>
-          </TouchableOpacity>
-        ))}
+        {isLoading ? (
+          <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+            <Text style={{ color: colors.textSecondary, fontFamily: typography.fontFamily.regular }}>Loading secured groups...</Text>
+          </View>
+        ) : securedGroups.length === 0 ? (
+          <View style={[styles.noGroupCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Ionicons name="lock-closed-outline" size={36} color={colors.textMuted} />
+            <Text style={[styles.noGroupTitle, { color: colors.text, fontFamily: typography.fontFamily.bold, marginTop: 12 }]}>
+              No Secured Groups
+            </Text>
+            <Text style={[styles.noGroupBody, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+              There are no secured groups available at the moment.
+            </Text>
+          </View>
+        ) : (
+          securedGroups.map((group, i) => {
+            const meta = getGroupMetadata(group.name);
+            return (
+              <Animated.View key={group.id} entering={FadeInDown.delay(i * 80).duration(400)}>
+                <TouchableOpacity
+                  activeOpacity={0.78}
+                  onPress={() =>
+                    router.push({
+                      pathname: '/(modals)/group-access-request',
+                      params: { groupId: group.id },
+                    })
+                  }
+                  style={[
+                    styles.groupRow,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
+                      borderRadius: radius.md,
+                      marginBottom: i < securedGroups.length - 1 ? 10 : 0,
+                    },
+                  ]}
+                >
+                  {/* Left — colored icon square */}
+                  <View style={[styles.groupIconBox, { backgroundColor: meta.color + '18' }]}>
+                    <Ionicons name={meta.icon as any} size={22} color={meta.color} />
+                  </View>
+
+                  {/* Middle — name & description */}
+                  <View style={styles.groupMeta}>
+                    <Text style={[styles.groupName, { color: colors.text, fontFamily: typography.fontFamily.bold }]} numberOfLines={1}>
+                      {group.name}
+                    </Text>
+                    <Text style={[styles.groupDesc, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]} numberOfLines={1}>
+                      {group.description}
+                    </Text>
+                  </View>
+
+                  {/* Right — Approval chip */}
+                  <View style={[styles.approvalChip, { backgroundColor: colors.warningBg }]}>
+                    <Ionicons name="lock-closed" size={9} color={colors.warning} />
+                    <Text style={[styles.approvalText, { color: colors.warning, fontFamily: typography.fontFamily.semiBold }]}>
+                      Approval
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            );
+          })
+        )}
 
         <View style={{ height: 28 }} />
       </ScrollView>
@@ -255,77 +270,222 @@ export default function GroupsScreen() {
 }
 
 const styles = StyleSheet.create({
-  // Scroll
-  scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  scroll: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120 },
 
-  // Featured card
-  featuredCard: { borderWidth: 1, overflow: 'hidden', marginBottom: 28 },
-
-  // Hero strip
-  heroStrip: {
-    paddingTop: 22, paddingBottom: 24, paddingHorizontal: 20,
-    alignItems: 'center', position: 'relative', overflow: 'hidden',
+  // ── Header action ──────────────────────────────────────────────────────────
+  createBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
   },
-  crossWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  crossV: { position: 'absolute', width: 30, top: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.06)' },
-  crossH: { position: 'absolute', height: 30, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.06)' },
-  myGroupBadge: {
-    position: 'absolute', top: 12, right: 12,
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.92)',
-    paddingHorizontal: 9, paddingVertical: 4,
-    borderRadius: 20,
+  createBtnText: {
+    fontSize: 13,
   },
-  heroIcon: { width: 64, height: 64, borderRadius: 32, alignItems: 'center', justifyContent: 'center' },
 
-  // Meeting times
-  meetingRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 14, paddingVertical: 10,
+  // ── Section label ──────────────────────────────────────────────────────────
+  sectionLabel: {
+    fontSize: 11,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    marginBottom: 12,
+  },
+
+  // ── Group row (both open & secured) ───────────────────────────────────────
+  groupRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderWidth: 1,
+  },
+  groupIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  groupMeta: {
+    flex: 1,
+    marginLeft: 12,
+    marginRight: 10,
+  },
+  groupName: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  groupDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+
+  // Join / Joined pills
+  joinedPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    flexShrink: 0,
+  },
+  joinedText: {
+    fontSize: 12,
+  },
+  joinPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexShrink: 0,
+  },
+  joinText: {
+    fontSize: 12,
+  },
+
+  // ── My Group expanded detail blocks ───────────────────────────────────────
+  detailBlock: {
+    marginTop: 10,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
   },
-  timeChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  detailLabel: {
+    fontSize: 11,
+    letterSpacing: 0.3,
+  },
+  timeChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 9999,
+  },
+  timeChipText: {
+    fontSize: 11,
+  },
 
-  // Updates feed
-  updatesSection: {},
+  // Feed
   feedHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 14, paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  feedHeaderText: {
+    fontSize: 12,
+    letterSpacing: 0.2,
   },
   readOnlyChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 8, paddingVertical: 3,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 12,
+    gap: 4,
   },
-  emptyUpdates: { alignItems: 'center', paddingVertical: 24 },
-  updateItem: { paddingHorizontal: 14, paddingVertical: 14 },
-  updateHeader: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  dateBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  readOnlyText: {
+    fontSize: 10,
+  },
+  emptyUpdates: {
+    alignItems: 'center',
+    paddingVertical: 28,
+  },
+  emptyText: {
+    fontSize: 13,
+    marginTop: 8,
+  },
+
+  // Update items
+  updateItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  updateHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+  },
+  updateTitle: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  dateBadge: {
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  dateBadgeText: {
+    fontSize: 10,
+  },
+  updateBody: {
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 6,
+  },
   updateFooter: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  updateAuthor: {
+    fontSize: 11,
+  },
+  readMore: {
+    fontSize: 11,
   },
 
-  // No group
-  noGroupCard: { alignItems: 'center', padding: 28, marginBottom: 28 },
-
-  // Divider section
-  dividerSection: { position: 'relative', marginBottom: 12 },
-  dividerLabel: {
-    position: 'absolute', top: -9, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 12, paddingVertical: 2,
+  // No group assigned
+  noGroupCard: {
+    alignItems: 'center',
+    padding: 36,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 28,
+  },
+  noGroupIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  noGroupTitle: {
+    fontSize: 17,
+    marginBottom: 8,
+  },
+  noGroupBody: {
+    fontSize: 13,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 
-  // Locked row
-  lockedRow: {
-    flexDirection: 'row', alignItems: 'center',
-    padding: 14, borderWidth: 1, borderLeftWidth: 3,
+  // Secured groups
+  securedSubtext: {
+    fontSize: 13,
+    marginBottom: 12,
+    lineHeight: 19,
   },
-  lockedIcon: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
-  lockedRight: { alignItems: 'flex-end', marginLeft: 8 },
   approvalChip: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 7, paddingVertical: 3, borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
+    gap: 4,
+    flexShrink: 0,
+  },
+  approvalText: {
+    fontSize: 10,
   },
 });

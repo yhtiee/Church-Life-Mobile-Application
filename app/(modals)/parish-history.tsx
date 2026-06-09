@@ -1,56 +1,70 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { PARISH_HISTORY } from '@/constants/mockData';
 
 export default function ParishHistoryScreen() {
   const { colors, typography, radius } = useTheme();
 
   return (
-    <ScreenWrapper edges={['left', 'right', 'bottom']}>
+    <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+      <ScreenHeader title="Parish History" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         {/* ── Hero Image / Gradient ── */}
-        <LinearGradient
-          colors={['#0A1929', '#1D3557']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.heroBox, { borderRadius: radius.lg }]}
+        <Animated.View 
+          entering={FadeInDown.duration(500)}
+          style={[styles.heroBox, { borderRadius: radius.xl }]}
         >
-          {/* Subtle watermark */}
-          <Ionicons name="business-outline" size={120} color="rgba(255,255,255,0.05)" style={{ position: 'absolute', right: -20, bottom: -20 }} />
+          <Image
+            source={require('@/assets/images/church_exterior_hero.png')}
+            style={StyleSheet.absoluteFillObject}
+            contentFit="cover"
+          />
+          <LinearGradient
+            colors={['rgba(7,21,36,0.3)', 'rgba(7,21,36,0.92)']}
+            style={StyleSheet.absoluteFillObject}
+          />
 
-          <View style={styles.iconCircle}>
-            <Ionicons name="home-outline" size={28} color="#D4AF37" />
-          </View>
+          <View style={styles.heroContent}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="home" size={24} color="#D4AF37" />
+            </View>
 
-          <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 16 }}>
-            {PARISH_HISTORY.patron}
-          </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-            <Ionicons name="calendar-outline" size={14} color="rgba(255,255,255,0.6)" />
-            <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.medium, color: 'rgba(255,255,255,0.6)', marginLeft: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
-              Founded {PARISH_HISTORY.founded}
+            <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 16 }}>
+              {PARISH_HISTORY.patron}
             </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+              <Ionicons name="calendar-outline" size={14} color="rgba(255,255,255,0.7)" />
+              <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.semiBold, color: 'rgba(255,255,255,0.7)', marginLeft: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Founded {PARISH_HISTORY.founded}
+              </Text>
+            </View>
           </View>
-        </LinearGradient>
+        </Animated.View>
 
         {/* ── Leadership Details ── */}
-        <View style={styles.section}>
+        <Animated.View 
+          entering={FadeInDown.delay(150).duration(500)}
+          style={styles.section}
+        >
           <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold }]}>
             Leadership
           </Text>
           
-          <View style={[styles.detailCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md }]}>
+          <View style={[styles.detailCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
             <View style={styles.detailRow}>
               <View style={[styles.detailIcon, { backgroundColor: colors.primaryLight }]}>
-                <Ionicons name="person-circle-outline" size={20} color={colors.primary} />
+                <Ionicons name="person" size={20} color={colors.primary} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.regular, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Bishop
                 </Text>
                 <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.semiBold, color: colors.text, marginTop: 2 }}>
@@ -63,10 +77,10 @@ export default function ParishHistoryScreen() {
 
             <View style={styles.detailRow}>
               <View style={[styles.detailIcon, { backgroundColor: colors.primaryLight }]}>
-                <Ionicons name="people-outline" size={20} color={colors.primary} />
+                <Ionicons name="people" size={20} color={colors.primary} />
               </View>
               <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.regular, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <Text style={{ fontSize: 11, fontFamily: typography.fontFamily.bold, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                   Parish Priest
                 </Text>
                 <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.semiBold, color: colors.text, marginTop: 2 }}>
@@ -75,17 +89,22 @@ export default function ParishHistoryScreen() {
               </View>
             </View>
           </View>
-        </View>
+        </Animated.View>
 
         {/* ── Brief History ── */}
-        <View style={styles.section}>
+        <Animated.View 
+          entering={FadeInDown.delay(250).duration(500)}
+          style={styles.section}
+        >
           <Text style={[styles.sectionTitle, { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold }]}>
             Our Story
           </Text>
-          <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.text, lineHeight: 26 }}>
-            {PARISH_HISTORY.brief}
-          </Text>
-        </View>
+          <View style={[styles.storyCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
+            <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.text, lineHeight: 26 }}>
+              {PARISH_HISTORY.brief}
+            </Text>
+          </View>
+        </Animated.View>
 
       </ScrollView>
     </ScreenWrapper>
@@ -95,11 +114,14 @@ export default function ParishHistoryScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
   heroBox: {
-    padding: 24,
-    height: 200,
-    justifyContent: 'flex-end',
+    height: 240,
     overflow: 'hidden',
     marginBottom: 24,
+    position: 'relative',
+    justifyContent: 'flex-end',
+  },
+  heroContent: {
+    padding: 24,
   },
   iconCircle: {
     width: 56,
@@ -119,6 +141,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     marginBottom: 12,
+    marginLeft: 4,
   },
   detailCard: {
     borderWidth: 1,
@@ -130,14 +153,18 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   detailIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
   },
   divider: {
     height: 1,
     marginHorizontal: 16,
+  },
+  storyCard: {
+    padding: 20,
+    borderWidth: 1,
   },
 });

@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown, ZoomIn, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
-import { OPEN_GROUPS } from '@/constants/groups';
+import { Input } from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
+import { getGroupMetadata } from '@/constants/groups';
+import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
 
 export default function GroupTransitionRequestScreen() {
   const { colors, typography, radius } = useTheme();
@@ -15,35 +20,66 @@ export default function GroupTransitionRequestScreen() {
   const router = useRouter();
 
   const [targetGroupId, setTargetGroupId] = useState<string | null>(null);
+  const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const currentGroup = OPEN_GROUPS.find((g) => g.id === user?.groupId);
-  const availableGroups = OPEN_GROUPS.filter((g) => g.id !== user?.groupId);
-  const groupOptions = availableGroups.map((g) => ({
-    label: g.name,
-    value: g.id,
-    subtitle: g.shortName,
+  const { data: groups = [] } = useOpenGroupsQuery();
+
+  const currentGroup = user?.id ? groups.find((g) => g.member_ids?.includes(user.id)) : undefined;
+  const targetGroup = groups.find((g) => g.id === targetGroupId);
+
+  const currentGroupMeta = currentGroup ? getGroupMetadata(currentGroup.name) : null;
+  const targetGroupMeta = targetGroup ? getGroupMetadata(targetGroup.name) : null;
+
+  const availableGroups = user?.id ? groups.filter((g) => !g.member_ids?.includes(user.id)) : groups;
+  const groupOptions = availableGroups.map((g) => {
+    const meta = getGroupMetadata(g.name);
+    return {
+      label: g.name,
+      value: g.id,
+      subtitle: meta.shortName,
+    };
+  });
+
+  // Arrow animation
+  const arrowTranslateX = useSharedValue(0);
+  React.useEffect(() => {
+    arrowTranslateX.value = withRepeat(
+      withSequence(
+        withTiming(6, { duration: 500 }),
+        withTiming(0, { duration: 500 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const animatedArrowStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: arrowTranslateX.value }],
   }));
 
   if (submitted) {
     return (
-      <ScreenWrapper edges={['left', 'right', 'bottom']}>
+      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
         <View style={styles.successWrapper}>
-          <View style={[styles.successCircle, { backgroundColor: colors.successBg }]}>
+          <Animated.View 
+            entering={ZoomIn.springify().damping(12)}
+            style={[styles.successCircle, { backgroundColor: colors.successBg }]}
+          >
             <Ionicons name="checkmark-circle" size={56} color={colors.success} />
-          </View>
-          <Text style={{ fontSize: 22, fontFamily: typography.fontFamily.extraBold, color: colors.text, marginTop: 20, textAlign: 'center' }}>
+          </Animated.View>
+          <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: colors.text, marginTop: 24, textAlign: 'center' }}>
             Request Submitted!
           </Text>
-          <Text style={{ fontSize: 14, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 10, textAlign: 'center', lineHeight: 22 }}>
-            Your request to transition to a new group has been sent to the Parish Administrator. We'll notify you once it's reviewed.
+          <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 10, textAlign: 'center', lineHeight: 24, paddingHorizontal: 12 }}>
+            {`Your request to transition to `}<Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>{targetGroup?.name}</Text>{` has been sent to the Parish Administrator. We’ll notify you once it’s reviewed.`}
           </Text>
           <Button
             label="Back to Profile"
             onPress={() => router.back()}
             fullWidth
             size="lg"
-            style={{ marginTop: 28 }}
+            style={{ marginTop: 32 }}
           />
         </View>
       </ScreenWrapper>
@@ -51,34 +87,49 @@ export default function GroupTransitionRequestScreen() {
   }
 
   return (
-    <ScreenWrapper edges={['left', 'right', 'bottom']}>
+    <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+      <ScreenHeader title="Group Transition" />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         
         {/* Header Description */}
-        <Text style={[styles.description, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-          Group transitions (e.g., aging out of CYON into CMO/CWO) require verification from the Parish Administrator. 
-        </Text>
-
-        {/* Current Group */}
-        <View style={styles.section}>
-          <Text style={[styles.label, { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold }]}>
-            Current Group
+        <Animated.View entering={FadeInDown.duration(400)}>
+          <Text style={[styles.description, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+            Group transitions (e.g., aging out of CYON into CMO/CWO) require verification from the Parish Administrator. 
           </Text>
-          <View style={[styles.currentGroupCard, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md, borderColor: colors.border }]}>
-            <Ionicons name={currentGroup?.icon as any ?? 'people-outline'} size={24} color={currentGroup?.color ?? colors.icon} />
-            <View style={{ marginLeft: 12, flex: 1 }}>
-              <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.bold, color: colors.text }}>
-                {currentGroup?.name ?? 'No Group Assigned'}
-              </Text>
-              <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>
-                {currentGroup?.shortName}
+        </Animated.View>
+
+        {/* Transition Visualizer */}
+        {targetGroupId && (
+          <Animated.View 
+            entering={FadeInDown.duration(450)}
+            style={[styles.transitionContainer, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.xl }]}
+          >
+            <View style={styles.transitionNode}>
+              <View style={[styles.nodeCircle, { backgroundColor: currentGroupMeta?.color ?? colors.border }]}>
+                <Ionicons name={(currentGroupMeta?.icon || 'people') as any} size={22} color="#FFFFFF" />
+              </View>
+              <Text style={[styles.nodeText, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+                {currentGroupMeta?.shortName ?? 'None'}
               </Text>
             </View>
-          </View>
-        </View>
+
+            <Animated.View style={[styles.arrowNode, animatedArrowStyle]}>
+              <Ionicons name="arrow-forward-outline" size={24} color={colors.accent} />
+            </Animated.View>
+
+            <View style={styles.transitionNode}>
+              <View style={[styles.nodeCircle, { backgroundColor: targetGroupMeta?.color ?? colors.border }]}>
+                <Ionicons name={(targetGroupMeta?.icon || 'people') as any} size={22} color="#FFFFFF" />
+              </View>
+              <Text style={[styles.nodeText, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+                {targetGroupMeta?.shortName ?? 'Select'}
+              </Text>
+            </View>
+          </Animated.View>
+        )}
 
         {/* Target Group Dropdown */}
-        <View style={styles.section}>
+        <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.section}>
           <Text style={[styles.label, { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold }]}>
             Target Group *
           </Text>
@@ -89,24 +140,40 @@ export default function GroupTransitionRequestScreen() {
             value={targetGroupId}
             onChange={(val) => setTargetGroupId(val)}
           />
-        </View>
+        </Animated.View>
+
+        {/* Reason Field */}
+        <Animated.View entering={FadeInDown.delay(180).duration(450)}>
+          <Input
+            label="Reason for Transition"
+            placeholder="e.g. I turned 36 and aged out of the youth group"
+            value={reason}
+            onChangeText={setReason}
+            multiline
+            numberOfLines={2}
+            style={styles.reasonInput}
+          />
+        </Animated.View>
 
         {/* Info callout */}
-        <View style={[styles.callout, { backgroundColor: colors.infoBg, borderColor: colors.info, borderRadius: radius.md }]}>
+        <Animated.View 
+          entering={FadeInDown.delay(240).duration(450)}
+          style={[styles.callout, { backgroundColor: colors.infoBg, borderColor: colors.info, borderRadius: radius.lg }]}
+        >
           <Ionicons name="information-circle-outline" size={18} color={colors.info} style={{ marginTop: 1 }} />
           <Text style={{ flex: 1, fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.info, marginLeft: 10, lineHeight: 20 }}>
-            Once approved, you will automatically be moved to your new group and lose access to {currentGroup?.shortName ?? 'your previous group'}'s specific updates.
+            Once approved, you will automatically be moved to your new group and lose access to {currentGroupMeta?.shortName ?? 'your previous group'}{`’s specific updates.`}
           </Text>
-        </View>
+        </Animated.View>
 
         {/* Actions */}
-        <View style={styles.actions}>
+        <Animated.View entering={FadeInDown.delay(300).duration(450)} style={styles.actions}>
           <Button
             label="Submit Request"
             onPress={() => setSubmitted(true)}
             fullWidth
             size="lg"
-            disabled={!targetGroupId}
+            disabled={!targetGroupId || !reason.trim()}
             style={{ marginBottom: 12 }}
           />
           <Button
@@ -116,7 +183,7 @@ export default function GroupTransitionRequestScreen() {
             fullWidth
             size="md"
           />
-        </View>
+        </Animated.View>
 
       </ScrollView>
     </ScreenWrapper>
@@ -124,11 +191,41 @@ export default function GroupTransitionRequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 48 },
-  description: { fontSize: 14, lineHeight: 22, marginBottom: 24 },
-  section: { marginBottom: 24 },
-  label: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 },
-  currentGroupCard: { flexDirection: 'row', alignItems: 'center', padding: 16, borderWidth: 1 },
+  scroll: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 48 },
+  description: { fontSize: 14, lineHeight: 22, marginBottom: 20 },
+  transitionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    padding: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    marginBottom: 24,
+  },
+  transitionNode: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  nodeCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  nodeText: {
+    fontSize: 14,
+  },
+  arrowNode: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  section: { marginBottom: 20 },
+  label: { fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginLeft: 4 },
+  reasonInput: {
+    height: 70,
+    textAlignVertical: 'top',
+    paddingTop: 10,
+  },
   callout: { flexDirection: 'row', alignItems: 'flex-start', padding: 14, borderWidth: 1, marginBottom: 32 },
   actions: { marginTop: 'auto' },
   successWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },

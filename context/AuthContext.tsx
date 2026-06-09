@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { OPEN_GROUPS } from '@/constants/groups';
+import { AuthService } from '@/lib/supabase/services/auth';
+import { supaBaseClient } from '@/lib/supabase/client';
+import { registerForPushNotifications } from '@/lib/supabase/services/push';
 
 export type UserRole = 'member' | 'group_admin' | 'parish_admin';
 export type Sex = 'Male' | 'Female';
@@ -17,11 +18,12 @@ export interface AuthUser {
   birthdayMonth: BirthdayMonth;
   parishId: string | null;
   parishName: string | null;
-  groupId: string;
-  groupName: string;
+  groupId?: string | null;
+  groupName?: string | null;
   role: UserRole;
   hasParishAccess: boolean;
   createdAt: string;
+  push_token?: string | null;
 }
 
 export interface RegisterPayload {
@@ -33,7 +35,7 @@ export interface RegisterPayload {
   birthdayMonth: BirthdayMonth;
   parishId: string | null;
   parishName: string | null;
-  groupId: string;
+  groupId?: string | null;
 }
 
 interface AuthContextType {
@@ -48,113 +50,123 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const AUTH_KEY = '@churchlife_user';
-
-// ─── Mock admin user for testing admin screens ───────────────────────────
-const MOCK_ADMIN: AuthUser = {
-  id: 'admin-001',
-  fullName: 'Fr. Emmanuel Okafor',
-  email: 'admin@church.ng',
-  sex: 'Male',
-  birthdayMonth: 'March',
-  parishId: 'p001',
-  parishName: 'Holy Cross Cathedral',
-  groupId: 'cmo',
-  groupName: 'Catholic Men Organization',
-  role: 'parish_admin',
-  hasParishAccess: true,
-  createdAt: new Date().toISOString(),
-};
-
-// ─── Mock regular user ───────────────────────────────────────────────────
-const MOCK_USER: AuthUser = {
-  id: 'user-001',
-  fullName: 'Chidi Okonkwo',
-  baptismalName: 'Anthony',
-  email: 'chidi@example.com',
-  sex: 'Male',
-  birthdayMonth: 'June',
-  parishId: 'p001',
-  parishName: 'Holy Cross Cathedral',
-  groupId: 'cyon',
-  groupName: 'Catholic Youth Organization of Nigeria',
-  role: 'member',
-  hasParishAccess: true,
-  createdAt: new Date().toISOString(),
-};
+const authService = new AuthService();
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restore persisted session on app start
+  // Restore session and subscribe to auth state changes on start
   useEffect(() => {
     const restore = async () => {
       try {
-        const stored = await AsyncStorage.getItem(AUTH_KEY);
-        if (stored) {
-          setUser(JSON.parse(stored));
+        const { data: { session } } = await supaBaseClient.auth.getSession();
+        if (session?.user) {
+          const profile = await authService.getUserProfile(session.user.id);
+          if (profile.data) {
+            setUser(profile.data);
+          }
         }
-      } catch {
-        // ignore storage errors
+      } catch (error) {
+        console.error('Error restoring session:', error);
       } finally {
         setIsLoading(false);
       }
     };
     restore();
+
+    // Listen for auth changes to sync state
+    const { data: { subscription } } = supaBaseClient.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const profile = await authService.getUserProfile(session.user.id);
+        if (profile.data) {
+          setUser(profile.data);
+        } else {
+          // If profiles entry is not created yet (failing or delay during registration),
+          // fallback to user metadata or base profile schema
+          setUser({
+            id: session.user.id,
+            fullName: session.user.user_metadata?.fullName || '',
+            baptismalName: session.user.user_metadata?.baptismalName || '',
+            email: session.user.email || '',
+            sex: session.user.user_metadata?.sex || 'Male',
+            birthdayMonth: session.user.user_metadata?.birthdayMonth || 'January',
+            parishId: session.user.user_metadata?.parishId || null,
+            parishName: session.user.user_metadata?.parishName || null,
+            groupId: session.user.user_metadata?.groupId || null,
+            groupName: session.user.user_metadata?.groupName || null,
+            role: 'member',
+            hasParishAccess: !!session.user.user_metadata?.parishId,
+            createdAt: session.user.created_at,
+          });
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
-    // Mock login — accept admin@church.ng / admin or any registered user
-    if (email === 'admin@church.ng' && password === 'admin') {
-      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(MOCK_ADMIN));
-      setUser(MOCK_ADMIN);
-      return { success: true };
+    const { data, error } = await authService.signInWithEmail(email, password);
+    if (error) {
+      return { success: false, error: error.message || 'Invalid email or password.' };
     }
 
-    if (email === 'chidi@example.com' && password === 'password') {
-      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(MOCK_USER));
-      setUser(MOCK_USER);
-      return { success: true };
+    if (data?.user) {
+      const profile = await authService.getUserProfile(data.user.id);
+      if (profile.data) {
+        setUser(profile.data);
+      }
     }
 
-    return { success: false, error: 'Invalid email or password. Please try again.' };
+    return { success: true };
   };
 
   const register = async (payload: RegisterPayload) => {
-    const group = OPEN_GROUPS.find((g) => g.id === payload.groupId);
-    const newUser: AuthUser = {
-      id: `user-${Date.now()}`,
-      fullName: payload.fullName,
-      baptismalName: payload.baptismalName,
-      email: payload.email,
-      sex: payload.sex,
-      birthdayMonth: payload.birthdayMonth,
-      parishId: payload.parishId,
-      parishName: payload.parishName,
-      groupId: payload.groupId,
-      groupName: group?.name ?? payload.groupId,
-      role: 'member',
-      hasParishAccess: payload.parishId !== null,
-      createdAt: new Date().toISOString(),
-    };
+    const result = await authService.signUpWithEmail(payload);
+    if (result.error) {
+      return { success: false, error: result.error.message || 'Registration failed.' };
+    }
 
-    await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
-    setUser(newUser);
+    const { data, profile } = result;
+
+    if (profile) {
+      setUser(profile as any);
+    } else if (data?.user) {
+      // In case signup profile call didn't finish locally, fetch it
+      const profileRes = await authService.getUserProfile(data.user.id);
+      if (profileRes.data) {
+        setUser(profileRes.data);
+      }
+    }
+
     return { success: true };
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem(AUTH_KEY);
+    await authService.signOut();
     setUser(null);
   };
 
   const updateUser = async (updates: Partial<AuthUser>) => {
     if (!user) return;
-    const updated = { ...user, ...updates };
-    await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(updated));
-    setUser(updated);
+    const { data, error } = await authService.updateUserProfile(user.id, updates);
+    if (!error && data) {
+      setUser(data);
+    }
   };
+
+  // Register push notifications when a user ID is present
+  useEffect(() => {
+    if (user?.id) {
+      registerForPushNotifications(user.id);
+    }
+  }, [user?.id]);
 
   return (
     <AuthContext.Provider
@@ -179,3 +191,4 @@ export function useAuth(): AuthContextType {
   if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
   return ctx;
 }
+

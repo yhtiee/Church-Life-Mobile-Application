@@ -1,7 +1,7 @@
 /**
- * ChurchLife Design System — Theme Tokens
+ * ChurchLife Design System — Theme Tokens (v2 — Refactored)
  * Light: "Reverent Dawn" — Marian Blue, Liturgical Gold, Soft Ivory
- * Dark:  "Vespers"       — Midnight Charcoal, Soft Amber, Dark Slate
+ * Dark:  "Sacred Night"  — Deep Navy, Vivid Blue, Liturgical Gold
  */
 
 export const Palette = {
@@ -35,49 +35,51 @@ export const Palette = {
   indigo200: '#C5CAE9',
   indigo300: '#9FA8DA',
   indigo400: '#7986CB',
-  indigo500: '#3F51B5',   // Muted Indigo — secondary brand
+  indigo500: '#3F51B5',
   indigo600: '#303F9F',
   indigo700: '#283593',
   indigo800: '#1A237E',
   indigo900: '#1A237E22',
 
-  // Amber — Dark Mode primary
-  amber50:  '#FFFDE7',
-  amber100: '#FFF9C4',
-  amber200: '#FFF176',
-  amber300: '#FFD740',
-  amber400: '#E5C158',   // Soft Amber / Gold — dark mode interactive
-  amber500: '#C9A227',
-  amber600: '#A07C10',
-  amber700: '#7A5B05',
-  amber800: '#332A00',
-  amber900: '#2A2300',
+  // Vivid Action Blue (for gradients & CTAs)
+  actionBlue1: '#1A3A6B',
+  actionBlue2: '#2A5298',
+  actionBlue3: '#3D7DE4',
+
+  // Deep Navy (dark mode)
+  navy900: '#040A14',
+  navy800: '#071524',
+  navy700: '#0D2137',
+  navy600: '#102040',
+  navy500: '#162844',
+  navy400: '#1D3557',
+  navy300: '#2A4A7F',
 
   // Neutrals
   white:    '#FFFFFF',
   black:    '#000000',
 
   // Light neutrals (Ivory scale)
-  gray50:   '#FAFAFA',   // Soft Ivory background
+  gray50:   '#FAFAFA',
   gray100:  '#F4F4F4',
   gray200:  '#E2E8F0',
   gray300:  '#CBD5E0',
-  gray400:  '#A0AEC0',   // Ash Gray
+  gray400:  '#A0AEC0',
   gray500:  '#718096',
-  gray600:  '#4A5568',   // Muted Slate
+  gray600:  '#4A5568',
   gray700:  '#2D3748',
   gray800:  '#1A202C',
-  gray900:  '#111111',   // Deep Charcoal
+  gray900:  '#111111',
 
-  // Dark neutrals (Charcoal scale)
+  // Dark neutrals
   dark50:   '#3A3A3A',
   dark100:  '#2D2D2D',
   dark200:  '#272727',
   dark300:  '#252525',
-  dark400:  '#1E1E1E',   // Dark Slate surface
+  dark400:  '#1E1E1E',
   dark500:  '#181818',
   dark600:  '#141414',
-  dark700:  '#121212',   // Midnight Charcoal background
+  dark700:  '#121212',
   dark800:  '#0E0E0E',
   dark900:  '#080808',
 
@@ -92,43 +94,72 @@ export const Palette = {
   infoLight:    '#D6EAF8',
 };
 
+// ─── Gradients ───────────────────────────────────────────────────────────────
+export const Gradients = {
+  heroDark:     ['#071524', '#0D2137', '#1D3557'] as const,
+  heroBlue:     ['#1A3A6B', '#2A5298', '#3D7DE4'] as const,
+  heroBlueR:    ['#3D7DE4', '#2A5298', '#1A3A6B'] as const,
+  heroLight:    ['#2A6FDB', '#4A8FFF', '#6AAFFF'] as const,
+  cardGold:     ['#C49A1A', '#D4AF37', '#E8CC54'] as const,
+  cardGreen:    ['#1A6B3A', '#27AE60', '#52C77A'] as const,
+  cardPurple:   ['#6B1A6B', '#9C27B0', '#CE93D8'] as const,
+  cardOrange:   ['#B45309', '#D97706', '#F59E0B'] as const,
+  profileHero:  ['#1D3A6B', '#2A6FDB', '#4A8FFF'] as const,
+  surface:      ['#FFFFFF', '#F8FAFF'] as const,
+  glassLight:   ['rgba(255,255,255,0.95)', 'rgba(248,250,255,0.90)'] as const,
+  glassDark:    ['rgba(8,14,26,0.92)', 'rgba(13,33,55,0.88)'] as const,
+  // Announcement overlay gradients
+  overlayDark:  ['rgba(0,0,0,0.05)', 'rgba(0,0,0,0.72)'] as const,
+  overlayBlue:  ['rgba(26,58,107,0.1)', 'rgba(26,58,107,0.80)'] as const,
+};
+
+// ─── Animation ───────────────────────────────────────────────────────────────
+export const Animation = {
+  fast:   150,
+  normal: 250,
+  slow:   400,
+  spring: { damping: 18, stiffness: 200, mass: 1 },
+  springBounce: { damping: 12, stiffness: 160, mass: 1 },
+  springGentle: { damping: 22, stiffness: 180, mass: 1 },
+} as const;
+
 export const Colors = {
   light: {
     // ─── Base ───────────────────────────────────────────────────────────────
-    background:     '#FAFAFA',    // Soft Ivory
-    surface:        '#FFFFFF',    // Pure White
-    surfaceElevated:'#FFFFFF',
-    surfaceMuted:   '#F4F4F4',
+    background:      '#F5F8FF',   // very soft blue-white
+    surface:         '#FFFFFF',
+    surfaceElevated: '#FFFFFF',
+    surfaceMuted:    '#EEF3FB',
 
     // ─── Text ───────────────────────────────────────────────────────────────
-    text:           '#111111',    // Deep Charcoal
-    textSecondary:  '#4A5568',    // Muted Slate
-    textMuted:      '#718096',
-    textInverse:    '#FFFFFF',
+    text:            '#0F172A',
+    textSecondary:   '#4A6080',
+    textMuted:       '#8FA8C8',
+    textInverse:     '#FFFFFF',
 
     // ─── Brand ──────────────────────────────────────────────────────────────
-    primary:        '#1D3557',    // Marian Blue
-    primaryLight:   '#D6E4F0',
-    accent:         '#D4AF37',    // Liturgical Gold
-    accentLight:    '#FBF5DC',
-    secondary:      '#3F51B5',    // Muted Indigo
-    secondaryLight: '#E8EAF6',
+    primary:         '#2A6FDB',   // vivid clear blue (matches inspiration)
+    primaryLight:    '#E8F0FE',
+    accent:          '#D4AF37',   // Liturgical Gold
+    accentLight:     '#FBF5DC',
+    secondary:       '#7C3AED',   // purple accent
+    secondaryLight:  '#EDE9FE',
 
     // ─── Borders & Dividers ─────────────────────────────────────────────────
-    border:         '#E2E8F0',
-    borderStrong:   '#CBD5E0',
-    divider:        '#EDF2F7',
+    border:          '#E2ECF8',
+    borderStrong:    '#C5D8EF',
+    divider:         '#EEF3F8',
 
     // ─── Icons & UI ─────────────────────────────────────────────────────────
-    icon:           '#4A5568',
-    iconActive:     '#1D3557',    // Marian Blue
-    tabBarBg:       '#FFFFFF',
-    tabIconDefault: '#A0AEC0',
-    tabIconSelected:'#1D3557',    // Marian Blue
-    tabBadge:       '#3F51B5',    // Muted Indigo
+    icon:            '#6B8CAE',
+    iconActive:      '#2A6FDB',
+    tabBarBg:        'rgba(255,255,255,0.96)',
+    tabIconDefault:  '#A0B8D4',
+    tabIconSelected: '#2A6FDB',
+    tabBadge:        '#7C3AED',
 
     // ─── Cards ──────────────────────────────────────────────────────────────
-    cardShadowColor: '#000000',
+    cardShadowColor: '#2A6FDB',
 
     // ─── Semantic ───────────────────────────────────────────────────────────
     success:   Palette.success,
@@ -146,50 +177,51 @@ export const Colors = {
 
   dark: {
     // ─── Base ───────────────────────────────────────────────────────────────
-    background:     '#121212',    // Midnight Charcoal
-    surface:        '#1E1E1E',    // Dark Slate
-    surfaceElevated:'#252525',
-    surfaceMuted:   '#181818',
+    // Sacred Night: deep navy palette derived from the hero gradient
+    background:      '#04080F',    // deepest navy
+    surface:         '#0A1628',    // dark navy card
+    surfaceElevated: '#0F1D35',    // raised navy
+    surfaceMuted:    '#071524',    // sunken / muted sections
 
     // ─── Text ───────────────────────────────────────────────────────────────
-    text:           '#E0E0E0',    // Soft White
-    textSecondary:  '#A0AEC0',    // Ash Gray
-    textMuted:      '#718096',
-    textInverse:    '#111111',
+    text:            '#EEF2F8',    // near-white, warm
+    textSecondary:   '#8FA8C8',    // steel blue
+    textMuted:       '#506A88',    // muted navy-grey
+    textInverse:     '#071524',
 
     // ─── Brand ──────────────────────────────────────────────────────────────
-    primary:        '#E5C158',    // Soft Amber / Gold (readable on dark)
-    primaryLight:   '#332A00',
-    accent:         '#E5C158',    // Soft Amber / Gold
-    accentLight:    '#2A2300',
-    secondary:      '#7986CB',    // Lighter Indigo (readable on dark)
-    secondaryLight: '#1A237E22',
+    primary:         '#4A90E2',    // vivid blue (readable on dark navy)
+    primaryLight:    '#0D2137',
+    accent:          '#D4AF37',    // Liturgical Gold stays
+    accentLight:     '#1C1500',
+    secondary:       '#7986CB',
+    secondaryLight:  '#0E1440',
 
     // ─── Borders & Dividers ─────────────────────────────────────────────────
-    border:         '#2D2D2D',
-    borderStrong:   '#3A3A3A',
-    divider:        '#272727',
+    border:          '#152035',
+    borderStrong:    '#1E3050',
+    divider:         '#0D1C30',
 
     // ─── Icons & UI ─────────────────────────────────────────────────────────
-    icon:           '#A0AEC0',
-    iconActive:     '#E5C158',    // Soft Amber
-    tabBarBg:       '#1E1E1E',
-    tabIconDefault: '#718096',
-    tabIconSelected:'#E5C158',    // Soft Amber
-    tabBadge:       '#7986CB',    // Lighter Indigo
+    icon:            '#7A9EC0',
+    iconActive:      '#4A90E2',
+    tabBarBg:        'rgba(4,8,15,0.92)',
+    tabIconDefault:  '#3D5A78',
+    tabIconSelected: '#4A90E2',
+    tabBadge:        '#7986CB',
 
     // ─── Cards ──────────────────────────────────────────────────────────────
     cardShadowColor: '#000000',
 
     // ─── Semantic ───────────────────────────────────────────────────────────
     success:   '#2ECC71',
-    successBg: '#0D2B1A',
+    successBg: '#061A0F',
     danger:    '#E74C3C',
-    dangerBg:  '#2D0E0B',
+    dangerBg:  '#1E0600',
     warning:   '#F1C40F',
-    warningBg: '#2D2200',
+    warningBg: '#1C1400',
     info:      '#3498DB',
-    infoBg:    '#0B1D2E',
+    infoBg:    '#061428',
 
     // ─── Status bar ─────────────────────────────────────────────────────────
     statusBar: 'light' as 'light' | 'dark',
@@ -199,7 +231,6 @@ export const Colors = {
 export type ThemeColors = typeof Colors.light;
 
 export const Typography = {
-  // Font families (expo-font will load Inter)
   fontFamily: {
     regular:   'Inter_400Regular',
     medium:    'Inter_500Medium',
@@ -208,30 +239,27 @@ export const Typography = {
     extraBold: 'Inter_800ExtraBold',
   },
 
-  // Font sizes
   size: {
-    xs:   11,
-    sm:   13,
-    base: 15,
-    md:   16,
-    lg:   18,
-    xl:   20,
+    xs:    11,
+    sm:    13,
+    base:  15,
+    md:    16,
+    lg:    18,
+    xl:    20,
     '2xl': 24,
     '3xl': 28,
     '4xl': 34,
     '5xl': 42,
   },
 
-  // Line heights
   lineHeight: {
     tight:   1.2,
     normal:  1.5,
     relaxed: 1.7,
   },
 
-  // Letter spacing
   tracking: {
-    tight:   -0.5,
+    tight:  -0.5,
     normal:  0,
     wide:    0.5,
     wider:   1,
@@ -266,36 +294,37 @@ export const Radius = {
   lg:    16,
   xl:    20,
   '2xl': 28,
+  '3xl': 40,
   full:  9999,
 };
 
 export const Shadow = {
   sm: {
-    shadowColor:   '#000',
-    shadowOffset:  { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius:  3,
-    elevation:     2,
+    shadowColor:   'transparent',
+    shadowOffset:  { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius:  0,
+    elevation:     0,
   },
   md: {
-    shadowColor:   '#000',
-    shadowOffset:  { width: 0, height: 3 },
-    shadowOpacity: 0.10,
-    shadowRadius:  8,
-    elevation:     5,
+    shadowColor:   'transparent',
+    shadowOffset:  { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius:  0,
+    elevation:     0,
   },
   lg: {
-    shadowColor:   '#000',
-    shadowOffset:  { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius:  14,
-    elevation:     10,
+    shadowColor:   'transparent',
+    shadowOffset:  { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius:  0,
+    elevation:     0,
   },
   xl: {
-    shadowColor:   '#000',
-    shadowOffset:  { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius:  24,
-    elevation:     16,
+    shadowColor:   'transparent',
+    shadowOffset:  { width: 0, height: 0 },
+    shadowOpacity: 0,
+    shadowRadius:  0,
+    elevation:     0,
   },
 };

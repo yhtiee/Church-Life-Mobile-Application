@@ -3,10 +3,13 @@ import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { MOCK_PARISHIONERS, Parishioner } from '@/constants/mockData';
 import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 import { MemberListItem } from '@/components/admin/MemberListItem';
 import { useRouter } from 'expo-router';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useAllProfilesQuery } from '@/hooks/queries/useProfiles';
+import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { getGroupMetadata } from '@/constants/groups';
 
 type StatusTab = 'Active' | 'Pending' | 'Suspended';
 
@@ -17,20 +20,39 @@ export default function MembersScreen() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<StatusTab>('Active');
 
+  const { data: rawMembers = [], isLoading: loadingProfiles } = useAllProfilesQuery();
+  const { data: groups = [], isLoading: loadingGroups } = useGroupsQuery();
+
+  const loading = loadingProfiles || loadingGroups;
+
+  const members = useMemo(() => {
+    return rawMembers.map((m) => {
+      const joined = groups.filter((g) => g.member_ids?.includes(m.id));
+      const groupNamesStr = joined.map((g) => getGroupMetadata(g.name).shortName).join(', ');
+
+      return {
+        ...m,
+        groupId: groupNamesStr || 'UNASSIGNED',
+        status: 'Active' as StatusTab,
+        phone: 'N/A',
+      };
+    });
+  }, [rawMembers, groups]);
+
   const filteredMembers = useMemo(() => {
-    return MOCK_PARISHIONERS.filter((p) => {
+    return members.filter((p) => {
       const matchesSearch = p.fullName.toLowerCase().includes(search.toLowerCase()) || 
                             p.groupId?.toLowerCase().includes(search.toLowerCase());
       const matchesTab = p.status === activeTab;
       return matchesSearch && matchesTab;
     });
-  }, [search, activeTab]);
+  }, [members, search, activeTab]);
 
-  const handleMessage = (member: Parishioner) => {
+  const handleMessage = (member: any) => {
     Alert.alert('Message', `Opening chat with ${member.fullName}`);
   };
 
-  const handleSuspend = (member: Parishioner) => {
+  const handleSuspend = (member: any) => {
     Alert.alert(
       'Account Action',
       `Are you sure you want to ${member.status === 'Suspended' ? 'reactivate' : 'suspend'} ${member.fullName}?`,
@@ -40,6 +62,15 @@ export default function MembersScreen() {
       ]
     );
   };
+
+  if (loading) {
+    return (
+      <ScreenWrapper edges={['top', 'left', 'right']}>
+        <ScreenHeader title="Parish Members" />
+        <LoadingSpinner fullScreen />
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
