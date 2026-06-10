@@ -20,13 +20,13 @@ import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useMassBookingsQuery } from '@/hooks/queries/useMass';
 import { useCreateMassBookingMutation, useDeleteMassBookingMutation } from '@/hooks/mutations/useMass';
 import { MASS_TIMES } from '@/constants/mockData';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 interface MassBooking {
   id: string;
@@ -373,15 +373,6 @@ export default function MassScheduleScreen() {
     { label: 'Birthday Celebration', value: 'Birthday Thanksgiving' },
     { label: 'Vocational & Business Success', value: 'Success' },
   ];
-
-  if (loadingBookings) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title="Mass Schedule" />
-        <LoadingSpinner fullScreen />
-      </ScreenWrapper>
-    );
-  }
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
@@ -1126,6 +1117,7 @@ export default function MassScheduleScreen() {
           </View>
         </View>
       </Modal>
+      <GlobalLoader visible={loadingBookings} />
     </ScreenWrapper>
   );
 }

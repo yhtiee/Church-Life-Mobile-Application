@@ -10,7 +10,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { useAnnouncementsQuery } from '@/hooks/queries/useAnnouncements';
 import { ANNOUNCEMENTS, Announcement } from '@/constants/mockData';
 
@@ -47,23 +47,18 @@ export default function AnnouncementsModal() {
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title="Announcements" />
-      {loading ? (
-        <View style={styles.loadingWrapper}>
-          <LoadingSpinner size="large" />
-        </View>
-      ) : (
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefetching}
-              onRefresh={refetch}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-            />
-          }
-        >
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefetching}
+            onRefresh={refetch}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+      >
 
         {/* Filter chips */}
         <Animated.View entering={FadeInDown.delay(80).duration(350)}>
@@ -101,7 +96,7 @@ export default function AnnouncementsModal() {
 
         {/* Announcement list */}
         <View style={styles.list}>
-          {filtered.length === 0 ? (
+          {!loading && filtered.length === 0 ? (
             <EmptyState
               icon="megaphone-outline"
               title="No Announcements"
@@ -198,7 +193,7 @@ export default function AnnouncementsModal() {
           )}
         </View>
       </ScrollView>
-      )}
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

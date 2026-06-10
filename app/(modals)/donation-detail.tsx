@@ -10,7 +10,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { FinanaceService } from '@/lib/supabase/services/finance';
 import { Gradients } from '@/constants/theme';
 
@@ -46,16 +46,7 @@ export default function DonationDetailScreen() {
     fetchDonation();
   }, [id, user?.id]);
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title="Donation Details" />
-        <LoadingSpinner fullScreen />
-      </ScreenWrapper>
-    );
-  }
-
-  if (!donation) {
+  if (!loading && !donation) {
     return (
       <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title="Donation Details" />
@@ -94,20 +85,20 @@ export default function DonationDetailScreen() {
               <Ionicons name="checkmark" size={28} color={colors.success} />
             </View>
             <Text style={{ fontSize: 36, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 14 }}>
-              {donation.currency}{donation.amount.toLocaleString()}
+              {donation?.currency || ''}{(donation?.amount || 0).toLocaleString()}
             </Text>
             <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.medium, color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>
-              {donation.description}
+              {donation?.description || ''}
             </Text>
           </LinearGradient>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(150).duration(450)}>
           <Card elevation="sm" style={{ margin: 20, padding: 0, overflow: 'hidden', borderRadius: radius.lg }}>
-            <InfoRow label="Description" value={donation.description} icon="gift-outline" />
-            <InfoRow label="Category" value={donation.category} icon="grid-outline" />
-            <InfoRow label="Amount" value={`${donation.currency}${donation.amount.toLocaleString()}`} icon="cash-outline" />
-            <InfoRow label="Date" value={donation.date} icon="calendar-outline" />
+            <InfoRow label="Description" value={donation?.description || ''} icon="gift-outline" />
+            <InfoRow label="Category" value={donation?.category || ''} icon="grid-outline" />
+            <InfoRow label="Amount" value={`${donation?.currency || ''}${(donation?.amount || 0).toLocaleString()}`} icon="cash-outline" />
+            <InfoRow label="Date" value={donation?.date || ''} icon="calendar-outline" />
             <InfoRow label="Status" value="Confirmed" icon="checkmark-circle-outline" />
           </Card>
         </Animated.View>
@@ -116,6 +107,7 @@ export default function DonationDetailScreen() {
           <Badge label="Transaction Confirmed ✓" variant="success" glow />
         </Animated.View>
       </View>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

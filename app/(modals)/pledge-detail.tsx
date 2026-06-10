@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { FinanaceService } from '@/lib/supabase/services/finance';
 import { Gradients } from '@/constants/theme';
 
@@ -48,16 +48,7 @@ export default function PledgeDetailScreen() {
     fetchPledge();
   }, [id, user?.id]);
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title="Pledge Details" />
-        <LoadingSpinner fullScreen />
-      </ScreenWrapper>
-    );
-  }
-
-  if (!pledge) {
+  if (!loading && !pledge) {
     return (
       <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title="Pledge Details" />
@@ -70,8 +61,8 @@ export default function PledgeDetailScreen() {
     );
   }
 
-  const paid = pledge.isPaid ? pledge.targetAmount : (pledge.paidAmount || 0);
-  const pct = pledge.targetAmount > 0 ? (paid / pledge.targetAmount) : 0;
+  const paid = pledge?.isPaid ? (pledge?.targetAmount || 0) : (pledge?.paidAmount || 0);
+  const pct = pledge?.targetAmount > 0 ? (paid / pledge.targetAmount) : 0;
 
   const InfoRow = ({ label, value, icon }: { label: string; value: string; icon: string }) => (
     <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
@@ -91,26 +82,26 @@ export default function PledgeDetailScreen() {
         {/* Amount Hero Gradient */}
         <Animated.View entering={FadeIn.duration(400)}>
           <LinearGradient
-            colors={pledge.isPaid ? Gradients.cardGreen : Gradients.cardGold}
+            colors={pledge?.isPaid ? Gradients.cardGreen : Gradients.cardGold}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.hero, { borderRadius: radius.xl }]}
           >
             <View style={styles.heroIconCircle}>
               <Ionicons 
-                name={pledge.isPaid ? "checkmark" : "bookmark"} 
+                name={pledge?.isPaid ? "checkmark" : "bookmark"} 
                 size={28} 
                 color="#FFFFFF" 
               />
             </View>
             <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.bold, color: 'rgba(255,255,255,0.85)', textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 14 }}>
-              {pledge.isPaid ? 'Pledge Fulfilled' : 'Active Pledge'}
+              {pledge?.isPaid ? 'Pledge Fulfilled' : 'Active Pledge'}
             </Text>
             <Text style={{ fontSize: 32, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 4 }}>
-              {pledge.currency}{pledge.targetAmount.toLocaleString()}
+              {pledge?.currency || ''}{(pledge?.targetAmount || 0).toLocaleString()}
             </Text>
             <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.medium, color: '#FFFFFF', marginTop: 4 }}>
-              {pledge.title}
+              {pledge?.title || ''}
             </Text>
           </LinearGradient>
         </Animated.View>
@@ -121,33 +112,33 @@ export default function PledgeDetailScreen() {
           <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.progressBox}>
             <View style={styles.progressTextRow}>
               <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.bold, color: colors.textSecondary }}>Fulfillment Progress</Text>
-              <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.bold, color: pledge.isPaid ? colors.success : colors.accent }}>{Math.round(pct * 100)}%</Text>
+              <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.bold, color: pledge?.isPaid ? colors.success : colors.accent }}>{Math.round(pct * 100)}%</Text>
             </View>
             <View style={[styles.progressBarBg, { backgroundColor: colors.border, borderRadius: radius.full }]}>
-              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: pledge.isPaid ? colors.success : colors.accent, borderRadius: radius.full }]} />
+              <View style={[styles.progressBarFill, { width: `${pct * 100}%`, backgroundColor: pledge?.isPaid ? colors.success : colors.accent, borderRadius: radius.full }]} />
             </View>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(200).duration(450)}>
             <Card elevation="sm" style={{ padding: 0, overflow: 'hidden', borderRadius: radius.lg }}>
-              <InfoRow label="Pledge Title" value={pledge.title} icon="bookmark-outline" />
-              <InfoRow label="Due Date" value={pledge.dueDate} icon="calendar-outline" />
-              <InfoRow label="Target Amount" value={`${pledge.currency}${pledge.targetAmount.toLocaleString()}`} icon="cash-outline" />
-              {pledge.isPaid ? (
+              <InfoRow label="Pledge Title" value={pledge?.title || ''} icon="bookmark-outline" />
+              <InfoRow label="Due Date" value={pledge?.dueDate || ''} icon="calendar-outline" />
+              <InfoRow label="Target Amount" value={`${pledge?.currency || ''}${(pledge?.targetAmount || 0).toLocaleString()}`} icon="cash-outline" />
+              {pledge?.isPaid ? (
                 <>
-                  <InfoRow label="Amount Paid" value={`${pledge.currency}${pledge.paidAmount?.toLocaleString()}`} icon="checkmark-done-outline" />
-                  <InfoRow label="Paid On" value={pledge.paidDate!} icon="time-outline" />
+                  <InfoRow label="Amount Paid" value={`${pledge?.currency || ''}${(pledge?.paidAmount || 0).toLocaleString()}`} icon="checkmark-done-outline" />
+                  <InfoRow label="Paid On" value={pledge?.paidDate || ''} icon="time-outline" />
                 </>
               ) : (
                 <>
-                  <InfoRow label="Amount Paid" value={`${pledge.currency}${paid.toLocaleString()}`} icon="checkmark-done-outline" />
-                  <InfoRow label="Balance Remaining" value={`${pledge.currency}${(pledge.targetAmount - paid).toLocaleString()}`} icon="wallet-outline" />
+                  <InfoRow label="Amount Paid" value={`${pledge?.currency || ''}${paid.toLocaleString()}`} icon="checkmark-done-outline" />
+                  <InfoRow label="Balance Remaining" value={`${pledge?.currency || ''}${( (pledge?.targetAmount || 0) - paid).toLocaleString()}`} icon="wallet-outline" />
                 </>
               )}
             </Card>
           </Animated.View>
 
-          {!pledge.isPaid && (
+          {!pledge?.isPaid && (
             <Animated.View 
               entering={FadeInDown.delay(280).duration(450)}
               style={[styles.paymentBox, { backgroundColor: colors.infoBg, borderColor: colors.info, borderRadius: radius.lg }]}
@@ -170,16 +161,17 @@ export default function PledgeDetailScreen() {
 
           <Animated.View entering={FadeInDown.delay(350).duration(400)}>
             <Button
-              label={pledge.isPaid ? "Back to Finance" : "Confirm Payment Made"}
+              label={pledge?.isPaid ? "Back to Finance" : "Confirm Payment Made"}
               onPress={() => router.back()}
               fullWidth
               size="lg"
-              variant={pledge.isPaid ? "primary" : "secondary"}
+              variant={pledge?.isPaid ? "primary" : "secondary"}
               style={{ marginTop: 20 }}
             />
           </Animated.View>
         </View>
       </ScrollView>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

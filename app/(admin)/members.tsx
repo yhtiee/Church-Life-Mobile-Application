@@ -6,7 +6,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 import { MemberListItem } from '@/components/admin/MemberListItem';
 import { useRouter } from 'expo-router';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { useAllProfilesQuery } from '@/hooks/queries/useProfiles';
 import { useGroupsQuery } from '@/hooks/queries/useGroups';
 import { getGroupMetadata } from '@/constants/groups';
@@ -63,15 +63,6 @@ export default function MembersScreen() {
     );
   };
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right']}>
-        <ScreenHeader title="Parish Members" />
-        <LoadingSpinner fullScreen />
-      </ScreenWrapper>
-    );
-  }
-
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <ScreenHeader title="Parish Members" />
@@ -122,14 +113,17 @@ export default function MembersScreen() {
           />
         )}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.medium }}>
-              No members found in {activeTab}
-            </Text>
-          </View>
+          loading ? null : (
+            <View style={styles.emptyContainer}>
+              <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.medium }}>
+                No members found in {activeTab}
+              </Text>
+            </View>
+          )
         }
         contentContainerStyle={styles.listContent}
       />
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

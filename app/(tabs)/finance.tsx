@@ -14,9 +14,9 @@ import { PledgeCard } from '@/components/ui/PledgeCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { AnimatedProgressRing } from '@/components/ui/AnimatedProgressRing';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useDonationsQuery, usePledgesQuery } from '@/hooks/queries/useFinance';
 import { Gradients } from '@/constants/theme';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 export default function FinanceScreen() {
   const { colors, typography, radius } = useTheme();
@@ -39,10 +39,6 @@ export default function FinanceScreen() {
   const totalPledges = pledges.length;
   const paidFraction = totalPledges > 0 ? `${paidPledges.length}/${totalPledges}` : '0/0';
   const paidPercentage = totalPledges > 0 ? Math.round((paidPledges.length / totalPledges) * 100) : 0;
-
-  if (loading) {
-    return <LoadingSpinner fullScreen />;
-  }
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
@@ -213,6 +209,7 @@ export default function FinanceScreen() {
           )}
         </View>
       </ScrollView>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

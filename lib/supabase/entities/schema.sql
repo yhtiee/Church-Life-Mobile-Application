@@ -1,5 +1,6 @@
--- Enable UUID extension
+-- Enable UUID and pg_net extensions
 create extension if not exists "uuid-ossp";
+create extension if not exists pg_net;
 
 -- 1. Parishes Table
 create table public.parishes (
@@ -251,12 +252,24 @@ alter table public.profiles add column if not exists push_token text;
 -- Create helper function to invoke Edge Function
 create or replace function public.on_notification_inserted()
 returns trigger as $$
+declare
+  req_headers text;
+  auth_header text := '';
 begin
+  req_headers := current_setting('request.headers', true);
+  if req_headers is not null and req_headers <> '' then
+    begin
+      auth_header := req_headers::json->>'authorization';
+    exception when others then
+      auth_header := '';
+    end;
+  end if;
+
   perform net.http_post(
-    url := 'https://<your-project-ref>.supabase.co/functions/v1/send-push',
+    url := 'https://eivpztqeitqsmykxlwuh.supabase.co/functions/v1/send-push',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || auth.jwt()
+      'Authorization', coalesce(auth_header, '')
     ),
     body := jsonb_build_object('record', row_to_json(new))
   );

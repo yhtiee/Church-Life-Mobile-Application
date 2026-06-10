@@ -14,8 +14,8 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { PARISH_HISTORY, MASS_TIMES, getDailyVerse } from '@/constants/mockData';
 import { AnnoucementService } from '@/lib/supabase/services/announcements';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Gradients } from '@/constants/theme';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -156,9 +156,7 @@ export default function HomeScreen() {
     setHeroIndex(idx);
   };
 
-  if (loading) {
-    return <LoadingSpinner fullScreen />;
-  }
+
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
@@ -460,6 +458,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

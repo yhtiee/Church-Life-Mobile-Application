@@ -14,7 +14,7 @@ import { Gradients } from '@/constants/theme';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { AuthService } from '@/lib/supabase/services/auth';
 
 export default function MemberDetailModal() {
@@ -58,18 +58,7 @@ export default function MemberDetailModal() {
     };
   }, [id]);
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title="Member Profile" />
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <LoadingSpinner size="large" />
-        </View>
-      </ScreenWrapper>
-    );
-  }
-
-  if (!member) {
+  if (!loading && !member) {
     return (
       <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title="Member Profile" />
@@ -111,21 +100,23 @@ export default function MemberDetailModal() {
             <View style={styles.heroContent}>
               <Animated.View entering={ZoomIn.springify().damping(12)}>
                 <Avatar
-                  name={member.fullName}
+                  name={member?.fullName || ''}
                   size={96}
                   ring={primaryGroupColor}
                 />
               </Animated.View>
               <Text style={[styles.fullName, { color: '#FFFFFF', fontFamily: typography.fontFamily.bold, marginTop: 14 }]}>
-                {member.fullName}
+                {member?.fullName || ''}
               </Text>
               <View style={styles.badgeRow}>
-                <Badge 
-                  label={member.status} 
-                  variant={member.status === 'Active' ? 'success' : 'warning'} 
-                  size="sm" 
-                  glow 
-                />
+                {member?.status ? (
+                  <Badge 
+                    label={member.status} 
+                    variant={member.status === 'Active' ? 'success' : 'warning'} 
+                    size="sm" 
+                    glow 
+                  />
+                ) : null}
                 {joinedGroups.map((g) => {
                   const meta = getGroupMetadata(g.name);
                   return (
@@ -164,9 +155,9 @@ export default function MemberDetailModal() {
             Personal Details
           </Text>
           <Card elevation="sm" style={{ padding: 0, overflow: 'hidden', borderRadius: radius.lg }}>
-            <InfoRow label="Baptismal Name" value={member.baptismalName || 'N/A'} icon="person-outline" />
-            <InfoRow label="Email Address" value={member.email} icon="mail-outline" />
-            <InfoRow label="Phone Number" value={member.phone} icon="call-outline" isLast />
+            <InfoRow label="Baptismal Name" value={member?.baptismalName || 'N/A'} icon="person-outline" />
+            <InfoRow label="Email Address" value={member?.email || ''} icon="mail-outline" />
+            <InfoRow label="Phone Number" value={member?.phone || ''} icon="call-outline" isLast />
           </Card>
         </Animated.View>
 
@@ -177,8 +168,8 @@ export default function MemberDetailModal() {
           </Text>
           <Card elevation="sm" style={{ padding: 0, overflow: 'hidden', borderRadius: radius.lg }}>
             <InfoRow label="Parish Group" value={joinedGroups.map((g) => g.name).join(', ') || 'Unassigned'} icon="people-outline" />
-            <InfoRow label="Baptism Date" value={member.baptismDate || 'Not recorded'} icon="water-outline" />
-            <InfoRow label="Confirmation" value={member.confirmationDate || 'Not recorded'} icon="flame-outline" isLast />
+            <InfoRow label="Baptism Date" value={member?.baptismDate || 'Not recorded'} icon="water-outline" />
+            <InfoRow label="Confirmation" value={member?.confirmationDate || 'Not recorded'} icon="flame-outline" isLast />
           </Card>
         </Animated.View>
 
@@ -191,6 +182,7 @@ export default function MemberDetailModal() {
       >
         <Ionicons name="create" size={24} color="#FFFFFF" />
       </TouchableOpacity>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

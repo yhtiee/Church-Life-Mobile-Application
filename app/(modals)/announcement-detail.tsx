@@ -9,7 +9,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Badge } from '@/components/ui/Badge';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 import { useAnnouncementQuery } from '@/hooks/queries/useAnnouncements';
 import { Announcement } from '@/constants/mockData';
 import { Gradients } from '@/constants/theme';
@@ -28,18 +28,7 @@ export default function AnnouncementDetailScreen() {
 
   const { data: announcement = null, isLoading: loading } = useAnnouncementQuery(id || '');
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title="Announcement" />
-        <View style={styles.loadingWrapper}>
-          <LoadingSpinner size="large" />
-        </View>
-      </ScreenWrapper>
-    );
-  }
-
-  if (!announcement) {
+  if (!loading && !announcement) {
     return (
       <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title="Announcement" />
@@ -52,7 +41,7 @@ export default function AnnouncementDetailScreen() {
     );
   }
 
-  const heroIndex = announcement.id
+  const heroIndex = announcement?.id
     ? announcement.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
     : 0;
   const heroImage = HERO_IMAGES[heroIndex % HERO_IMAGES.length];
@@ -75,13 +64,15 @@ export default function AnnouncementDetailScreen() {
           />
           <View style={styles.bannerContent}>
             <View style={styles.badges}>
-              <Badge label={announcement.category} variant="accent" size="sm" glow />
-              {announcement.important && (
+              {announcement?.category ? (
+                <Badge label={announcement.category} variant="accent" size="sm" glow />
+              ) : null}
+              {announcement?.important && (
                 <Badge label="Important" variant="danger" size="sm" glow />
               )}
             </View>
             <Text style={[styles.bannerTitle, { fontFamily: typography.fontFamily.extraBold }]}>
-              {announcement.title}
+              {announcement?.title || ''}
             </Text>
           </View>
         </Animated.View>
@@ -92,13 +83,13 @@ export default function AnnouncementDetailScreen() {
             <View style={styles.metaItem}>
               <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
               <Text style={[styles.metaText, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]}>
-                {announcement.date}
+                {announcement?.date || ''}
               </Text>
             </View>
             <View style={styles.metaItem}>
               <Ionicons name="person-outline" size={14} color={colors.textMuted} />
               <Text style={[styles.metaText, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]}>
-                By {announcement.author}
+                By {announcement?.author || ''}
               </Text>
             </View>
           </View>
@@ -106,11 +97,12 @@ export default function AnnouncementDetailScreen() {
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
 
           <Text style={[styles.bodyText, { color: colors.text, fontFamily: typography.fontFamily.regular }]}>
-            {announcement.body}
+            {announcement?.body || ''}
           </Text>
         </Animated.View>
 
       </ScrollView>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

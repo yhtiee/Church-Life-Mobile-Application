@@ -7,10 +7,10 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { ComunityService } from '@/lib/supabase/services/community';
 import { Avatar } from '@/components/ui/Avatar';
 import { EmptyState } from '@/components/ui/EmptyState';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 export default function GroupChatModal() {
   const { colors, typography, radius } = useTheme();
@@ -101,15 +101,6 @@ export default function GroupChatModal() {
     );
   };
 
-  if (loading) {
-    return (
-      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-        <ScreenHeader title={groupTitle} />
-        <LoadingSpinner fullScreen />
-      </ScreenWrapper>
-    );
-  }
-
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title={groupTitle} />
@@ -121,11 +112,13 @@ export default function GroupChatModal() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <EmptyState
-            icon="chatbubbles-outline"
-            title="No Messages"
-            message="There are no broadcasts or group messages in this channel yet."
-          />
+          loading ? null : (
+            <EmptyState
+              icon="chatbubbles-outline"
+              title="No Messages"
+              message="There are no broadcasts or group messages in this channel yet."
+            />
+          )
         }
       />
 
@@ -138,6 +131,7 @@ export default function GroupChatModal() {
           </Text>
         </View>
       </View>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }

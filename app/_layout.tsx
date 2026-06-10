@@ -10,7 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { FeedbackProvider } from '@/context/FeedbackContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 export const unstable_settings = { anchor: '(tabs)' };
 
@@ -30,17 +30,13 @@ function RootLayoutNav() {
       router.replace('/(auth)/welcome');
     } else if (isAuthenticated && inAuth) {
       // Check user role for redirection
-      if (user?.role === 'parish_admin') {
-        router.replace('/(admin)');
-      } else {
+      if (user?.role === 'member') {
         router.replace('/(tabs)');
+      } else {
+        router.replace('/(admin)');
       }
     }
   }, [isAuthenticated, isLoading, segments, user?.role]);
-
-  if (isLoading) {
-    return <LoadingSpinner fullScreen />;
-  }
 
   return (
     <NavThemeProvider value={resolvedMode === 'dark' ? DarkTheme : DefaultTheme}>
@@ -51,6 +47,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(modals)" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
+      <GlobalLoader visible={isLoading} />
     </NavThemeProvider>
   );
 }
