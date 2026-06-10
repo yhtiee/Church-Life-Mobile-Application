@@ -38,6 +38,14 @@ function RootLayoutNav() {
     }
   }, [isAuthenticated, isLoading, segments, user?.role]);
 
+  if (isLoading) {
+    return (
+      <NavThemeProvider value={resolvedMode === 'dark' ? DarkTheme : DefaultTheme}>
+        <GlobalLoader visible={true} />
+      </NavThemeProvider>
+    );
+  }
+
   return (
     <NavThemeProvider value={resolvedMode === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
@@ -47,7 +55,6 @@ function RootLayoutNav() {
         <Stack.Screen name="(modals)" options={{ headerShown: false, presentation: 'modal' }} />
       </Stack>
       <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
-      <GlobalLoader visible={isLoading} />
     </NavThemeProvider>
   );
 }

@@ -17,6 +17,8 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { PARISHES } from '@/constants/parishes';
 import { getGroupMetadata } from '@/constants/groups';
 import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
+import { useParishesQuery } from '@/hooks/queries/useParishes';
+import { supaBaseClient } from '@/lib/supabase/client';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -37,7 +39,15 @@ export default function RegisterScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    // Clear any stale local auth session on register mount
+    supaBaseClient.auth.signOut().catch((err) => {
+      console.log('Error clearing session on register mount:', err);
+    });
+  }, []);
+
   const { data: openGroups = [], isLoading: loadingGroups } = useOpenGroupsQuery();
+  const { data: parishes = [], isLoading: loadingParishes } = useParishesQuery()
 
   const progressAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
@@ -63,9 +73,10 @@ export default function RegisterScreen() {
   const [noParish, setNoParish] = useState(false);
   const [groupId, setGroupId] = useState<string | null>(null);
 
-  const parishOptions = PARISHES.map((p) => ({
+  const parishOptions = parishes.map((p) => ({
     label: p.name, value: p.id, subtitle: `${p.diocese} Diocese · ${p.country}`,
   }));
+
   const monthOptions = MONTHS.map((m) => ({ label: m, value: m }));
 
   const validateStep1 = () => {

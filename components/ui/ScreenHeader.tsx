@@ -121,7 +121,7 @@ export function ScreenHeader({
     >
       {/* Back button */}
       {
-        showBack && (
+        showBack? (
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={handleBack}
@@ -129,6 +129,8 @@ export function ScreenHeader({
           >
             <Ionicons name="chevron-back" size={22} color={colors.text} />
           </TouchableOpacity>
+        ) : (
+          <View style={{ width: 38 }} />
         )
       }
 
