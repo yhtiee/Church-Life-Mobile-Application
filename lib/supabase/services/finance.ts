@@ -118,6 +118,80 @@ export class FinanaceService {
   );
   
   /**
+   * Fetches all donations across the parish (admin view), with the donor's name attached.
+   */
+  async fetchAllDonations() {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .select('*, profiles:user_id(fullName)')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      return { data: data as (Donation & { user_id: string; profiles: { fullName: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching all donations:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches all donations filtered by parish (admin view for specific parish).
+   */
+  async fetchDonationsByParish(parishId: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .select('*, profiles:user_id(id, fullName, parishId)')
+        .eq('profiles.parishId', parishId)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      return { data: data as (Donation & { user_id: string; profiles: { fullName: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching donations for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches all pledges across the parish (admin view), with the pledger's name attached.
+   */
+  async fetchAllPledges() {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .select('*, profiles:user_id(fullName)')
+        .order('dueDate', { ascending: true });
+
+      if (error) throw error;
+      return { data: data as (Pledge & { user_id: string; profiles: { fullName: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching all pledges:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches all pledges filtered by parish (admin view for specific parish).
+   */
+  async fetchPledgesByParish(parishId: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .select('*, profiles:user_id(id, fullName, parishId)')
+        .eq('profiles.parishId', parishId)
+        .order('dueDate', { ascending: true });
+
+      if (error) throw error;
+      return { data: data as (Pledge & { user_id: string; profiles: { fullName: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching pledges for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
    * Updates a pledge (e.g. paying towards it, updating status).
    */
   async updatePledgeStatus(pledgeId: string, updates: Partial<Pledge>) {

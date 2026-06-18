@@ -23,7 +23,9 @@ export default function GroupsScreen() {
   const { data: groups = [], isLoading, refetch, isRefetching } = useGroupsQuery();
   const { mutateAsync: joinOpenGroup } = useJoinOpenGroupMutation();
 
-  const openGroups = groups.filter((g) => !g.is_secure);
+  // Separate groups by membership and type
+  const myGroups = groups.filter((g) => user?.id && g.member_ids?.includes(user.id));
+  const openGroups = groups.filter((g) => !g.is_secure && !(user?.id && g.member_ids?.includes(user.id)));
   const securedGroups = groups.filter((g) => g.is_secure);
 
   const handleJoinGroup = (group: any) => {
@@ -85,8 +87,72 @@ export default function GroupsScreen() {
           />
         }
       >
+        {/* ── My Groups Section ── */}
+        {!isLoading && myGroups.length > 0 && (
+          <Animated.View entering={FadeInDown.duration(400)}>
+            <View style={styles.myGroupsHeader}>
+              <View style={styles.myGroupsHeaderContent}>
+                <Ionicons name="checkmark-circle" size={18} color={colors.primary} />
+                <Text style={[styles.sectionLabel, { color: colors.primary, fontFamily: typography.fontFamily.bold, margin: 0, lineHeight: 18 }]}>
+                  My Groups
+                </Text>
+              </View>
+              <Text style={[styles.myGroupsCount, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
+                {myGroups.length}
+              </Text>
+            </View>
+
+            {myGroups.map((group, i) => {
+              const meta = getGroupMetadata(group.name);
+              return (
+                <Animated.View key={group.id} entering={FadeInDown.delay(i * 40).duration(350)}>
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/(modals)/group-chat',
+                        params: { groupId: group.id, groupName: group.name },
+                      })
+                    }
+                    style={[
+                      styles.groupRow,
+                      {
+                        backgroundColor: colors.primaryLight,
+                        borderColor: colors.primary,
+                        borderWidth: 2,
+                        borderRadius: radius.md,
+                        marginBottom: i < myGroups.length - 1 ? 10 : 16,
+                      },
+                    ]}
+                  >
+                    {/* Left — colored icon square */}
+                    <View style={[styles.groupIconBox, { backgroundColor: meta.color + '18' }]}>
+                      <Ionicons name={meta.icon as any} size={22} color={meta.color} />
+                    </View>
+
+                    {/* Middle — name & description */}
+                    <View style={styles.groupMeta}>
+                      <Text style={[styles.groupName, { color: colors.text, fontFamily: typography.fontFamily.bold }]} numberOfLines={2}>
+                        {group.name}
+                      </Text>
+                      <Text style={[styles.groupDesc, { color: colors.textMuted, fontFamily: typography.fontFamily.regular }]} numberOfLines={1}>
+                        {group.description}
+                      </Text>
+                    </View>
+
+                    {/* Right — Clickable hint (arrow) */}
+                    <View style={styles.clickHintContainer}>
+                      <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                    </View>
+                  </TouchableOpacity>
+                </Animated.View>
+              );
+            })}
+          </Animated.View>
+        )}
+
         {/* ── Open Groups section label ── */}
-        <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
+        <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold, marginTop: myGroups.length > 0 ? 24 : 0 }]}>
           Open Groups
         </Text>
 
@@ -107,7 +173,6 @@ export default function GroupsScreen() {
           </View>
         ) : (
           openGroups.map((group, i) => {
-            const isMyGroup = user?.id ? group.member_ids?.includes(user.id) : false;
             const isLast = i === openGroups.length - 1;
             const meta = getGroupMetadata(group.name);
 
@@ -115,22 +180,12 @@ export default function GroupsScreen() {
               <Animated.View key={group.id} entering={FadeInDown.delay(i * 60).duration(400)}>
                 <TouchableOpacity
                   activeOpacity={0.78}
-                  onPress={() => {
-                    if (isMyGroup) {
-                      router.push({
-                        pathname: '/(modals)/group-chat',
-                        params: { groupId: group.id, groupName: group.name },
-                      });
-                    } else {
-                      handleJoinGroup(group);
-                    }
-                  }}
+                  onPress={() => handleJoinGroup(group)}
                   style={[
                     styles.groupRow,
                     {
-                      backgroundColor: isMyGroup ? colors.primaryLight : colors.surface,
-                      borderColor: isMyGroup ? colors.primary : colors.border,
-                      borderWidth: isMyGroup ? 2 : 1,
+                      backgroundColor: colors.surface,
+                      borderColor: colors.border,
                       borderRadius: radius.md,
                       marginBottom: isLast ? 0 : 10,
                     },
@@ -151,21 +206,15 @@ export default function GroupsScreen() {
                     </Text>
                   </View>
 
-                  {/* Right — Joined / Join pill */}
-                  {isMyGroup ? (
-                    <View style={[styles.joinedPill, { backgroundColor: colors.primary, flexDirection: 'row', alignItems: 'center', gap: 4 }]}>
-                      <Ionicons name="checkmark-circle" size={14} color="#FFFFFF" />
-                      <Text style={[styles.joinedText, { color: '#FFFFFF', fontFamily: typography.fontFamily.semiBold }]}>
-                        Joined
-                      </Text>
-                    </View>
-                  ) : (
+                  {/* Right — Join action with clickable hint */}
+                  <View style={styles.actionHintContainer}>
                     <View style={[styles.joinPill, { backgroundColor: meta.color + '18', borderColor: meta.color + '40' }]}>
                       <Text style={[styles.joinText, { color: meta.color, fontFamily: typography.fontFamily.semiBold }]}>
                         Join
                       </Text>
                     </View>
-                  )}
+                    <Ionicons name="chevron-forward" size={16} color={colors.textMuted} style={styles.hintArrow} />
+                  </View>
                 </TouchableOpacity>
               </Animated.View>
             );
@@ -272,6 +321,25 @@ export default function GroupsScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 120 },
 
+  // ── My Groups Header ───────────────────────────────────────────────────────
+  myGroupsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  myGroupsHeaderContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    height: 24,
+  },
+  myGroupsCount: {
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
   // ── Header action ──────────────────────────────────────────────────────────
   createBtn: {
     flexDirection: 'row',
@@ -322,7 +390,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Join / Joined pills
+  // Join / Joined pills & clickable hints
   joinedPill: {
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -341,6 +409,18 @@ const styles = StyleSheet.create({
   },
   joinText: {
     fontSize: 12,
+  },
+  actionHintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clickHintContainer: {
+    marginLeft: 4,
+    flexShrink: 0,
+  },
+  hintArrow: {
+    opacity: 0.5,
   },
 
   // ── My Group expanded detail blocks ───────────────────────────────────────

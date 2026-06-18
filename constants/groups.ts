@@ -95,26 +95,26 @@ export const ALL_GROUPS = [...OPEN_GROUPS, ...SECURED_GROUPS];
 export function getGroupMetadata(groupName: string) {
   const name = groupName.toLowerCase();
   if (name.includes('men')) {
-    return { shortName: 'CMO', icon: 'man-outline', color: '#1D3557' };
+    return { shortName: 'CMO', icon: 'man-outline', color: '#1D3557', name: name };
   }
   if (name.includes('women')) {
-    return { shortName: 'CWO', icon: 'woman-outline', color: '#3F51B5' };
+    return { shortName: 'CWO', icon: 'woman-outline', color: '#3F51B5', name: name };
   }
   if (name.includes('youth') || name.includes('cyon')) {
-    return { shortName: 'CYON', icon: 'people-outline', color: '#D4AF37' };
+    return { shortName: 'CYON', icon: 'people-outline', color: '#D4AF37', name: name };
   }
   if (name.includes('childhood') || name.includes('hca')) {
-    return { shortName: 'HCA', icon: 'star-outline', color: '#27AE60' };
+    return { shortName: 'HCA', icon: 'star-outline', color: '#27AE60', name: name };
   }
   if (name.includes('harvest')) {
-    return { shortName: 'Harvest', icon: 'leaf-outline', color: '#D4AF37' };
+    return { shortName: 'Harvest', icon: 'leaf-outline', color: '#D4AF37', name: name };
   }
   if (name.includes('finance')) {
-    return { shortName: 'Finance', icon: 'cash-outline', color: '#1D3557' };
+    return { shortName: 'Finance', icon: 'cash-outline', color: '#1D3557', name: name };
   }
   if (name.includes('laity')) {
-    return { shortName: 'Laity', icon: 'shield-outline', color: '#3F51B5' };
+    return { shortName: 'Laity', icon: 'shield-outline', color: '#3F51B5', name: name };
   }
   // Default fallback if no match found
-  return { shortName: groupName.substring(0, 5), icon: 'people-outline', color: '#1D3557' };
+  return { shortName: groupName.substring(0, 5), icon: 'people-outline', color: '#1D3557', name: name };
 }

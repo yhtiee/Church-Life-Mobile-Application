@@ -22,7 +22,6 @@ type TabConfig = {
 const TABS: TabConfig[] = [
   { name: 'index',               title: 'Home',          icon: 'home-outline',          iconFocused: 'home' },
   { name: 'groups',              title: 'Community',     icon: 'people-outline',        iconFocused: 'people' },
-  { name: 'quick-action',        title: 'Donate',        icon: 'add',                   iconFocused: 'add',          isSpecial: true, routeTo: '/(modals)/donate' },
   { name: 'bible',               title: 'Bible',         icon: 'book-outline',          iconFocused: 'book' },
   { name: 'profile',             title: 'Profile',       icon: 'person-outline',        iconFocused: 'person' },
 ];
@@ -32,13 +31,11 @@ function AnimatedTabIcon({
   size,
   color,
   focused,
-  isSpecial,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   size: number;
   color: string;
   focused: boolean;
-  isSpecial?: boolean;
 }) {
   const { colors } = useTheme();
   const scale = useSharedValue(1);
@@ -50,20 +47,6 @@ function AnimatedTabIcon({
     scale.value = withSpring(1.15, Animation.springBounce);
   } else {
     scale.value = withSpring(1, Animation.spring);
-  }
-
-  if (isSpecial && name === 'add') {
-    return (
-      <Animated.View
-        style={[
-          animStyle,
-          styles.centerButton,
-          { backgroundColor: colors.primary },
-        ]}
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </Animated.View>
-    );
   }
 
   return (
@@ -132,26 +115,16 @@ export default function TabsLayout() {
                 size={24}
                 color={color}
                 focused={focused}
-                isSpecial={tab.isSpecial}
               />
             ),
           }}
-          listeners={
-            tab.isSpecial && tab.routeTo
-              ? () => ({
-                  tabPress: (e) => {
-                    e.preventDefault();
-                    router.push(tab.routeTo as any);
-                  },
-                })
-              : undefined
-          }
         />
       ))}
 
       {/* Hidden tabs — not shown in nav bar */}
       <Tabs.Screen name="finance" options={{ href: null }} />
       <Tabs.Screen name="notifications-dummy" options={{ href: null }} />
+      <Tabs.Screen name="quick-action" options={{ href: null }} />
     </Tabs>
   );
 }

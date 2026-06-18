@@ -1,21 +1,27 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { ACTIVE_CAMPAIGN } from '@/constants/mockData';
 
-export function CampaignHero() {
+interface CampaignHeroProps {
+  title: string;
+  goal: number;
+  raised: number;
+  contributors: number;
+}
+
+export function CampaignHero({ title, goal, raised, contributors }: CampaignHeroProps) {
   const { colors, typography, radius } = useTheme();
 
-  const percentage = Math.min((ACTIVE_CAMPAIGN.raised / ACTIVE_CAMPAIGN.goal) * 100, 100);
-  const formattedRaised = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(ACTIVE_CAMPAIGN.raised);
-  const formattedGoal = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(ACTIVE_CAMPAIGN.goal);
+  const percentage = goal > 0 ? Math.min((raised / goal) * 100, 100) : 0;
+  const formattedRaised = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(raised);
+  const formattedGoal = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 }).format(goal);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
       <Text style={[styles.label, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
-        {ACTIVE_CAMPAIGN.title.toUpperCase()}
+        {title.toUpperCase()}
       </Text>
-      
+
       <View style={styles.amountRow}>
         <Text style={[styles.raised, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
           {formattedRaised}
@@ -34,7 +40,7 @@ export function CampaignHero() {
           {percentage.toFixed(0)}% reached
         </Text>
         <Text style={[styles.statText, { color: colors.textSecondary, fontFamily: typography.fontFamily.medium }]}>
-          {ACTIVE_CAMPAIGN.contributors} Contributors
+          {contributors} Contributors
         </Text>
       </View>
     </View>

@@ -15,3 +15,26 @@ export function useMassBookingsQuery(userId: string) {
     enabled: !!userId,
   });
 }
+
+export function useAllMassBookingsQuery() {
+  return useQuery({
+    queryKey: [QUERY_KEYS.massBookings('all')],
+    queryFn: async () => {
+      const res = await massService.fetchAllMassBookings();
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+  });
+}
+
+export function useMassBookingsByParishQuery(parishId: string) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.massBookings('all'), parishId],
+    queryFn: async () => {
+      const res = await massService.fetchMassBookingsByParish(parishId);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!parishId,
+  });
+}

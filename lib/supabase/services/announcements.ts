@@ -27,6 +27,31 @@ export class AnnoucementService {
       return { data: null, error };
     }
   }
+
+  /**
+   * Fetches announcements filtered by parish (admin view for specific parish).
+   */
+  async fetchAnnouncementsByParish(parishId: string, importantOnly: boolean = false) {
+    try {
+      let query = supaBaseClient
+        .from('announcements')
+        .select('*')
+        // .eq('parishId', parishId) to do
+        .order('date', { ascending: false });
+  
+      if (importantOnly) {
+        query = query.eq('important', true);
+      }
+  
+      const { data, error } = await query;
+  
+      if (error) throw error;
+      return { data: data as Announcement[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching announcements for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
   
   /**
    * Fetches an announcement by its ID.
@@ -68,6 +93,44 @@ export class AnnoucementService {
     } catch (error: any) {
       console.error('Error creating announcement:', error.message || error);
       return { data: null, error };
+    }
+  }
+
+  /**
+   * Updates an existing announcement.
+   */
+  async updateAnnouncement(id: string, updates: Partial<Announcement>) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('announcements')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Announcement, error: null };
+    } catch (error: any) {
+      console.error(`Error updating announcement (${id}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Deletes an announcement by its ID.
+   */
+  async deleteAnnouncement(id: string) {
+    try {
+      const { error } = await supaBaseClient
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { error: null };
+    } catch (error: any) {
+      console.error(`Error deleting announcement (${id}):`, error.message || error);
+      return { error };
     }
   }
 }

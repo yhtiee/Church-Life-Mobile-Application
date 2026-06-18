@@ -54,6 +54,43 @@ export class MassService {
   }
 
   /**
+   * Fetches all mass bookings (admin only)
+   */
+  async fetchAllMassBookings() {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('mass_bookings')
+        .select('*')
+        .order('createdAt', { ascending: false });
+
+      if (error) throw error;
+      return { data: data as DatabaseMassBooking[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching all mass bookings:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches all mass bookings filtered by parish (admin view for specific parish).
+   */
+  async fetchMassBookingsByParish(parishId: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('mass_bookings')
+        .select('*, profiles:user_id(id, fullName, parishId)')
+        .eq('profiles.parishId', parishId)
+        .order('createdAt', { ascending: false });
+
+      if (error) throw error;
+      return { data: data as DatabaseMassBooking[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching mass bookings for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
    * Deletes a mass booking intention.
    */
   async deleteMassBooking(bookingId: string) {

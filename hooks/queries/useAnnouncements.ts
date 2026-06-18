@@ -15,6 +15,18 @@ export function useAnnouncementsQuery(importantOnly: boolean = false) {
   });
 }
 
+export function useAnnouncementsByParishQuery(parishId: string, importantOnly: boolean = false) {
+  return useQuery({
+    queryKey: [QUERY_KEYS.announcements(importantOnly), parishId],
+    queryFn: async () => {
+      const res = await announcementService.fetchAnnouncementsByParish(parishId, importantOnly);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!parishId,
+  });
+}
+
 export function useAnnouncementQuery(id: string) {
   return useQuery({
     queryKey: QUERY_KEYS.announcement(id),

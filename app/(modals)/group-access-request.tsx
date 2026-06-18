@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, ZoomIn, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
@@ -13,16 +14,53 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { ALL_GROUPS } from '@/constants/groups';
 import { Gradients } from '@/constants/theme';
+import { ActivityService } from '@/lib/supabase/services/activity';
+import { useAlert } from '@/context/FeedbackContext';
 
 export default function GroupAccessRequestScreen() {
   const { groupId } = useLocalSearchParams<{ groupId: string }>();
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+  const { showAlert } = useAlert();
 
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const group = ALL_GROUPS.find((g) => g.id === groupId) ?? ALL_GROUPS[0];
+
+  const handleSubmitRequest = async () => {
+    if (!user?.id) {
+      showAlert({ title: 'Error', message: 'User not authenticated', type: 'error' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const activityService = new ActivityService();
+      const { error } = await activityService.logGroupJoinRequest(
+        user.id,
+        groupId || '',
+        group.name
+      );
+
+      if (error) {
+        showAlert({ title: 'Failed', message: 'Failed to submit request. Please try again.', type: 'error' });
+        console.error('Activity logging error:', error);
+        setLoading(false);
+        return;
+      }
+
+      showAlert({ title: 'Success', message: 'Request sent successfully!', type: 'success' });
+      setSubmitted(true);
+    } catch (err) {
+      showAlert({ title: 'Error', message: 'An error occurred. Please try again.', type: 'error' });
+      console.error('Submit request error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Lock shake animation on mount
   const lockRotation = useSharedValue(0);
@@ -178,10 +216,10 @@ export default function GroupAccessRequestScreen() {
         <Animated.View entering={FadeInDown.delay(300).duration(450)}>
           <Button
             label="Submit Request"
-            onPress={() => setSubmitted(true)}
+            onPress={handleSubmitRequest}
             fullWidth
             size="lg"
-            disabled={!reason.trim()}
+            disabled={!reason.trim() || loading}
             style={{ marginTop: 8 }}
           />
           <Button

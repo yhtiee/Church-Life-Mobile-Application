@@ -32,12 +32,12 @@ export function AdminSearchBar({ value, onChangeText, onFilterPress, placeholder
         )}
       </View>
       
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={[styles.filterBtn, { backgroundColor: colors.primaryLight, borderRadius: radius.md }]}
         onPress={onFilterPress}
       >
         <Ionicons name="options-outline" size={20} color={colors.primary} />
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 }

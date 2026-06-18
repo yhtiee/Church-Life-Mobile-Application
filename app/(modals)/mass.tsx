@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import GlobalLoader from '@/components/ui/GlobalLoader';
+import { ActivityService } from '@/lib/supabase/services/activity';
 
 interface MassBooking {
   id: string;
@@ -295,6 +296,22 @@ export default function MassScheduleScreen() {
     }
 
     setBookingModalVisible(false);
+
+    // Log mass booking activity
+    if (user?.id && finalBooking.id) {
+      try {
+        const activityService = new ActivityService();
+        await activityService.logMassBooking(
+          user.id,
+          finalBooking.id,
+          formattedDate,
+          selectedTime,
+          intentionDetails.trim()
+        );
+      } catch (err) {
+        console.error('Error logging mass booking activity:', err);
+      }
+    }
 
     // Show Custom Alert for Success
     showAlert({

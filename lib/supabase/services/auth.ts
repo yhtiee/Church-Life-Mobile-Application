@@ -184,5 +184,23 @@ export class AuthService {
       return { data: null, error };
     }
   }
-}
 
+  /**
+   * Fetches profiles filtered by parish.
+   */
+  async fetchProfilesByParish(parishId: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('profiles')
+        .select('*')
+        .eq('parishId', parishId)
+        .order('fullName', { ascending: true });
+  
+      if (error) throw error;
+      return { data: data as AuthUser[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching profiles for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+}

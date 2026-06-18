@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn, useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
+import { useAlert } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
@@ -13,15 +14,52 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { getGroupMetadata } from '@/constants/groups';
 import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
+import { ActivityService } from '@/lib/supabase/services/activity';
 
 export default function GroupTransitionRequestScreen() {
   const { colors, typography, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
+  const { showAlert } = useAlert();
 
   const [targetGroupId, setTargetGroupId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmitTransition = async () => {
+    if (!user?.id || !targetGroupId || !currentGroup?.id) {
+      showAlert({ title: 'Error', message: 'Invalid request. Please try again.', type: 'error' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const activityService = new ActivityService();
+      const { error } = await activityService.logGroupTransitionRequest(
+        user.id,
+        currentGroup.id,
+        targetGroupId,
+        currentGroupMeta?.name,
+        targetGroupMeta?.name
+      );
+
+      if (error) {
+        showAlert({ title: 'Failed', message: 'Failed to submit transition request. Please try again.', type: 'error' });
+        console.error('Activity logging error:', error);
+        setLoading(false);
+        return;
+      }
+
+      showAlert({ title: 'Success', message: 'Transition request submitted!', type: 'success' });
+      setSubmitted(true);
+    } catch (err) {
+      showAlert({ title: 'Error', message: 'An error occurred. Please try again.', type: 'error' });
+      console.error('Submit transition error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const { data: groups = [] } = useOpenGroupsQuery();
 
@@ -170,10 +208,10 @@ export default function GroupTransitionRequestScreen() {
         <Animated.View entering={FadeInDown.delay(300).duration(450)} style={styles.actions}>
           <Button
             label="Submit Request"
-            onPress={() => setSubmitted(true)}
+            onPress={handleSubmitTransition}
             fullWidth
             size="lg"
-            disabled={!targetGroupId || !reason.trim()}
+            disabled={!targetGroupId || !reason.trim() || loading}
             style={{ marginBottom: 12 }}
           />
           <Button

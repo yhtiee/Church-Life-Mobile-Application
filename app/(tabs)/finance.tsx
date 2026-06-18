@@ -78,7 +78,7 @@ export default function FinanceScreen() {
             </Text>
 
             {/* Quick donate button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.donateQuickBtn}
               activeOpacity={0.85}
               onPress={() => router.push('/(modals)/donate')}
@@ -87,7 +87,7 @@ export default function FinanceScreen() {
               <Text style={[styles.donateQuickText, { fontFamily: typography.fontFamily.bold }]}>
                 Donate Now
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </LinearGradient>
         </Animated.View>
 
@@ -133,14 +133,14 @@ export default function FinanceScreen() {
               <Text style={[styles.kpiValue, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
                 {totalPledges - paidPledges.length}
               </Text>
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 onPress={() => router.push('/(modals)/new-pledge')}
                 style={[styles.kpiActionBtn, { backgroundColor: colors.warningBg }]}
               >
                 <Text style={[styles.kpiActionText, { color: colors.warning, fontFamily: typography.fontFamily.semiBold }]}>
                   + New Pledge
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
           </Animated.View>
         </View>

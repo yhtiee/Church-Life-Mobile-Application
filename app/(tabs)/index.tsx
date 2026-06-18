@@ -12,10 +12,14 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { PARISH_HISTORY, MASS_TIMES, getDailyVerse } from '@/constants/mockData';
+import { PARISH_HISTORY, MASS_TIMES } from '@/constants/mockData';
 import { AnnoucementService } from '@/lib/supabase/services/announcements';
+import { AdsService } from '@/lib/supabase/services/ads';
+import { BibleService } from '@/lib/supabase/services/bible';
 import { Gradients } from '@/constants/theme';
 import GlobalLoader from '@/components/ui/GlobalLoader';
+import AnnouncementCarousel from '@/components/ui/AnnouncementCarousel';
+import AdsCarousel from '@/components/ui/AdsCarousel';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -64,20 +68,20 @@ const FEATURE_SLIDES = [
 
 const QUICK_ACTIONS = [
   {
-    icon: 'cash-outline' as const,
-    label: 'Deposit',
-    bg: '#E8F0FE',
-    iconColor: '#2A6FDB',
-    gradient: Gradients.heroBlue,
-    route: '/(modals)/donate',
-  },
-  {
     icon: 'wallet-outline' as const,
     label: 'Finance',
     bg: '#FEF3C7',
     iconColor: '#D97706',
     gradient: Gradients.cardGold,
     route: '/(tabs)/finance',
+  },
+  {
+    icon: 'book-outline' as const,
+    label: 'Bible',
+    bg: '#E8F0FE',
+    iconColor: '#2A6FDB',
+    gradient: Gradients.heroBlue,
+    route: '/(tabs)/bible',
   },
   {
     icon: 'musical-notes-outline' as const,
@@ -103,11 +107,9 @@ export default function HomeScreen() {
   const { colors, typography, radius, isDark } = useTheme();
   const router = useRouter();
 
-  const dailyVerse = getDailyVerse();
-  const heroRef = useRef<FlatList>(null);
-  const [heroIndex, setHeroIndex] = useState(0);
-
+  const [dailyVerse, setDailyVerse] = useState<any>(null);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const hasAnnouncements = announcements && announcements.length > 0;
@@ -115,45 +117,67 @@ export default function HomeScreen() {
 
   useEffect(() => {
     let active = true;
-    const fetchAnnouncements = async () => {
+    const fetchData = async () => {
       try {
-        const service = new AnnoucementService();
-        const { data, error } = await service.fetchAnnouncements();
+        // Fetch announcements
+        const announcementService = new AnnoucementService();
+        const { data: announcementData, error: announcementError } = await announcementService.fetchAnnouncements();
         if (active) {
-          if (!error && data) {
-            setAnnouncements(data);
+          if (!announcementError && announcementData) {
+            setAnnouncements(announcementData);
           } else {
             setAnnouncements([]);
           }
         }
+
+        // Fetch ads
+        const adsService = new AdsService();
+        const { data: adsData, error: adsError } = await adsService.fetchActiveAds();
+        if (active) {
+          if (!adsError && adsData) {
+            setAds(adsData);
+          } else {
+            setAds([]);
+          }
+        }
+
+        // Fetch verse of the day
+        const bibleService = new BibleService();
+        const verse = await bibleService.getVerseOfDay();
+        if (active && verse) {
+          setDailyVerse(verse);
+        } else if (active) {
+          // Fallback if daily verse fails
+          const randomVerse = await bibleService.getRandomVerse();
+          setDailyVerse(randomVerse);
+        }
       } catch (err) {
-        console.error('Failed to load announcements:', err);
-        if (active) setAnnouncements([]);
+        console.error('Failed to load data:', err);
+        if (active) {
+          setAnnouncements([]);
+          setAds([]);
+        }
       } finally {
         if (active) setLoading(false);
       }
     };
-    fetchAnnouncements();
+    fetchData();
     return () => {
       active = false;
     };
   }, []);
 
-  useEffect(() => {
-    if (carouselData.length <= 1) return;
-    const timer = setInterval(() => {
-      setHeroIndex((prev) => {
-        const next = (prev + 1) % carouselData.length;
-        heroRef.current?.scrollToIndex({ index: next, animated: true });
-        return next;
+  const handleCarouselSelect = (item: any) => {
+    if ('important' in item) {
+      // Announcement
+      router.push({
+        pathname: '/(modals)/announcement-detail',
+        params: { id: item.id },
       });
-    }, 4500);
-    return () => clearInterval(timer);
-  }, [carouselData.length]);
-
-  const onHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-    setHeroIndex(idx);
+    } else {
+      // Feature
+      router.push(item.route);
+    }
   };
 
 
@@ -196,8 +220,24 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </Animated.View>
 
+        {/* ── Announcements Carousel ── */}
+        <AnnouncementCarousel
+          data={carouselData}
+          heroImages={HERO_IMAGES}
+          onSelect={handleCarouselSelect}
+          loading={loading}
+          showHeader={true}
+          headerTitle={hasAnnouncements ? 'Announcements' : 'Explore ChurchLife'}
+          onSeeAll={hasAnnouncements ? () => router.push('/(modals)/announcements') : undefined}
+          animationDelay={220}
+          isFeatures={!hasAnnouncements}
+        />
+
         {/* ── Quick Actions ── */}
-        <Animated.View entering={FadeInDown.delay(140).duration(400)}>
+        <Animated.View 
+          entering={FadeInDown.delay(140).duration(400)}
+          style={styles.quickActionSection}
+        >
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
               Quick Access
@@ -234,155 +274,17 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* ── Announcements Carousel ── */}
-        <Animated.View
-          entering={FadeInDown.delay(220).duration(450)}
-          style={styles.section}
-        >
-          {/* Section header */}
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-              {hasAnnouncements ? 'Announcements' : 'Explore ChurchLife'}
-            </Text>
-            {hasAnnouncements && (
-              <TouchableOpacity onPress={() => router.push('/(modals)/announcements')}>
-                <Text style={[styles.seeAll, { color: colors.primary, fontFamily: typography.fontFamily.semiBold }]}>
-                  See All →
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Full-width carousel */}
-          <View style={styles.carouselWrapper}>
-            <FlatList
-              ref={heroRef}
-              data={carouselData}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id}
-              onScroll={onHeroScroll}
-              scrollEventThrottle={16}
-              decelerationRate="fast"
-              snapToAlignment="center"
-              renderItem={({ item, index }) => {
-                const isAnnouncement = 'important' in item;
-                const imageSource = isAnnouncement
-                  ? HERO_IMAGES[index % HERO_IMAGES.length]
-                  : (item as any).image;
-
-                const handlePress = () => {
-                  if (isAnnouncement) {
-                    router.push({
-                      pathname: '/(modals)/announcement-detail',
-                      params: { id: item.id },
-                    });
-                  } else {
-                    router.push((item as any).route);
-                  }
-                };
-
-                return (
-                  <TouchableOpacity
-                    activeOpacity={0.95}
-                    onPress={handlePress}
-                    style={styles.carouselSlide}
-                  >
-                    {/* Background image */}
-                    <Image
-                      source={imageSource}
-                      style={StyleSheet.absoluteFillObject}
-                      contentFit="cover"
-                    />
-                    {/* Dark gradient overlay */}
-                    <LinearGradient
-                      colors={Gradients.overlayDark as any}
-                      style={StyleSheet.absoluteFillObject}
-                    />
-
-                    {/* Content overlay */}
-                    <View style={styles.carouselContent}>
-                      {/* Category chip */}
-                      <View
-                        style={[
-                          styles.categoryChip,
-                          {
-                            backgroundColor: isAnnouncement
-                              ? (item.important ? 'rgba(212,175,55,0.85)' : 'rgba(42,111,219,0.85)')
-                              : 'rgba(124,58,237,0.85)',
-                          },
-                        ]}
-                      >
-                        <Text style={[styles.categoryText, { fontFamily: typography.fontFamily.bold }]}>
-                          {isAnnouncement
-                            ? (item.important ? '★ Important' : item.category)
-                            : (item as any).tag}
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={[
-                          styles.carouselTitle,
-                          { fontFamily: typography.fontFamily.extraBold },
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {item.title}
-                      </Text>
-                      <Text
-                        style={[
-                          styles.carouselBody,
-                          { fontFamily: typography.fontFamily.regular },
-                        ]}
-                        numberOfLines={2}
-                      >
-                        {item.body}
-                      </Text>
-
-                      <View style={styles.carouselFooter}>
-                        {isAnnouncement ? (
-                          <>
-                            <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.70)" />
-                            <Text style={[styles.carouselDate, { fontFamily: typography.fontFamily.medium }]}>
-                              {item.date}
-                            </Text>
-                            <Text style={[styles.carouselAuthor, { fontFamily: typography.fontFamily.regular }]}>
-                              · {item.author}
-                            </Text>
-                          </>
-                        ) : (
-                          <>
-                            <Ionicons name="arrow-forward-circle-outline" size={14} color="#D4AF37" />
-                            <Text style={[styles.carouselDate, { color: '#D4AF37', fontFamily: typography.fontFamily.bold }]}>
-                              Explore Feature
-                            </Text>
-                          </>
-                        )}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                );
-              }}
-            />
-
-            {/* Dot indicators */}
-            <View style={styles.dotRow}>
-              {carouselData.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    {
-                      backgroundColor: i === heroIndex ? colors.primary : colors.border,
-                      width: i === heroIndex ? 20 : 6,
-                    },
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-        </Animated.View>
+        {/* ── Ads Carousel ── */}
+        <AdsCarousel
+          data={ads}
+          onSelect={(item) => {
+            if (item.cta_url) {
+              router.push(item.cta_url as any);
+            }
+          }}
+          loading={loading}
+          animationDelay={220}
+        />
 
         {/* ── Two-column: Parish & Bible ── */}
         <Animated.View
@@ -449,10 +351,10 @@ export default function HomeScreen() {
                 Daily Word
               </Text>
               <Text style={[styles.halfCardTitle, { fontFamily: typography.fontFamily.bold }]} numberOfLines={3}>
-                {`"${dailyVerse.text.substring(0, 80)}..."`}
+                {dailyVerse ? `"${dailyVerse.text.substring(0, 80)}..."` : 'Loading verse...'}
               </Text>
               <Text style={[styles.halfCardLink, { fontFamily: typography.fontFamily.semiBold }]}>
-                {dailyVerse.reference} →
+                {dailyVerse ? `${dailyVerse.reference} →` : 'Bible'}
               </Text>
             </View>
           </TouchableOpacity>
@@ -486,6 +388,9 @@ const styles = StyleSheet.create({
   // Section
   section: {
     marginBottom: 4,
+  },
+  quickActionSection: {
+    marginBottom: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -527,72 +432,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     letterSpacing: 0.1,
     textAlign: 'center',
-  },
-
-  // Carousel
-  carouselWrapper: {},
-  carouselSlide: {
-    width: SCREEN_WIDTH,
-    height: 240,
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  carouselContent: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  categoryChip: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    marginBottom: 8,
-  },
-  categoryText: {
-    fontSize: 11,
-    color: '#FFFFFF',
-    letterSpacing: 0.4,
-  },
-  carouselTitle: {
-    fontSize: 20,
-    color: '#FFFFFF',
-    lineHeight: 26,
-    marginBottom: 6,
-  },
-  carouselBody: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.78)',
-    lineHeight: 19,
-    marginBottom: 10,
-  },
-  carouselFooter: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  carouselDate: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.70)',
-  },
-  carouselAuthor: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.55)',
-  },
-  dotRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 5,
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  dot: {
-    height: 5,
-    borderRadius: 3,
   },
 
   // Two-column cards

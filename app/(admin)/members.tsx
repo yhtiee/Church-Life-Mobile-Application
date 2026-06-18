@@ -1,14 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, TouchableOpacity } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 import { MemberListItem } from '@/components/admin/MemberListItem';
 import { useRouter } from 'expo-router';
 import GlobalLoader from '@/components/ui/GlobalLoader';
-import { useAllProfilesQuery } from '@/hooks/queries/useProfiles';
-import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { useProfilesByParishQuery } from '@/hooks/queries/useProfiles';
+import { useGroupsByParishQuery } from '@/hooks/queries/useGroups';
 import { getGroupMetadata } from '@/constants/groups';
 
 type StatusTab = 'Active' | 'Pending' | 'Suspended';
@@ -16,12 +18,13 @@ type StatusTab = 'Active' | 'Pending' | 'Suspended';
 export default function MembersScreen() {
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<StatusTab>('Active');
 
-  const { data: rawMembers = [], isLoading: loadingProfiles } = useAllProfilesQuery();
-  const { data: groups = [], isLoading: loadingGroups } = useGroupsQuery();
+  const { data: rawMembers = [], isLoading: loadingProfiles } = useProfilesByParishQuery(user?.parishId as string);
+  const { data: groups = [], isLoading: loadingGroups } = useGroupsByParishQuery(user?.parishId as string);
 
   const loading = loadingProfiles || loadingGroups;
 
@@ -65,17 +68,19 @@ export default function MembersScreen() {
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
-      <ScreenHeader title="Parish Members" />
-      
+      <ScreenHeader title={`${user?.parishId ? 'Parish' : 'All'} Members`} />
+
       {/* ── Search & Filters ── */}
-      <AdminSearchBar 
-        value={search} 
-        onChangeText={setSearch} 
-        onFilterPress={() => Alert.alert('Filter', 'Advanced filtering coming soon.')}
-      />
+      <Animated.View entering={FadeInDown.delay(60).duration(400)}>
+        <AdminSearchBar
+          value={search}
+          onChangeText={setSearch}
+          onFilterPress={() => Alert.alert('Filter', 'Advanced filtering coming soon.')}
+        />
+      </Animated.View>
 
       {/* ── Segmented Tabs ── */}
-      <View style={[styles.tabsContainer, { backgroundColor: colors.surface }]}>
+      <Animated.View entering={FadeInDown.delay(120).duration(400)} style={[styles.tabsContainer, { backgroundColor: colors.surface }]}>
         <View style={[styles.tabsWrapper, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}>
           {(['Active', 'Pending', 'Suspended'] as StatusTab[]).map((tab) => {
             const isActive = activeTab === tab;
@@ -98,19 +103,21 @@ export default function MembersScreen() {
             );
           })}
         </View>
-      </View>
+      </Animated.View>
 
       {/* ── Members List ── */}
       <FlatList
         data={filteredMembers}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <MemberListItem 
-            item={item} 
-            onPress={() => router.push({ pathname: '/(modals)/member-detail', params: { id: item.id } })}
-            onMessage={() => handleMessage(item)}
-            onSuspend={() => handleSuspend(item)}
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40 + 160).duration(350)}>
+            <MemberListItem
+              item={item}
+              onPress={() => router.push({ pathname: '/(modals)/member-detail', params: { id: item.id } })}
+              onMessage={() => handleMessage(item)}
+              onSuspend={() => handleSuspend(item)}
+            />
+          </Animated.View>
         )}
         ListEmptyComponent={
           loading ? null : (

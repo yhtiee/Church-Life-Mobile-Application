@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
@@ -7,11 +7,29 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import { getDailyVerse } from '@/constants/mockData';
+import { BibleService } from '@/lib/supabase/services/bible';
 
 export default function BibleVerseScreen() {
   const { colors, typography, radius } = useTheme();
-  const verse = getDailyVerse();
+  const [verse, setVerse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchVerse = async () => {
+      try {
+        const bibleService = new BibleService();
+        const dailyVerse = await bibleService.getVerseOfDay();
+        if (dailyVerse) {
+          setVerse(dailyVerse);
+        }
+      } catch (err) {
+        console.error('Failed to load verse:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVerse();
+  }, []);
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
@@ -44,7 +62,7 @@ export default function BibleVerseScreen() {
               letterSpacing: 1.5,
               textTransform: 'uppercase',
             }}>
-              {verse.theme} · Daily Reading
+              {loading ? 'Loading...' : `${verse?.book || 'Bible'} · Daily Reading`}
             </Text>
           </View>
 
@@ -56,7 +74,7 @@ export default function BibleVerseScreen() {
             marginTop: 24,
             fontStyle: 'italic',
           }}>
-            {`“${verse.text}”`}
+            {loading ? 'Loading verse...' : `"${verse?.text || ''}"`}
           </Text>
 
           <View style={styles.divider} />
@@ -68,7 +86,7 @@ export default function BibleVerseScreen() {
             marginTop: 16,
             alignSelf: 'flex-end',
           }}>
-            — {verse.reference}
+            {loading ? '— Bible' : `— ${verse?.reference || 'Bible'}`}
           </Text>
         </Animated.View>
 

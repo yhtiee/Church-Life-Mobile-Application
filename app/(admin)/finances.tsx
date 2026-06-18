@@ -1,56 +1,115 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { CampaignHero } from '@/components/admin/CampaignHero';
 import { PledgeLedgerItem } from '@/components/admin/PledgeLedgerItem';
-import { MOCK_ADMIN_PLEDGES, MOCK_DONATIONS } from '@/constants/mockData';
+import { AdminPledge } from '@/constants/mockData';
+import { useDonationsByParishQuery, usePledgesByParishQuery } from '@/hooks/queries/useFinance';
+import GlobalLoader from '@/components/ui/GlobalLoader';
 
 type FinanceTab = 'Collections' | 'Pledges';
 
 export default function FinancesScreen() {
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab] = useState<FinanceTab>('Pledges');
+
+  const { data: donations = [], isLoading: loadingDonations } = useDonationsByParishQuery(user?.parishId as string);
+  const { data: pledges = [], isLoading: loadingPledges } = usePledgesByParishQuery(user?.parishId as string);
+
+  const loading = loadingDonations || loadingPledges;
+
+  const campaignStats = useMemo(() => {
+    const goal = pledges.reduce((sum, p) => sum + Number(p.targetAmount), 0);
+    const raised = pledges.reduce((sum, p) => sum + Number(p.paidAmount || 0), 0);
+    const contributors = new Set(pledges.map((p) => p.user_id)).size;
+    return { title: 'Active Pledges', goal, raised, contributors };
+  }, [pledges]);
+
+  const ledgerItems: AdminPledge[] = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return pledges.map((p) => {
+      const status: AdminPledge['status'] = p.isPaid
+        ? 'Paid'
+        : p.dueDate < today
+          ? 'Overdue'
+          : 'Pending';
+      return {
+        id: p.id,
+        name: `${p.profiles?.fullName ?? 'Unknown'} — ${p.title}`,
+        totalPledge: Number(p.targetAmount),
+        paidAmount: Number(p.paidAmount || 0),
+        status,
+      };
+    });
+  }, [pledges]);
 
   const renderCollections = () => (
     <View style={styles.tabContent}>
       <Text style={[styles.sectionTitle, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
         Recent Collections
       </Text>
-      {MOCK_DONATIONS.map((item) => (
-        <View key={item.id} style={[styles.donationItem, { borderBottomColor: colors.divider }]}>
-          <View style={styles.donationLeft}>
-            <Text style={[styles.donationDesc, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-              {item.description}
-            </Text>
-            <Text style={[styles.donationDate, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
-              {item.date} • {item.category}
-            </Text>
-          </View>
-          <Text style={[styles.donationAmount, { color: colors.success, fontFamily: typography.fontFamily.extraBold }]}>
-            +{item.currency}{item.amount.toLocaleString()}
-          </Text>
-        </View>
-      ))}
+      {donations.length === 0 ? (
+        <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.medium, fontSize: 13 }}>
+          No donations recorded yet.
+        </Text>
+      ) : (
+        donations.map((item, index) => (
+          <Animated.View key={item.id} entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(350)}>
+            <View style={[styles.donationItem, { borderBottomColor: colors.divider }]}>
+              <View style={styles.donationLeft}>
+                <Text style={[styles.donationDesc, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+                  {item.description}
+                </Text>
+                <Text style={[styles.donationDate, { color: colors.textMuted, fontFamily: typography.fontFamily.medium }]}>
+                  {item.profiles?.fullName ?? 'Unknown'} • {item.date} • {item.category}
+                </Text>
+              </View>
+              <Text style={[styles.donationAmount, { color: colors.success, fontFamily: typography.fontFamily.extraBold }]}>
+                +{item.currency}{Number(item.amount).toLocaleString()}
+              </Text>
+            </View>
+          </Animated.View>
+        ))
+      )}
     </View>
   );
 
   const renderPledges = () => (
     <View style={styles.tabContent}>
-      <CampaignHero />
+      <Animated.View entering={FadeInDown.delay(80).duration(400)}>
+        <CampaignHero
+          title={campaignStats.title}
+          goal={campaignStats.goal}
+          raised={campaignStats.raised}
+          contributors={campaignStats.contributors}
+        />
+      </Animated.View>
       <Text style={[styles.sectionTitle, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
         Pledge Ledger
       </Text>
-      <View style={[styles.ledgerCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
-        {MOCK_ADMIN_PLEDGES.map((item) => (
-          <PledgeLedgerItem key={item.id} item={item} />
-        ))}
-      </View>
+      {ledgerItems.length === 0 ? (
+        <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.medium, fontSize: 13 }}>
+          No pledges recorded yet.
+        </Text>
+      ) : (
+        <Animated.View
+          entering={FadeInDown.delay(140).duration(400)}
+          style={[styles.ledgerCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}
+        >
+          {ledgerItems.map((item) => (
+            <PledgeLedgerItem key={item.id} item={item} />
+          ))}
+        </Animated.View>
+      )}
     </View>
   );
 
@@ -59,7 +118,7 @@ export default function FinancesScreen() {
       <ScreenHeader title="Parish Finances" />
 
       {/* ── Segmented Tabs ── */}
-      <View style={[styles.tabsContainer, { backgroundColor: colors.surface }]}>
+      <Animated.View entering={FadeInDown.delay(40).duration(400)} style={[styles.tabsContainer, { backgroundColor: colors.surface }]}>
         <View style={[styles.tabsWrapper, { backgroundColor: colors.surfaceMuted, borderRadius: radius.md }]}>
           {(['Collections', 'Pledges'] as FinanceTab[]).map((tab) => {
             const isActive = activeTab === tab;
@@ -82,19 +141,20 @@ export default function FinancesScreen() {
             );
           })}
         </View>
-      </View>
+      </Animated.View>
 
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         {activeTab === 'Collections' ? renderCollections() : renderPledges()}
       </ScrollView>
 
       {/* ── Floating Add Button ── */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[styles.fab, { backgroundColor: colors.primary, borderRadius: radius.xl }]}
         onPress={() => router.push('/(modals)/log-donation')}
       >
         <Ionicons name="add" size={32} color="#FFFFFF" />
       </TouchableOpacity>
+      <GlobalLoader visible={loading} />
     </ScreenWrapper>
   );
 }
@@ -103,7 +163,6 @@ const styles = StyleSheet.create({
   tabsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 16,
-    // marginTop: 20,
     paddingTop: 20,
   },
   tabsWrapper: {
@@ -159,7 +218,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 30,
+    bottom: 150,
     right: 20,
     width: 64,
     height: 64,

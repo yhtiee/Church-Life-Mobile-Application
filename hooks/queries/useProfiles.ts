@@ -26,3 +26,19 @@ export function useAllProfilesQuery() {
     },
   });
 }
+
+/**
+ * Fetches all profiles filtered by parish (for parishioner selection dropdowns).
+ */
+export function useProfilesByParishQuery(parishId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.allProfiles(),
+    queryFn: async () => {
+      if (!parishId) return [];
+      const res = await authService.fetchProfilesByParish(parishId);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!parishId,
+  });
+}

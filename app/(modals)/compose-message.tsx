@@ -1,51 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
+import { useAlert } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { OPEN_GROUPS } from '@/constants/groups';
+import { MultiSelectDropdown } from '@/components/ui/MultiSelectDropdown';
+import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import GlobalLoader from '@/components/ui/GlobalLoader';
+import { ComunityService } from '@/lib/supabase/services/community';
+import { useQueryClient } from '@tanstack/react-query';
+import { QUERY_KEYS } from '@/constants/query-keys';
+
+const communityService = new ComunityService();
 
 export default function ComposeMessageModal() {
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+  const { showAlert } = useAlert();
+  const queryClient = useQueryClient();
 
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
   const [messageType, setMessageType] = useState<'Standard' | 'Urgent'>('Standard');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
+  const [sendingGroupId, setSendingGroupId] = useState<string | null>(null);
 
-  const handleToggleGroup = (groupId: string) => {
-    setSelectedGroups(prev => 
-      prev.includes(groupId) 
-        ? prev.filter(id => id !== groupId) 
-        : [...prev, groupId]
-    );
-  };
+  const { data: allGroups = [], isLoading: loadingGroups } = useGroupsQuery();
 
-  const handleSend = () => {
+  // Format groups for multi-select dropdown with full names and metadata
+  const groupOptions = useMemo(() => {
+    return allGroups.map(group => ({
+      label: group.name,
+      value: group.id,
+      subtitle: group.description || (group.is_secure ? 'Secured Group' : 'Open Group'),
+      icon: group.is_secure ? 'lock-closed' : 'people',
+      metadata: group,
+    }));
+  }, [allGroups]);
+
+  const handleSend = async () => {
     if (selectedGroups.length === 0 || !body.trim()) {
-      Alert.alert('Missing Info', 'Please select at least one group and type a message.');
+      showAlert({ 
+        title: 'Missing Info', 
+        message: 'Please select at least one group and type a message.',
+        type: 'error'
+      });
       return;
     }
-    Alert.alert('Success', 'Message broadcasted successfully!');
-    router.back();
+
+    try {
+      // Send message to each selected group
+      for (const groupId of selectedGroups) {
+        setSendingGroupId(groupId);
+        const messageData = {
+          groupId,
+          sender: user?.fullName || 'Admin',
+          senderRole: 'Admin' as const,
+          content: body,
+        };
+        
+        // Call service directly (no hooks inside loops!)
+        const res = await communityService.sendGroupMessage(groupId, messageData);
+        if (res.error) throw res.error;
+      }
+
+      // Invalidate caches after all messages sent
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups() });
+      selectedGroups.forEach(groupId => {
+        queryClient.invalidateQueries({ queryKey: ['groupMessages', groupId] });
+      });
+
+      showAlert({
+        title: 'Success',
+        message: `Message sent to ${selectedGroups.length} group${selectedGroups.length > 1 ? 's' : ''}`,
+        type: 'success'
+      });
+      
+      // Reset and go back
+      setSelectedGroups([]);
+      setSubject('');
+      setBody('');
+      setSendingGroupId(null);
+      router.back();
+    } catch (error: any) {
+      showAlert({
+        title: 'Error',
+        message: error?.message || 'Failed to send messages',
+        type: 'error'
+      });
+      setSendingGroupId(null);
+    }
   };
 
   const rightEl = (
     <TouchableOpacity
       onPress={handleSend}
+      disabled={sendingGroupId !== null || selectedGroups.length === 0}
       style={{
         width: 36,
         height: 36,
         borderRadius: 18,
-        backgroundColor: colors.primary,
+        backgroundColor: sendingGroupId !== null || selectedGroups.length === 0 ? colors.textMuted : colors.primary,
         alignItems: 'center',
         justifyContent: 'center',
+        opacity: sendingGroupId !== null || selectedGroups.length === 0 ? 0.5 : 1,
       }}
     >
       <Ionicons name="paper-plane" size={16} color="#FFFFFF" />
@@ -61,44 +126,16 @@ export default function ComposeMessageModal() {
       >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           
-          {/* ── Audience Selector (Recipient Pill Chips) ── */}
+          {/* ── Group Selection (Multi-Select Dropdown) ── */}
           <Animated.View entering={FadeInDown.duration(400)} style={styles.section}>
-            <Text style={[styles.label, { color: colors.textSecondary, fontFamily: typography.fontFamily.bold }]}>
-              Recipients *
-            </Text>
-            <View style={styles.recipientContainer}>
-              {OPEN_GROUPS.map((g) => {
-                const isSelected = selectedGroups.includes(g.id);
-                return (
-                  <TouchableOpacity
-                    key={g.id}
-                    onPress={() => handleToggleGroup(g.id)}
-                    activeOpacity={0.8}
-                    style={[
-                      styles.recipientPill,
-                      {
-                        backgroundColor: isSelected ? g.color : colors.surfaceMuted,
-                        borderColor: isSelected ? g.color : colors.border,
-                        borderRadius: radius.full,
-                      }
-                    ]}
-                  >
-                    <Ionicons 
-                      name={g.icon as any} 
-                      size={14} 
-                      color={isSelected ? '#FFFFFF' : colors.textSecondary} 
-                    />
-                    <Text style={{ 
-                      fontSize: 12, 
-                      fontFamily: typography.fontFamily.bold, 
-                      color: isSelected ? '#FFFFFF' : colors.textSecondary 
-                    }}>
-                      {g.shortName}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+            <MultiSelectDropdown
+              label="Recipients *"
+              placeholder="Select one or more groups"
+              options={groupOptions}
+              selectedValues={selectedGroups}
+              onChange={(values) => setSelectedGroups(values)}
+              searchable={true}
+            />
           </Animated.View>
 
           {/* ── Message Type ── */}
@@ -179,19 +216,21 @@ export default function ComposeMessageModal() {
           entering={FadeInDown.delay(240).duration(400)}
           style={[styles.bottomBar, { borderTopColor: colors.border, backgroundColor: colors.surface }]}
         >
-          <View style={styles.toolbar}>
+          {/* <View style={styles.toolbar}>
             <TouchableOpacity style={styles.toolBtn}><Ionicons name="camera" size={22} color={colors.primary} /></TouchableOpacity>
             <TouchableOpacity style={styles.toolBtn}><Ionicons name="image" size={22} color={colors.primary} /></TouchableOpacity>
             <TouchableOpacity style={styles.toolBtn}><Ionicons name="document-text" size={22} color={colors.primary} /></TouchableOpacity>
-          </View>
+          </View> */}
           <Button 
-            label="Send Broadcast"
+            label={sendingGroupId ? 'Sending...' : 'Send Broadcast'}
             onPress={handleSend}
             fullWidth
             size="lg"
+            disabled={sendingGroupId !== null || selectedGroups.length === 0}
           />
         </Animated.View>
       </KeyboardAvoidingView>
+      <GlobalLoader visible={loadingGroups || sendingGroupId !== null} />
     </ScreenWrapper>
   );
 }
@@ -224,19 +263,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     marginBottom: 10,
     marginLeft: 4,
-  },
-  recipientContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  recipientPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 6,
-    borderWidth: StyleSheet.hairlineWidth,
   },
   typeTabs: {
     flexDirection: 'row',
