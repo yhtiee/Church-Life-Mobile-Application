@@ -12,6 +12,7 @@ import { useAuth, Sex, BirthdayMonth, RegisterPayload } from '@/context/AuthCont
 import { useToast } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { PARISHES } from '@/constants/parishes';
@@ -208,12 +209,30 @@ export default function RegisterScreen() {
                 </View>
               </LinearGradient>
 
-              <Input label="Full Name *" placeholder="As it appears on your ID" value={fullName} onChangeText={setFullName} leftIcon="person-outline" />
-              <Input label="Baptismal Name (Optional)" placeholder="Your baptismal / confirmation name" value={baptismalName} onChangeText={setBaptismalName} leftIcon="water-outline" />
-              <Input label="Email Address *" placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" leftIcon="mail-outline" />
-              <Input label="Password *" placeholder="At least 6 characters" value={password} onChangeText={setPassword} isPassword leftIcon="lock-closed-outline" />
-              <Input label="Confirm Password *" placeholder="Re-enter your password" value={confirmPassword} onChangeText={setConfirmPassword} isPassword leftIcon="lock-closed-outline" />
-              <Dropdown label="Birthday Month *" placeholder="Select month" options={monthOptions} value={birthdayMonth} onChange={(val) => setBirthdayMonth(val as BirthdayMonth)} />
+              <View>
+                <Label label="Full Name" required />
+                <Input placeholder="As it appears on your ID" value={fullName} onChangeText={setFullName} leftIcon="person-outline" />
+              </View>
+              <View>
+                <Label label="Baptismal Name (Optional)" />
+                <Input placeholder="Your baptismal / confirmation name" value={baptismalName} onChangeText={setBaptismalName} leftIcon="water-outline" />
+              </View>
+              <View>
+                <Label label="Email Address" required />
+                <Input placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" leftIcon="mail-outline" />
+              </View>
+              <View>
+                <Label label="Password" required />
+                <Input placeholder="At least 6 characters" value={password} onChangeText={setPassword} isPassword leftIcon="lock-closed-outline" />
+              </View>
+              <View>
+                <Label label="Confirm Password" required />
+                <Input placeholder="Re-enter your password" value={confirmPassword} onChangeText={setConfirmPassword} isPassword leftIcon="lock-closed-outline" />
+              </View>
+              <View>
+                <Label label="Birthday Month" required />
+                <Dropdown placeholder="Select month" options={monthOptions} value={birthdayMonth} onChange={(val) => setBirthdayMonth(val as BirthdayMonth)} />
+              </View>
 
               {/* Sex cards */}
               <Text style={[styles.fieldLabel, { fontFamily: typography.fontFamily.medium, color: colors.textSecondary }]}>
@@ -280,14 +299,16 @@ export default function RegisterScreen() {
               </LinearGradient>
 
               {!noParish && (
-                <Dropdown
-                  label="Select Your Parish *"
-                  placeholder="Search for your parish..."
-                  options={parishOptions}
-                  value={parishId}
-                  onChange={(val, opt) => { setParishId(val); setParishName(opt.label); }}
-                  searchable
-                />
+                <View>
+                  <Label label="Select Your Parish" required />
+                  <Dropdown
+                    placeholder="Search for your parish..."
+                    options={parishOptions}
+                    value={parishId}
+                    onChange={(val, opt) => { setParishId(val); setParishName(opt.label); }}
+                    searchable
+                  />
+                </View>
               )}
 
               <TouchableOpacity

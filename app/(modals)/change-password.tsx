@@ -8,6 +8,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { useAuth } from '@/context/AuthContext';
 import { supaBaseClient } from '@/lib/supabase/client';
 
@@ -105,23 +106,27 @@ export default function ChangePasswordScreen() {
 
         <View style={styles.form}>
           <Animated.View entering={FadeInDown.delay(80).duration(450)}>
-            <Input
-              label="Current Password"
-              placeholder="Enter current password"
-              value={currentPassword}
-              onChangeText={setCurrentPassword}
-              isPassword
-            />
+            <View>
+              <Label label="Current Password" required />
+              <Input
+                placeholder="Enter current password"
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                isPassword
+              />
+            </View>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(140).duration(450)}>
-            <Input
-              label="New Password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChangeText={setNewPassword}
-              isPassword
-            />
+            <View>
+              <Label label="New Password" required />
+              <Input
+                placeholder="Enter new password"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                isPassword
+              />
+            </View>
           </Animated.View>
 
           {/* Password Strength Indicator */}
@@ -151,14 +156,16 @@ export default function ChangePasswordScreen() {
           )}
 
           <Animated.View entering={FadeInDown.delay(200).duration(450)}>
-            <Input
-              label="Confirm New Password"
-              placeholder="Re-enter new password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              isPassword
-              error={confirmPassword && confirmPassword !== newPassword ? "Passwords do not match" : undefined}
-            />
+            <View>
+              <Label label="Confirm New Password" required />
+              <Input
+                placeholder="Re-enter new password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                isPassword
+                error={confirmPassword && confirmPassword !== newPassword ? "Passwords do not match" : undefined}
+              />
+            </View>
           </Animated.View>
         </View>
 

@@ -13,10 +13,28 @@ interface PledgeCardProps {
 
 export function PledgeCard({ pledge, onPress }: PledgeCardProps) {
   const { colors, typography } = useTheme();
-  const isPaid = pledge.isPaid;
-  const iconColor = isPaid ? colors.success : colors.warning;
-  const iconBg = isPaid ? colors.successBg : colors.warningBg;
+  
+  // Determine status based on pledge.status or fallback to isPaid
+  const getStatusInfo = (status?: string) => {
+    switch (status) {
+      case 'pending':
+        return { icon: 'time-outline', color: colors.warning, bg: colors.warningBg, label: 'Under Review', borderColor: colors.warning };
+      case 'approved':
+        return { icon: 'checkmark-circle-outline', color: colors.info, bg: colors.infoBg, label: 'Approved', borderColor: colors.info };
+      case 'fulfilled':
+        return { icon: 'checkmark-circle-outline', color: colors.success, bg: colors.successBg, label: 'Recorded', borderColor: colors.success };
+      case 'rejected':
+        return { icon: 'close-circle-outline', color: colors.danger, bg: colors.dangerBg, label: 'Rejected', borderColor: colors.danger };
+      default:
+        // Fallback to isPaid logic
+        return pledge.isPaid 
+          ? { icon: 'checkmark-circle-outline', color: colors.success, bg: colors.successBg, label: 'Paid ✓', borderColor: colors.success }
+          : { icon: 'time-outline', color: colors.warning, bg: colors.warningBg, label: `${Math.min(Math.round((pledge.paidAmount ?? 0 / pledge.targetAmount) * 100), 100)}%`, borderColor: colors.warning };
+    }
+  };
 
+  const statusInfo = getStatusInfo(pledge.status);
+  
   // Progress fraction
   const paid = pledge.paidAmount ?? 0;
   const pct = Math.min(Math.round((paid / pledge.targetAmount) * 100), 100);
@@ -30,16 +48,16 @@ export function PledgeCard({ pledge, onPress }: PledgeCardProps) {
         {
           backgroundColor: colors.surface,
           borderBottomColor: colors.divider,
-          borderLeftColor: iconColor,
+          borderLeftColor: statusInfo.borderColor,
         },
       ]}
     >
       {/* Status icon */}
-      <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
+      <View style={[styles.iconCircle, { backgroundColor: statusInfo.bg }]}>
         <Ionicons
-          name={isPaid ? 'checkmark-circle-outline' : 'time-outline'}
+          name={statusInfo.icon as any}
           size={20}
-          color={iconColor}
+          color={statusInfo.color}
         />
       </View>
 
@@ -54,7 +72,7 @@ export function PledgeCard({ pledge, onPress }: PledgeCardProps) {
         <Text
           style={{ fontSize: 12, fontFamily: typography.fontFamily.regular, color: colors.textMuted, marginTop: 2 }}
         >
-          {isPaid ? `Paid on ${pledge.paidDate}` : `Due: ${pledge.dueDate}`}
+          {pledge.status === 'fulfilled' && pledge.paidDate ? `Paid on ${pledge.paidDate}` : `Due: ${pledge.dueDate}`}
         </Text>
 
         {/* Progress bar */}
@@ -62,7 +80,7 @@ export function PledgeCard({ pledge, onPress }: PledgeCardProps) {
           <View
             style={[
               styles.progressFill,
-              { backgroundColor: iconColor, width: `${pct}%` },
+              { backgroundColor: statusInfo.color, width: `${pct}%` },
             ]}
           />
         </View>
@@ -79,15 +97,15 @@ export function PledgeCard({ pledge, onPress }: PledgeCardProps) {
           style={{
             fontSize: 10,
             fontFamily: typography.fontFamily.semiBold,
-            color: iconColor,
+            color: statusInfo.color,
             marginTop: 3,
-            backgroundColor: iconBg,
+            backgroundColor: statusInfo.bg,
             paddingHorizontal: 7,
             paddingVertical: 2,
             borderRadius: 6,
           }}
         >
-          {isPaid ? 'Paid ✓' : `${pct}%`}
+          {statusInfo.label}
         </Text>
       </View>
     </TouchableOpacity>

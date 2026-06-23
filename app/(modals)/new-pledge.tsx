@@ -10,6 +10,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Card } from '@/components/ui/Card';
 import { Gradients } from '@/constants/theme';
@@ -76,10 +77,10 @@ export default function NewPledgeScreen() {
       });
 
       showAlert({
-        title: 'Pledge Recorded',
-        message: `Your pledge of ₦${parseInt(amount).toLocaleString()} for ${title} has been securely saved. It is due by the end of ${dueMonth}.`,
+        title: 'Pledge Submitted',
+        message: `Your pledge of ₦${parseInt(amount).toLocaleString()} for ${title} has been submitted and is pending admin review. You will be notified once it's approved.`,
         type: 'success',
-        buttonLabel: 'View Commitments',
+        buttonLabel: 'View Status',
         onPress: () => {
           setSubmitted(true);
         },
@@ -104,10 +105,10 @@ export default function NewPledgeScreen() {
             <Ionicons name="document-text" size={48} color={colors.warning} />
           </Animated.View>
           <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: colors.text, marginTop: 24, textAlign: 'center' }}>
-            Pledge Recorded
+            Pledge Submitted
           </Text>
           <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 10, textAlign: 'center', lineHeight: 24, paddingHorizontal: 12 }}>
-            Your pledge of <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>₦{parseInt(amount).toLocaleString()}</Text> for {title} has been securely saved. It is due by the end of {dueMonth}.
+            Your pledge of <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>₦{parseInt(amount).toLocaleString()}</Text> for {title} has been submitted and is <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.warning }}>pending admin review</Text>. It is due by the end of {dueMonth} once approved.
           </Text>
           <Button
             label="Back to Finance"
@@ -146,26 +147,32 @@ export default function NewPledgeScreen() {
         </Animated.View>
 
         <View style={styles.form}>
-          <Input
-            label="Pledge Title / Purpose"
-            placeholder="e.g. 2025 Harvest Support"
-            value={title}
-            onChangeText={setTitle}
-          />
-          <Input
-            label="Target Amount (₦)"
-            placeholder="e.g. 50000"
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="numeric"
-          />
-          <Dropdown
-            label="Target Fulfillment Month"
-            placeholder="Select a month..."
-            options={MONTHS}
-            value={dueMonth}
-            onChange={(val) => setDueMonth(val)}
-          />
+          <View>
+            <Label label="Pledge Title / Purpose" required />
+            <Input
+              placeholder="e.g. 2025 Harvest Support"
+              value={title}
+              onChangeText={setTitle}
+            />
+          </View>
+          <View>
+            <Label label="Target Amount (₦)" required />
+            <Input
+              placeholder="e.g. 50000"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+            />
+          </View>
+          <View>
+            <Label label="Target Fulfillment Month" required />
+            <Dropdown
+              placeholder="Select a month..."
+              options={MONTHS}
+              value={dueMonth}
+              onChange={(val) => setDueMonth(val)}
+            />
+          </View>
         </View>
 
         {/* Commitment Card Preview */}

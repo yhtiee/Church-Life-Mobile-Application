@@ -122,3 +122,147 @@ export function useCreatePledgeMutation() {
     },
   });
 }
+
+// ============ ADMIN APPROVAL WORKFLOW HOOKS ============
+
+/**
+ * Fetches all pending donations (admin view).
+ */
+export function usePendingDonationsQuery() {
+  return useQuery({
+    queryKey: QUERY_KEYS.pendingDonations(),
+    queryFn: async () => {
+      const res = await financeService.getPendingDonations();
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+  });
+}
+
+/**
+ * Fetches all pending pledges (admin view).
+ */
+export function usePendingPledgesQuery() {
+  return useQuery({
+    queryKey: QUERY_KEYS.pendingPledges(),
+    queryFn: async () => {
+      const res = await financeService.getPendingPledges();
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+  });
+}
+
+/**
+ * Mutation to approve a donation.
+ */
+export function useApproveDonationMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ donationId, approvedBy }: { donationId: string; approvedBy: string }) => {
+      const res = await financeService.approveDonation(donationId, approvedBy);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingDonations() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allDonations() });
+    },
+  });
+}
+
+/**
+ * Mutation to reject a donation.
+ */
+export function useRejectDonationMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ donationId, reason, rejectedBy }: { donationId: string; reason: string; rejectedBy: string }) => {
+      const res = await financeService.rejectDonation(donationId, reason, rejectedBy);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingDonations() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allDonations() });
+    },
+  });
+}
+
+/**
+ * Mutation to fulfill (record actual amount) a donation.
+ */
+export function useFulfillDonationMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ donationId, fulfilledAmount, approvedBy, adminNotes }: { donationId: string; fulfilledAmount: number; approvedBy: string; adminNotes?: string }) => {
+      const res = await financeService.fulfillDonation(donationId, fulfilledAmount, approvedBy, adminNotes);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingDonations() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allDonations() });
+    },
+  });
+}
+
+/**
+ * Mutation to approve a pledge.
+ */
+export function useApprovePledgeMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ pledgeId, approvedBy }: { pledgeId: string; approvedBy: string }) => {
+      const res = await financeService.approvePledge(pledgeId, approvedBy);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingPledges() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allPledges() });
+    },
+  });
+}
+
+/**
+ * Mutation to reject a pledge.
+ */
+export function useRejectPledgeMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ pledgeId, reason, rejectedBy }: { pledgeId: string; reason: string; rejectedBy: string }) => {
+      const res = await financeService.rejectPledge(pledgeId, reason, rejectedBy);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingPledges() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allPledges() });
+    },
+  });
+}
+
+/**
+ * Mutation to fulfill (record actual amount) a pledge.
+ */
+export function useFulfillPledgeMutation() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ pledgeId, fulfilledAmount, approvedBy, adminNotes }: { pledgeId: string; fulfilledAmount: number; approvedBy: string; adminNotes?: string }) => {
+      const res = await financeService.fulfillPledge(pledgeId, fulfilledAmount, approvedBy, adminNotes);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingPledges() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allPledges() });
+    },
+  });
+}

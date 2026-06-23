@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
-import { Avatar } from '@/components/ui/Avatar';
+import { ThemeSwitcher } from '@/components/ui/ThemeSwitcher';
 
 interface ScreenHeaderProps {
   /** Screen title — shown when showGreeting is false */
@@ -90,7 +90,7 @@ export function ScreenHeader({
           )}
         </View>
 
-        {/* Right: notification + avatar */}
+        {/* Right: notification + theme switcher */}
         <View style={styles.rightArea}>
           <TouchableOpacity
             style={[styles.notifBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
@@ -100,11 +100,7 @@ export function ScreenHeader({
             {/* Unread dot */}
             <View style={[styles.notifDot, { borderColor: colors.background }]} />
           </TouchableOpacity>
-          <Avatar
-            name={user?.fullName ?? 'User'}
-            size={42}
-            ring={colors.primary}
-          />
+          <ThemeSwitcher size={42} />
         </View>
       </Animated.View>
     );

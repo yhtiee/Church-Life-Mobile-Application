@@ -10,6 +10,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { Card } from '@/components/ui/Card';
 import { useCreateDonationMutation } from '@/hooks/mutations/useFinance';
@@ -62,9 +63,9 @@ export default function DonateScreen() {
 
       showAlert({
         title: 'God Bless You!',
-        message: `Your donation of ₦${parseInt(amount).toLocaleString()} for ${category} was successful. Thank you for your support!`,
+        message: `Your donation of ₦${parseInt(amount).toLocaleString()} for ${category} has been submitted and is pending admin review. You will be notified once it's recorded.`,
         type: 'success',
-        buttonLabel: 'View Receipt',
+        buttonLabel: 'View Status',
         onPress: () => {
           setSubmitted(true);
         },
@@ -89,10 +90,10 @@ export default function DonateScreen() {
             <Ionicons name="heart" size={56} color={colors.success} />
           </Animated.View>
           <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: colors.text, marginTop: 24, textAlign: 'center' }}>
-            God Bless You!
+            Donation Submitted
           </Text>
           <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 10, textAlign: 'center', lineHeight: 24, paddingHorizontal: 12 }}>
-            Your donation of <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>₦{parseInt(amount).toLocaleString()}</Text> for {category} was successful. Thank you for your support!
+            Your donation of <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>₦{parseInt(amount).toLocaleString()}</Text> for {category} has been submitted and is <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.warning }}>pending admin review</Text>. You will be notified once it's recorded.
           </Text>
           <Button
             label="Back to Finance"
@@ -132,27 +133,34 @@ export default function DonateScreen() {
         </Animated.View>
 
         <View style={styles.form}>
-          <Input
-            label="Amount (₦)"
-            placeholder="e.g. 5000"
-            value={amount}
-            onChangeText={setAmount}
-            keyboardType="numeric"
-          />
-          <Dropdown
-            label="Donation Category"
-            placeholder="Select purpose..."
-            options={CATEGORIES}
-            value={category}
-            onChange={(val) => setCategory(val)}
-          />
-          <Dropdown
-            label="Payment Method"
-            placeholder="Select how to pay..."
-            options={PAYMENT_METHODS}
-            value={method}
-            onChange={(val) => setMethod(val)}
-          />
+          <View>
+            <Label label="Amount (₦)" required />
+            <Input
+              placeholder="e.g. 5000"
+              value={amount}
+              onChangeText={setAmount}
+              keyboardType="numeric"
+              error={amount === '' && submitted ? 'Amount is required' : undefined}
+            />
+          </View>
+          <View>
+            <Label label="Donation Category" required />
+            <Dropdown
+              placeholder="Select purpose..."
+              options={CATEGORIES}
+              value={category}
+              onChange={(val) => setCategory(val)}
+            />
+          </View>
+          <View>
+            <Label label="Payment Method" required />
+            <Dropdown
+              placeholder="Select how to pay..."
+              options={PAYMENT_METHODS}
+              value={method}
+              onChange={(val) => setMethod(val)}
+            />
+          </View>
         </View>
 
         <View style={styles.actions}>

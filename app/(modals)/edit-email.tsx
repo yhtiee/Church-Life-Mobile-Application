@@ -9,6 +9,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { useUpdateUserProfileMutation } from '@/hooks/mutations/useProfiles';
 import { supaBaseClient } from '@/lib/supabase/client';
 
@@ -101,23 +102,27 @@ export default function EditEmailScreen() {
 
         <View style={styles.form}>
           <Animated.View entering={FadeInDown.delay(100).duration(450)}>
-            <Input
-              label="New Email Address"
-              placeholder="e.g., your.name@example.com"
-              value={newEmail}
-              onChangeText={setNewEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
+            <View>
+              <Label label="New Email Address" required />
+              <Input
+                placeholder="e.g., your.name@example.com"
+                value={newEmail}
+                onChangeText={setNewEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
           </Animated.View>
           <Animated.View entering={FadeInDown.delay(180).duration(450)}>
-            <Input
-              label="Current Password"
-              placeholder="Enter password to verify"
-              value={password}
-              onChangeText={setPassword}
-              isPassword
-            />
+            <View>
+              <Label label="Current Password" required />
+              <Input
+                placeholder="Enter password to verify"
+                value={password}
+                onChangeText={setPassword}
+                isPassword
+              />
+            </View>
           </Animated.View>
         </View>
 

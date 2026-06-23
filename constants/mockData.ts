@@ -21,16 +21,24 @@ export interface BibleVerse {
 
 export interface Donation {
   id: string;
+  user_id?: string;
   description: string;
   amount: number;
   currency: string;
   date: string;
   category: string;
   receipt?: string;
+  // Approval workflow fields
+  status?: 'pending' | 'approved' | 'fulfilled' | 'rejected';
+  fulfilled_amount?: number;
+  approved_at?: string;
+  approved_by?: string;
+  admin_notes?: string;
 }
 
 export interface Pledge {
   id: string;
+  user_id?: string;
   title: string;
   targetAmount: number;
   currency: string;
@@ -38,6 +46,12 @@ export interface Pledge {
   isPaid: boolean;
   paidDate?: string;
   paidAmount?: number;
+  // Approval workflow fields
+  status?: 'pending' | 'approved' | 'fulfilled' | 'rejected';
+  fulfilled_amount?: number;
+  approved_at?: string;
+  approved_by?: string;
+  admin_notes?: string;
 }
 
 export interface GroupUpdate {
@@ -151,7 +165,7 @@ export const BIBLE_VERSES: BibleVerse[] = [
   },
 ];
 
-export const MOCK_DONATIONS: Donation[] = [
+export const MOCK_DONATIONS: any[] = [
   { id: 'd001', description: 'Sunday Offering', amount: 2000, currency: '₦', date: '2025-08-04', category: 'Tithe & Offering' },
   { id: 'd002', description: 'Annual Harvest Donation', amount: 50000, currency: '₦', date: '2025-07-15', category: 'Harvest' },
   { id: 'd003', description: 'Church Renovation Fund', amount: 10000, currency: '₦', date: '2025-07-01', category: 'Special Collection' },
@@ -160,7 +174,7 @@ export const MOCK_DONATIONS: Donation[] = [
   { id: 'd006', description: 'Sunday Offering', amount: 2000, currency: '₦', date: '2025-06-15', category: 'Tithe & Offering' },
 ];
 
-export const MOCK_PLEDGES: Pledge[] = [
+export const MOCK_PLEDGES: any[] = [
   {
     id: 'pl001',
     title: 'Annual Harvest 2025',
@@ -303,7 +317,10 @@ export interface AdminPledge {
   name: string;
   totalPledge: number;
   paidAmount: number;
-  status: 'Paid' | 'Pending' | 'Overdue';
+  fulfilledAmount?: number;
+  status: 'Paid' | 'Pending' | 'Overdue' | 'pending' | 'approved' | 'fulfilled' | 'rejected';
+  approvedAt?: string;
+  approvedBy?: string;
 }
 
 export const ACTIVE_CAMPAIGN = {

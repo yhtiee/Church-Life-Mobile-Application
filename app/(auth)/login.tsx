@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/FeedbackContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { Input } from '@/components/ui/Input';
+import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
 import { Gradients } from '@/constants/theme';
 
@@ -129,23 +130,27 @@ export default function LoginScreen() {
           )} */}
 
           {/* Fields */}
-          <Input
-            label="Email Address"
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon="mail-outline"
-          />
-          <Input
-            label="Password"
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            isPassword
-            leftIcon="lock-closed-outline"
-          />
+          <View>
+            <Label label="Email Address" required />
+            <Input
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              leftIcon="mail-outline"
+            />
+          </View>
+          <View>
+            <Label label="Password" required />
+            <Input
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              isPassword
+              leftIcon="lock-closed-outline"
+            />
+          </View>
 
           <TouchableOpacity style={styles.forgotRow}>
             <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.medium, color: colors.primary }}>

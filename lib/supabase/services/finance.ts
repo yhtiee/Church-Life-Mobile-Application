@@ -25,8 +25,9 @@ export class FinanaceService {
   
   /**
    * Records a new donation made by a user (raw implementation).
+   * Creates with pending status for admin approval workflow.
    */
-  async createDonationRaw(userId: string, donation: Omit<Donation, 'id' | 'date'>) {
+  async createDonationRaw(userId: string, donation: Omit<Donation, 'id' | 'date' | 'status' | 'fulfilled_amount' | 'approved_at' | 'approved_by' | 'admin_notes'>) {
     try {
       const { data, error } = await supaBaseClient
         .from('donations')
@@ -35,6 +36,7 @@ export class FinanaceService {
             ...donation,
             user_id: userId,
             date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+            status: 'pending', // Default to pending for admin approval
           },
         ])
         .select()
@@ -54,8 +56,8 @@ export class FinanaceService {
   createDonation = notifyOnSuccess(
     this.createDonationRaw.bind(this),
     (result, userId, donation) => ({
-      title: 'Donation Confirmed',
-      body: `Your donation of ₦${donation.amount.toLocaleString()} for ${donation.category} has been received.`,
+      title: 'Donation Submitted',
+      body: `Your donation of ₦${donation.amount.toLocaleString()} for ${donation.category} has been submitted and is pending admin review.`,
       type: 'giving',
     })
   );
@@ -82,8 +84,9 @@ export class FinanaceService {
   
   /**
    * Creates a new pledge for a user (raw implementation).
+   * Creates with pending status for admin approval workflow.
    */
-  async createPledgeRaw(userId: string, pledge: Omit<Pledge, 'id' | 'isPaid' | 'paidDate' | 'paidAmount'>) {
+  async createPledgeRaw(userId: string, pledge: Omit<Pledge, 'id' | 'isPaid' | 'paidDate' | 'paidAmount' | 'status' | 'fulfilled_amount' | 'approved_at' | 'approved_by' | 'admin_notes'>) {
     try {
       const { data, error } = await supaBaseClient
         .from('pledges')
@@ -92,6 +95,7 @@ export class FinanaceService {
             ...pledge,
             user_id: userId,
             isPaid: false,
+            status: 'pending', // Default to pending for admin approval
           },
         ])
         .select()
@@ -111,8 +115,8 @@ export class FinanaceService {
   createPledge = notifyOnSuccess(
     this.createPledgeRaw.bind(this),
     (result, userId, pledge) => ({
-      title: 'Pledge Created',
-      body: `You have successfully created a pledge of ₦${pledge.targetAmount.toLocaleString()} for "${pledge.title}".`,
+      title: 'Pledge Submitted',
+      body: `Your pledge of ₦${pledge.targetAmount.toLocaleString()} for "${pledge.title}" has been submitted and is pending admin review.`,
       type: 'giving',
     })
   );
@@ -207,6 +211,196 @@ export class FinanaceService {
       return { data: data as Pledge, error: null };
     } catch (error: any) {
       console.error(`Error updating pledge (${pledgeId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  // ============ ADMIN APPROVAL WORKFLOW METHODS ============
+
+  /**
+   * Fetches all pending donations across the parish (admin view).
+   */
+  async getPendingDonations() {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .select('*, profiles:user_id(id, fullName, email)')
+        .eq('status', 'pending')
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      return { data: data as (Donation & { profiles: { id: string; fullName: string; email: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching pending donations:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches all pending pledges across the parish (admin view).
+   */
+  async getPendingPledges() {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .select('*, profiles:user_id(id, fullName, email)')
+        .eq('status', 'pending')
+        .order('dueDate', { ascending: true });
+
+      if (error) throw error;
+      return { data: data as (Pledge & { profiles: { id: string; fullName: string; email: string } | null })[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching pending pledges:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin approves a donation (changes status to approved).
+   */
+  async approveDonation(donationId: string, approvedBy: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: approvedBy,
+        })
+        .eq('id', donationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Donation, error: null };
+    } catch (error: any) {
+      console.error(`Error approving donation (${donationId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin rejects a donation with a reason.
+   */
+  async rejectDonation(donationId: string, reason: string, rejectedBy: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .update({
+          status: 'rejected',
+          admin_notes: reason,
+          approved_by: rejectedBy,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', donationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Donation, error: null };
+    } catch (error: any) {
+      console.error(`Error rejecting donation (${donationId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin fulfills (records actual amount) a donation.
+   */
+  async fulfillDonation(donationId: string, fulfilledAmount: number, approvedBy: string, adminNotes?: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('donations')
+        .update({
+          status: 'fulfilled',
+          fulfilled_amount: fulfilledAmount,
+          approved_at: new Date().toISOString(),
+          approved_by: approvedBy,
+          admin_notes: adminNotes,
+        })
+        .eq('id', donationId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Donation, error: null };
+    } catch (error: any) {
+      console.error(`Error fulfilling donation (${donationId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin approves a pledge (changes status to approved).
+   */
+  async approvePledge(pledgeId: string, approvedBy: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .update({
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: approvedBy,
+        })
+        .eq('id', pledgeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Pledge, error: null };
+    } catch (error: any) {
+      console.error(`Error approving pledge (${pledgeId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin rejects a pledge with a reason.
+   */
+  async rejectPledge(pledgeId: string, reason: string, rejectedBy: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .update({
+          status: 'rejected',
+          admin_notes: reason,
+          approved_by: rejectedBy,
+          approved_at: new Date().toISOString(),
+        })
+        .eq('id', pledgeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Pledge, error: null };
+    } catch (error: any) {
+      console.error(`Error rejecting pledge (${pledgeId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Admin fulfills (records actual amount) a pledge.
+   */
+  async fulfillPledge(pledgeId: string, fulfilledAmount: number, approvedBy: string, adminNotes?: string) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('pledges')
+        .update({
+          status: 'fulfilled',
+          fulfilled_amount: fulfilledAmount,
+          approved_at: new Date().toISOString(),
+          approved_by: approvedBy,
+          admin_notes: adminNotes,
+        })
+        .eq('id', pledgeId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Pledge, error: null };
+    } catch (error: any) {
+      console.error(`Error fulfilling pledge (${pledgeId}):`, error.message || error);
       return { data: null, error };
     }
   }

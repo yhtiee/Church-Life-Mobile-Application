@@ -22,6 +22,24 @@ export function DonationRow({ item, onPress }: DonationRowProps) {
   const { colors, typography } = useTheme();
   const icon = CATEGORY_ICONS[item.category] ?? 'cash-outline';
 
+  // Determine status badge
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'pending':
+        return { label: 'Under Review', color: colors.warning, bg: colors.warningBg };
+      case 'approved':
+        return { label: 'Approved', color: colors.info, bg: colors.infoBg };
+      case 'fulfilled':
+        return { label: 'Recorded', color: colors.success, bg: colors.successBg };
+      case 'rejected':
+        return { label: 'Rejected', color: colors.danger, bg: colors.dangerBg };
+      default:
+        return { label: 'Paid', color: colors.success, bg: colors.successBg };
+    }
+  };
+
+  const statusBadge = getStatusBadge(item.status);
+
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -65,15 +83,15 @@ export function DonationRow({ item, onPress }: DonationRowProps) {
           style={{
             fontSize: 10,
             fontFamily: typography.fontFamily.semiBold,
-            color: colors.success,
+            color: statusBadge.color,
             marginTop: 2,
-            backgroundColor: colors.successBg,
+            backgroundColor: statusBadge.bg,
             paddingHorizontal: 6,
             paddingVertical: 2,
             borderRadius: 6,
           }}
         >
-          Paid
+          {statusBadge.label}
         </Text>
       </View>
     </TouchableOpacity>

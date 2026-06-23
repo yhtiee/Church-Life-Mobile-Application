@@ -20,7 +20,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { Animation } from '@/constants/theme';
 
 interface InputProps extends TextInputProps {
-  label?: string;
   error?: string;
   helper?: string;
   leftIcon?: keyof typeof Ionicons.glyphMap;
@@ -33,7 +32,6 @@ interface InputProps extends TextInputProps {
 const AnimatedView = Animated.createAnimatedComponent(View);
 
 export function Input({
-  label,
   error,
   helper,
   leftIcon,
@@ -52,7 +50,7 @@ export function Input({
   const [isFocused, setIsFocused] = useState(false);
 
   // Shared animated value: 0 = unfocused/empty, 1 = focused/has value
-  const focusAnim = useSharedValue(value ? 1 : 0);
+  const focusAnim = useSharedValue(0);
 
   const handleFocus = (e: any) => {
     setIsFocused(true);
@@ -62,9 +60,7 @@ export function Input({
 
   const handleBlur = (e: any) => {
     setIsFocused(false);
-    if (!value) {
-      focusAnim.value = withTiming(0, { duration: Animation.normal });
-    }
+    focusAnim.value = withTiming(0, { duration: Animation.normal });
     onBlur?.(e);
   };
 
@@ -82,26 +78,7 @@ export function Input({
     ),
   }));
 
-  // Floating label
-  const labelAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: interpolate(focusAnim.value, [0, 1], [0, -26]),
-      },
-      {
-        scale: interpolate(focusAnim.value, [0, 1], [1, 0.82]),
-      },
-    ],
-    color: interpolateColor(
-      focusAnim.value,
-      [0, 1],
-      [colors.textMuted, error ? colors.danger : colors.primary]
-    ),
-  }));
-
   const iconColor = isFocused ? colors.primary : colors.icon;
-  const hasFloatingLabel = !!label;
-  const paddingTop = hasFloatingLabel ? 20 : 0;
 
   return (
     <View style={[styles.container, containerStyle]}>
@@ -126,37 +103,23 @@ export function Input({
           />
         )}
 
-        <View style={[styles.fieldWrap, { paddingTop }]}>
-          {hasFloatingLabel && (
-            <Animated.Text
-              style={[
-                styles.floatingLabel,
-                { fontFamily: typography.fontFamily.medium, fontSize: 14 },
-                labelAnimStyle,
-              ]}
-              pointerEvents="none"
-            >
-              {label}
-            </Animated.Text>
-          )}
-          <TextInput
-            style={[
-              styles.input,
-              {
-                color: colors.text,
-                fontFamily: typography.fontFamily.regular,
-                fontSize: 16,
-              },
-              style,
-            ]}
-            placeholderTextColor={hasFloatingLabel ? 'transparent' : colors.textMuted}
-            secureTextEntry={isPassword && !showPassword}
-            value={value}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            {...props}
-          />
-        </View>
+        <TextInput
+          style={[
+            styles.input,
+            {
+              color: colors.text,
+              fontFamily: typography.fontFamily.regular,
+              fontSize: 16,
+            },
+            style,
+          ]}
+          placeholderTextColor={colors.textMuted}
+          secureTextEntry={isPassword && !showPassword}
+          value={value}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          {...props}
+        />
 
         {isPassword && (
           <TouchableOpacity onPress={() => setShowPassword((v) => !v)}>
@@ -197,19 +160,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
-  },
-  fieldWrap: {
-    flex: 1,
-    justifyContent: 'center',
-    height: '100%',
-  },
-  floatingLabel: {
-    position: 'absolute',
-    top: 18,
-    left: 0,
-    transformOrigin: 'left center',
   },
   leftIcon: { marginRight: 10 },
-  input: { flex: 1, height: '100%', paddingTop: 0, paddingBottom: 0 },
+  input: { flex: 1, height: '100%', paddingHorizontal: 0 },
 });
