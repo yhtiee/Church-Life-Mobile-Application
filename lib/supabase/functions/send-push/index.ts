@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
     const { record } = payload
     const userId = record.user_id
 
+
     // 1. Fetch user's push token from profiles table
     const { data: profile, error: profileError } = await supabase
       .from('profiles')

@@ -66,8 +66,8 @@ export class AuthService {
         birthdayMonth: payload.birthdayMonth,
         parishId: payload.parishId,
         parishName: payload.parishName,
-        groupId: null,
-        groupName: null,
+        groupId: payload.groupId,
+        groupName: groupName,
         role: 'member', // Default role for newly registered users
         hasParishAccess: payload.parishId !== null,
         createdAt: new Date().toISOString(),
@@ -80,31 +80,6 @@ export class AuthService {
       if (profileError) {
         console.error('Auth succeeded but profile creation failed:', profileError.message);
         throw profileError;
-      }
-  
-      // 3. Add the user as a member of their selected group in the 'groups' table
-      if (payload.groupId) {
-        const { data: groupData, error: fetchGroupError } = await supaBaseClient
-          .from('groups')
-          .select('member_ids')
-          .eq('id', payload.groupId)
-          .single();
-
-        if (!fetchGroupError && groupData) {
-          const currentMembers = groupData.member_ids || [];
-          if (!currentMembers.includes(authData.user.id)) {
-            const { error: updateGroupError } = await supaBaseClient
-              .from('groups')
-              .update({ member_ids: [...currentMembers, authData.user.id] })
-              .eq('id', payload.groupId);
-            
-            if (updateGroupError) {
-              console.error('Failed to add user to group member_ids:', updateGroupError.message);
-            }
-          }
-        } else {
-          console.error('Failed to fetch group to add member:', fetchGroupError?.message);
-        }
       }
 
       return { data: authData, profile: profileData, error: null };

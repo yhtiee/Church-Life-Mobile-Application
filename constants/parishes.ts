@@ -9,6 +9,12 @@ export interface Parish {
   diocese: string;
   state: string;
   country: string;
+  founded?: string | null;
+  patron?: string | null;
+  bishop?: string | null;
+  parish_priest?: string | null;
+  brief?: string | null;
+  image_url?: string | null;
 }
 
 export const PARISHES: Parish[] = [

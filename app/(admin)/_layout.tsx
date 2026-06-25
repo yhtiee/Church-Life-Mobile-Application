@@ -1,5 +1,6 @@
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
@@ -63,6 +64,19 @@ function AnimatedTabIcon({
 export default function AdminLayout() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Redirect href="/(auth)/welcome" />;
+  }
+
+  if (user?.role === 'member') {
+    return <Redirect href="/(tabs)" />;
+  }
 
   const FLOAT_BOTTOM = Math.max(insets.bottom + 10, 20);
   const FLOAT_H = 68;

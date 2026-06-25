@@ -10,10 +10,23 @@ export class ComunityService {
    */
   async fetchGroupUpdates(groupId: string) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_updates')
         .select('*')
         .eq('groupId', groupId)
+        .eq('parish_id', parishId)
         .order('date', { ascending: false });
   
       if (error) throw error;
@@ -29,12 +42,25 @@ export class ComunityService {
    */
   async createGroupUpdate(groupId: string, update: Omit<GroupUpdate, 'id' | 'date'>) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_updates')
         .insert([
           {
             ...update,
             groupId,
+            parish_id: parishId,
             date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
           },
         ])
@@ -54,6 +80,18 @@ export class ComunityService {
    */
   async submitGroupRequest(userName: string, targetGroupId: string, currentGroupId?: string) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_requests')
         .insert([
@@ -61,6 +99,8 @@ export class ComunityService {
             userName,
             targetGroupId,
             currentGroupId,
+            user_id: userId,
+            parish_id: parishId,
             requestDate: new Date().toISOString(),
           },
         ])
@@ -123,41 +163,15 @@ export class ComunityService {
    */
   async fetchGroupRequestsByParish(parishId: string) {
     try {
-      // First, get all profiles from the parish to get their names
-      const { data: parishProfiles, error: profileError } = await supaBaseClient
-        .from('profiles')
-        .select('fullName')
-        .eq('parishId', parishId);
-
-      if (profileError) throw profileError;
-
-      const parishMemberNames = parishProfiles?.map(p => p.fullName) || [];
-
-      if (parishMemberNames.length === 0) {
-        return {
-          data: [] as (DatabaseGroupRequest & {
-            targetGroup: { name: string } | null;
-            currentGroup: { name: string } | null;
-          })[],
-          error: null,
-        };
-      }
-
-      // Fetch all group requests with their group relationships
-      const { data: allRequests, error: requestError } = await supaBaseClient
+      const { data, error } = await supaBaseClient
         .from('group_requests')
         .select('*, targetGroup:targetGroupId(name), currentGroup:currentGroupId(name)')
+        .eq('parish_id', parishId)
         .order('requestDate', { ascending: false });
 
-      if (requestError) throw requestError;
-
-      // Filter requests where userName matches a member from this parish
-      const filteredRequests = allRequests?.filter(req => 
-        parishMemberNames.includes(req.userName)
-      ) || [];
-
+      if (error) throw error;
       return {
-        data: filteredRequests as (DatabaseGroupRequest & {
+        data: data as (DatabaseGroupRequest & {
           targetGroup: { name: string } | null;
           currentGroup: { name: string } | null;
         })[],
@@ -195,30 +209,15 @@ export class ComunityService {
    */
   async fetchGroupUpdatesByParish(parishId: string) {
     try {
-      // Get all groups in the parish
-      const groupsResult = await this.getGroupsByParish(parishId);
-      if (groupsResult.error) throw groupsResult.error;
-
-      const parishGroupIds = groupsResult.data?.map(g => g.id) || [];
-
-      if (parishGroupIds.length === 0) {
-        return { data: [], error: null };
-      }
-
-      // Fetch updates for groups in this parish
-      const { data: updates, error: updateError } = await supaBaseClient
+      const { data, error } = await supaBaseClient
         .from('group_updates')
         .select('*, group:groupId(name)')
+        .eq('parish_id', parishId)
         .order('date', { ascending: false });
 
-      if (updateError) throw updateError;
-
-      const filteredUpdates = updates?.filter(update => 
-        parishGroupIds.includes(update.groupId)
-      ) || [];
-
+      if (error) throw error;
       return {
-        data: filteredUpdates as (GroupUpdate & { group: { name: string } | null })[],
+        data: data as (GroupUpdate & { group: { name: string } | null })[],
         error: null,
       };
     } catch (error: any) {
@@ -325,15 +324,38 @@ export class ComunityService {
    */
   async fetchChatMessages(groupId: string, limit: number = 50) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_messages')
-        .select('*')
+        .select('*, profiles!sender(fullName)')
         .eq('groupId', groupId)
+        .eq('parish_id', parishId)
         .order('timestamp', { ascending: true })
         .limit(limit);
   
       if (error) throw error;
-      return { data: data as ChatMessage[], error: null };
+      
+      const mapped = (data || []).map((msg: any) => ({
+        id: msg.id,
+        groupId: msg.groupId,
+        sender: msg.profiles?.fullName || 'Unknown User',
+        senderRole: msg.senderRole,
+        content: msg.content,
+        timestamp: msg.timestamp,
+      }));
+
+      return { data: mapped as ChatMessage[], error: null };
     } catch (error: any) {
       console.error(`Error fetching chat messages for (${groupId}):`, error.message || error);
       return { data: null, error };
@@ -345,20 +367,45 @@ export class ComunityService {
    */
   async sendChatMessage(groupId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_messages')
         .insert([
           {
-            ...message,
             groupId,
+            sender: userId, // Write UUID instead of string name
+            senderRole: message.senderRole,
+            content: message.content,
+            parish_id: parishId,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           },
         ])
-        .select()
+        .select('*, profiles!sender(fullName)')
         .single();
   
       if (error) throw error;
-      return { data: data as ChatMessage, error: null };
+
+      const mapped: ChatMessage = {
+        id: data.id,
+        groupId: data.groupId,
+        sender: data.profiles?.fullName || 'Unknown User',
+        senderRole: data.senderRole as any,
+        content: data.content,
+        timestamp: data.timestamp,
+      };
+
+      return { data: mapped, error: null };
     } catch (error: any) {
       console.error('Error sending chat message:', error.message || error);
       return { data: null, error };
@@ -370,8 +417,24 @@ export class ComunityService {
    * Returns the unsubscribe function.
    */
   async subscribeToGroupChats(groupId: string, onMessageReceived: (message: ChatMessage) => void) {
+    let parishId: string | null = null;
+    try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+    } catch (err) {
+      console.error('Failed to get session for chat subscription:', err);
+    }
+
     const channel = supaBaseClient
-      .channel(`group-chat:${groupId}`)
+      .channel(`group-chat:${groupId}:${parishId || 'global'}`)
       .on(
         'postgres_changes',
         {
@@ -380,8 +443,30 @@ export class ComunityService {
           table: 'group_messages',
           filter: `groupId=eq.${groupId}`,
         },
-        (payload) => {
-          onMessageReceived(payload.new as ChatMessage);
+        async (payload) => {
+          const newMsg = payload.new as any;
+          if (!parishId || newMsg.parish_id === parishId) {
+            let senderName = 'Unknown User';
+            try {
+              const { data: profile } = await supaBaseClient
+                .from('profiles')
+                .select('fullName')
+                .eq('id', newMsg.sender)
+                .single();
+              if (profile) senderName = profile.fullName;
+            } catch (err) {
+              console.error('Failed to fetch sender profile for real-time msg:', err);
+            }
+
+            onMessageReceived({
+              id: newMsg.id,
+              groupId: newMsg.groupId,
+              sender: senderName,
+              senderRole: newMsg.senderRole,
+              content: newMsg.content,
+              timestamp: newMsg.timestamp,
+            });
+          }
         }
       )
       .subscribe();
@@ -399,6 +484,7 @@ export class ComunityService {
         .eq('is_secure', false);
 
       if (error) throw error;
+      console.log(data, "data")
       return { data: data as Group[], error: null };
     }catch(error: any){
       console.error('Error fetching open groups:', error.message || error);
@@ -408,34 +494,103 @@ export class ComunityService {
 
   async getAllGroups(){
     try{
-      const { data, error } = await supaBaseClient
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
+      // Fetch all groups (global ones where parish_id is null, and parish-specific secure groups)
+      const { data: groups, error: groupError } = await supaBaseClient
         .from('groups')
         .select('*');
 
-      if (error) throw error;
-      return { data: data as Group[], error: null };
+      if (groupError) throw groupError;
+
+      // Filter groups: either global groups (parish_id is null) or specific parish groups
+      const filteredGroups = (groups || []).filter(g => g.parish_id === null || g.parish_id === parishId);
+
+      if (!parishId) {
+        return { data: filteredGroups as Group[], error: null };
+      }
+
+      // Fetch all profiles in this parish who have joined a group
+      const { data: profiles, error: profileError } = await supaBaseClient
+        .from('profiles')
+        .select('id, groupId')
+        .eq('parishId', parishId)
+        .not('groupId', 'is', null);
+
+      if (profileError) throw profileError;
+
+      // Map group memberships dynamically by parish
+      const mappedGroups = filteredGroups.map((group) => {
+        if (!group.is_secure) {
+          // Open groups: filter members belonging to this parish
+          const groupMembers = profiles
+            ?.filter((p) => p.groupId === group.id)
+            .map((p) => p.id) || [];
+          return {
+            ...group,
+            member_ids: groupMembers,
+          };
+        }
+        return group;
+      });
+
+      return { data: mappedGroups as Group[], error: null };
     }catch(error: any){
-      console.error('Error fetching open groups:', error.message || error);
+      console.error('Error fetching all groups:', error.message || error);
       return { data: null, error };
     }
   }
-
+ 
   /**
    * Fetches groups filtered by parish (admin view for specific parish).
    * This assumes groups have members from a specific parish.
    */
   async getGroupsByParish(parishId: string) {
     try {
-      // Fetch all groups where parish_id matches (for admin management)
+      // Fetch all groups where parish_id is null (global) or matches parishId
       const { data: groups, error: groupError } = await supaBaseClient
         .from('groups')
         .select('*')
-        // .eq('parish_id', parishId)
+        .or(`parish_id.is.null,parish_id.eq.${parishId}`)
         .order('created_at', { ascending: false });
 
       if (groupError) throw groupError;
 
-      return { data: (groups || []) as Group[], error: null };
+      // Fetch all profiles in this parish who have joined a group
+      const { data: profiles, error: profileError } = await supaBaseClient
+        .from('profiles')
+        .select('id, groupId')
+        .eq('parishId', parishId)
+        .not('groupId', 'is', null);
+
+      if (profileError) throw profileError;
+
+      // Map group memberships dynamically by parish
+      const mappedGroups = (groups || []).map((group) => {
+        if (!group.is_secure) {
+          // Open groups: filter members belonging to this parish
+          const groupMembers = profiles
+            ?.filter((p) => p.groupId === group.id)
+            .map((p) => p.id) || [];
+          return {
+            ...group,
+            member_ids: groupMembers,
+          };
+        }
+        return group;
+      });
+
+      return { data: mappedGroups as Group[], error: null };
     } catch (error: any) {
       console.error(`Error fetching groups for parish (${parishId}):`, error.message || error);
       return { data: null, error };
@@ -444,25 +599,22 @@ export class ComunityService {
 
   async joinOpenGroupRaw(userId: string, groupId: string) {
     try {
-      const { data: newGroup, error: newGroupFetchError } = await supaBaseClient
+      const { data: group, error: fetchError } = await supaBaseClient
         .from('groups')
-        .select('name, member_ids')
+        .select('name')
         .eq('id', groupId)
         .single();
 
-      if (newGroupFetchError) throw newGroupFetchError;
+      if (fetchError) throw fetchError;
 
-      const currentMembers = newGroup.member_ids || [];
-      if (!currentMembers.includes(userId)) {
-        const updatedMembers = [...currentMembers, userId];
-        const { error: newGroupUpdateError } = await supaBaseClient
-          .from('groups')
-          .update({ member_ids: updatedMembers })
-          .eq('id', groupId);
+      const { error: profileError } = await supaBaseClient
+        .from('profiles')
+        .update({ groupId: groupId, groupName: group.name })
+        .eq('id', userId);
 
-        if (newGroupUpdateError) throw newGroupUpdateError;
-      }
-      return { data: { groupId, groupName: newGroup.name }, error: null };
+      if (profileError) throw profileError;
+
+      return { data: { groupId, groupName: group.name }, error: null };
     } catch (error: any) {
       console.error('Error joining open group:', error.message || error);
       return { data: null, error };
@@ -525,26 +677,51 @@ export class ComunityService {
    */
   async sendGroupMessageRaw(groupId: string, message: Omit<ChatMessage, 'id' | 'timestamp'>) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_messages')
         .insert([
           {
-            ...message,
             groupId,
+            sender: userId, // Write UUID instead of string name
+            senderRole: message.senderRole,
+            content: message.content,
+            parish_id: parishId,
             timestamp: new Date().toISOString(),
           },
         ])
-        .select()
+        .select('*, profiles!sender(fullName)')
         .single();
-
+  
       if (error) throw error;
-      return { data: data as ChatMessage, error: null };
+      
+      const mapped: ChatMessage = {
+        id: data.id,
+        groupId: data.groupId,
+        sender: data.profiles?.fullName || 'Unknown User',
+        senderRole: data.senderRole as any,
+        content: data.content,
+        timestamp: data.timestamp,
+      };
+
+      return { data: mapped, error: null };
     } catch (error: any) {
       console.error('Error sending group message:', error.message || error);
       return { data: null, error };
     }
   }
-
+  
   sendGroupMessage = notifyOnSuccess(
     this.sendGroupMessageRaw.bind(this),
     (result) => ({
@@ -553,21 +730,44 @@ export class ComunityService {
       type: 'group',
     })
   );
-
+ 
   /**
    * Fetches all messages for a group with pagination.
    */
   async fetchGroupMessagesWithPagination(groupId: string, limit: number = 50, offset: number = 0) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('group_messages')
-        .select('*')
+        .select('*, profiles!sender(fullName)')
         .eq('groupId', groupId)
+        .eq('parish_id', parishId)
         .order('timestamp', { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) throw error;
-      return { data: data as ChatMessage[], error: null };
+      
+      const mapped = (data || []).map((msg: any) => ({
+        id: msg.id,
+        groupId: msg.groupId,
+        sender: msg.profiles?.fullName || 'Unknown User',
+        senderRole: msg.senderRole,
+        content: msg.content,
+        timestamp: msg.timestamp,
+      }));
+
+      return { data: mapped as ChatMessage[], error: null };
     } catch (error: any) {
       console.error(`Error fetching group messages for (${groupId}):`, error.message || error);
       return { data: null, error };

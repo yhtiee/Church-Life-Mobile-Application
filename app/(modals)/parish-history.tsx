@@ -1,16 +1,44 @@
 import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { useParishQuery } from '@/hooks/queries/useParishes';
 import { PARISH_HISTORY } from '@/constants/mockData';
 
 export default function ParishHistoryScreen() {
   const { colors, typography, radius } = useTheme();
+  const { user } = useAuth();
+  const parishId = user?.parishId;
+
+  const { data: parishDetails, isLoading } = useParishQuery(parishId || '');
+
+  // Fallbacks if data is missing or loading
+  const patronName = parishDetails?.patron || PARISH_HISTORY.patron;
+  const foundedYear = parishDetails?.founded || PARISH_HISTORY.founded;
+  const bishopName = parishDetails?.bishop || PARISH_HISTORY.bishop;
+  const priestName = parishDetails?.parish_priest || PARISH_HISTORY.parishPriest;
+  const historyText = parishDetails?.brief || PARISH_HISTORY.brief;
+  const coverImage = parishDetails?.image_url;
+
+  if (isLoading) {
+    return (
+      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+        <ScreenHeader title="Parish History" />
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 12, color: colors.textSecondary, fontFamily: typography.fontFamily.medium }}>
+            Loading parish history...
+          </Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
@@ -23,7 +51,7 @@ export default function ParishHistoryScreen() {
           style={[styles.heroBox, { borderRadius: radius.xl }]}
         >
           <Image
-            source={require('@/assets/images/church_exterior_hero.png')}
+            source={coverImage ? { uri: coverImage } : require('@/assets/images/church_exterior_hero.png')}
             style={StyleSheet.absoluteFillObject}
             contentFit="cover"
           />
@@ -38,12 +66,12 @@ export default function ParishHistoryScreen() {
             </View>
 
             <Text style={{ fontSize: 24, fontFamily: typography.fontFamily.extraBold, color: '#FFFFFF', marginTop: 16 }}>
-              {PARISH_HISTORY.patron}
+              {patronName}
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
               <Ionicons name="calendar-outline" size={14} color="rgba(255,255,255,0.7)" />
               <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.semiBold, color: 'rgba(255,255,255,0.7)', marginLeft: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
-                Founded {PARISH_HISTORY.founded}
+                Founded {foundedYear}
               </Text>
             </View>
           </View>
@@ -68,7 +96,7 @@ export default function ParishHistoryScreen() {
                   Bishop
                 </Text>
                 <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.semiBold, color: colors.text, marginTop: 2 }}>
-                  {PARISH_HISTORY.bishop}
+                  {bishopName}
                 </Text>
               </View>
             </View>
@@ -84,7 +112,7 @@ export default function ParishHistoryScreen() {
                   Parish Priest
                 </Text>
                 <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.semiBold, color: colors.text, marginTop: 2 }}>
-                  {PARISH_HISTORY.parishPriest}
+                  {priestName}
                 </Text>
               </View>
             </View>
@@ -101,7 +129,7 @@ export default function ParishHistoryScreen() {
           </Text>
           <View style={[styles.storyCard, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.lg }]}>
             <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.text, lineHeight: 26 }}>
-              {PARISH_HISTORY.brief}
+              {historyText}
             </Text>
           </View>
         </Animated.View>
@@ -113,6 +141,7 @@ export default function ParishHistoryScreen() {
 
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   heroBox: {
     height: 240,
     overflow: 'hidden',

@@ -50,7 +50,11 @@ export default function LoginScreen() {
 
   return (
     <ScreenWrapper edges={['left', 'right']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        style={{ flex: 1 }}
+      >
 
         {/* ── Gradient hero panel ── */}
         <LinearGradient
@@ -105,6 +109,7 @@ export default function LoginScreen() {
           contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
         >
           {/* Demo hint */}
           {/* <View style={[styles.hintBox, { backgroundColor: colors.infoBg, borderColor: colors.info + '55', borderRadius: radius.md }]}>

@@ -15,6 +15,12 @@ export interface DatabaseParish {
   diocese: string;
   state: string;
   country: string;
+  founded?: string | null;
+  patron?: string | null;
+  bishop?: string | null;
+  parish_priest?: string | null;
+  brief?: string | null;
+  image_url?: string | null;
 }
 
 export interface Group {
@@ -68,6 +74,7 @@ export interface DatabaseNotification {
  */
 export interface DatabaseAnnouncement {
   id: string; // PK - uuid
+  parish_id?: string | null;
   title: string;
   body: string;
   category: string;
@@ -82,12 +89,18 @@ export interface DatabaseAnnouncement {
 export interface DatabaseDonation {
   id: string; // PK - uuid
   user_id: string; // FK to profiles.id
+  parish_id?: string | null;
   description: string;
   amount: number;
   currency: string;
   date: string; // YYYY-MM-DD
   category: string;
   receipt?: string | null;
+  status?: 'pending' | 'approved' | 'fulfilled' | 'rejected';
+  fulfilled_amount?: number;
+  approved_at?: string;
+  approved_by?: string;
+  admin_notes?: string;
 }
 
 /**
@@ -96,6 +109,7 @@ export interface DatabaseDonation {
 export interface DatabasePledge {
   id: string; // PK - uuid
   user_id: string; // FK to profiles.id
+  parish_id?: string | null;
   title: string;
   targetAmount: number;
   currency: string;
@@ -103,6 +117,11 @@ export interface DatabasePledge {
   isPaid: boolean;
   paidDate?: string | null; // YYYY-MM-DD
   paidAmount?: number | null;
+  status?: 'pending' | 'approved' | 'fulfilled' | 'rejected';
+  fulfilled_amount?: number;
+  approved_at?: string;
+  approved_by?: string;
+  admin_notes?: string;
 }
 
 /**
@@ -111,6 +130,7 @@ export interface DatabasePledge {
 export interface DatabaseGroupUpdate {
   id: string; // PK - uuid
   groupId: string;
+  parish_id?: string | null;
   title: string;
   body: string;
   date: string; // YYYY-MM-DD
@@ -123,6 +143,7 @@ export interface DatabaseGroupUpdate {
 export interface DatabaseGroupRequest {
   id: string; // PK - uuid
   user_id?: string | null; // FK to profiles.id
+  parish_id?: string | null;
   userName: string;
   targetGroupId: string;
   currentGroupId?: string | null;
@@ -135,6 +156,7 @@ export interface DatabaseGroupRequest {
 export interface DatabaseGroupMessage {
   id: string; // PK - uuid
   groupId: string;
+  parish_id?: string | null;
   sender: string;
   senderRole: string;
   content: string;
@@ -147,6 +169,7 @@ export interface DatabaseGroupMessage {
 export interface DatabaseMassBooking {
   id: string; // PK - uuid
   user_id?: string | null; // FK to profiles.id
+  parish_id?: string | null;
   bookerName: string;
   day: string;
   time: string;

@@ -13,6 +13,7 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import GlobalLoader from '@/components/ui/GlobalLoader';
 import { useAnnouncementsQuery } from '@/hooks/queries/useAnnouncements';
 import { ANNOUNCEMENTS, Announcement } from '@/constants/mockData';
+import { useAuth } from '@/context/AuthContext';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -36,9 +37,10 @@ const FILTERS = ['All', 'Liturgy', 'Events', 'Finance', 'Groups', 'Education'];
 export default function AnnouncementsModal() {
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState('All');
 
-  const { data: announcements = [], isLoading: loading, refetch, isRefetching } = useAnnouncementsQuery();
+  const { data: announcements = [], isLoading: loading, refetch, isRefetching } = useAnnouncementsQuery(user?.parishId);
 
   const filtered = activeFilter === 'All'
     ? announcements

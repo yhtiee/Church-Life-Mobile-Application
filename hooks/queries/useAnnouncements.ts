@@ -4,11 +4,11 @@ import { QUERY_KEYS } from '@/constants/query-keys';
 
 const announcementService = new AnnoucementService();
 
-export function useAnnouncementsQuery(importantOnly: boolean = false) {
+export function useAnnouncementsQuery(parishId?: string | null, importantOnly: boolean = false) {
   return useQuery({
-    queryKey: QUERY_KEYS.announcements(importantOnly),
+    queryKey: [...QUERY_KEYS.announcements(importantOnly), parishId],
     queryFn: async () => {
-      const res = await announcementService.fetchAnnouncements(importantOnly);
+      const res = await announcementService.fetchAnnouncements(parishId, importantOnly);
       if (res.error) throw res.error;
       return res.data || [];
     },

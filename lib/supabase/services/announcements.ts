@@ -7,12 +7,16 @@ export class AnnoucementService {
    * Fetches all announcements from the 'announcements' table.
    * Can filter to only important ones.
    */
-  async fetchAnnouncements(importantOnly: boolean = false) {
+  async fetchAnnouncements(parishId?: string | null, importantOnly: boolean = false) {
     try {
       let query = supaBaseClient
         .from('announcements')
         .select('*')
         .order('date', { ascending: false });
+  
+      if (parishId) {
+        query = query.or(`parish_id.is.null,parish_id.eq.${parishId}`);
+      }
   
       if (importantOnly) {
         query = query.eq('important', true);
@@ -36,7 +40,7 @@ export class AnnoucementService {
       let query = supaBaseClient
         .from('announcements')
         .select('*')
-        // .eq('parishId', parishId) to do
+        .eq('parish_id', parishId)
         .order('date', { ascending: false });
   
       if (importantOnly) {
@@ -77,11 +81,24 @@ export class AnnoucementService {
    */
   async createAnnouncement(announcement: Omit<Announcement, 'id' | 'date'>) {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('announcements')
         .insert([
           {
             ...announcement,
+            parish_id: parishId,
             date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
           },
         ])

@@ -23,10 +23,21 @@ export class ActivityService {
     groupName: string
   ): Promise<{ data?: Activity; error?: any }> {
     try {
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('activities')
         .insert({
           user_id: userId,
+          parish_id: parishId,
           activity_type: 'group_join_request',
           reference_type: 'group',
           reference_id: groupId,
@@ -61,10 +72,21 @@ export class ActivityService {
     toGroupName?: string
   ): Promise<{ data?: Activity; error?: any }> {
     try {
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('activities')
         .insert({
           user_id: userId,
+          parish_id: parishId,
           activity_type: 'group_transition_request',
           reference_type: 'group',
           reference_id: toGroupId,
@@ -99,10 +121,21 @@ export class ActivityService {
     intention: string
   ): Promise<{ data?: Activity; error?: any }> {
     try {
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('activities')
         .insert({
           user_id: userId,
+          parish_id: parishId,
           activity_type: 'booking_request',
           reference_type: 'mass',
           reference_id: massBookingId,
@@ -136,10 +169,21 @@ export class ActivityService {
     category: string
   ): Promise<{ data?: Activity; error?: any }> {
     try {
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       const { data, error } = await supaBaseClient
         .from('activities')
         .insert({
           user_id: userId,
+          parish_id: parishId,
           activity_type: 'donation',
           reference_type: 'donation',
           reference_id: donationId,

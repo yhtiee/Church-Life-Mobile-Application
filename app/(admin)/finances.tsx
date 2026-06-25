@@ -45,8 +45,8 @@ export default function FinancesScreen() {
   const { data: pledges = [], isLoading: loadingPledges } = usePledgesByParishQuery(user?.parishId as string);
 
   // Query pending approvals
-  const { data: pendingDonations = [], isLoading: loadingPendingDonations } = usePendingDonationsQuery();
-  const { data: pendingPledges = [], isLoading: loadingPendingPledges } = usePendingPledgesQuery();
+  const { data: pendingDonations = [], isLoading: loadingPendingDonations } = usePendingDonationsQuery(user?.parishId as string);
+  const { data: pendingPledges = [], isLoading: loadingPendingPledges } = usePendingPledgesQuery(user?.parishId as string);
 
   // Mutations for approvals
   const { mutateAsync: fulfillDonation, isPending: fulfilling } = useFulfillDonationMutation();

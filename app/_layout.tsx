@@ -24,19 +24,27 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (isLoading) return;
-    const inAuth = segments[0] === '(auth)';
+    const routeSegments = segments as string[];
+    const inAuth = routeSegments[0] === '(auth)';
+    const inAdmin = routeSegments[0] === '(admin)';
     
     if (!isAuthenticated && !inAuth) {
       router.replace('/(auth)/welcome');
-    } else if (isAuthenticated && inAuth) {
-      // Check user role for redirection
-      if (user?.role === 'member') {
+    } else if (isAuthenticated) {
+      const atRoot = routeSegments.length === 0 || !routeSegments[0] || routeSegments[0] === '';
+      if (inAuth || atRoot) {
+        // Check user role for redirection
+        if (user?.role === 'member') {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/(admin)');
+        }
+      } else if (user?.role === 'member' && inAdmin) {
+        // Security guard: prevent members from accessing admin pages
         router.replace('/(tabs)');
-      } else {
-        router.replace('/(admin)');
       }
     }
-  }, [isAuthenticated, isLoading, segments, user?.role]);
+  }, [isAuthenticated, isLoading, segments, user?.role, router]);
 
   if (isLoading) {
     return (

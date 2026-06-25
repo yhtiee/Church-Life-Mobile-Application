@@ -128,28 +128,30 @@ export function useCreatePledgeMutation() {
 /**
  * Fetches all pending donations (admin view).
  */
-export function usePendingDonationsQuery() {
+export function usePendingDonationsQuery(parishId: string) {
   return useQuery({
-    queryKey: QUERY_KEYS.pendingDonations(),
+    queryKey: [...QUERY_KEYS.pendingDonations(), parishId],
     queryFn: async () => {
-      const res = await financeService.getPendingDonations();
+      const res = await financeService.getPendingDonations(parishId);
       if (res.error) throw res.error;
       return res.data || [];
     },
+    enabled: !!parishId,
   });
 }
 
 /**
  * Fetches all pending pledges (admin view).
  */
-export function usePendingPledgesQuery() {
+export function usePendingPledgesQuery(parishId: string) {
   return useQuery({
-    queryKey: QUERY_KEYS.pendingPledges(),
+    queryKey: [...QUERY_KEYS.pendingPledges(), parishId],
     queryFn: async () => {
-      const res = await financeService.getPendingPledges();
+      const res = await financeService.getPendingPledges(parishId);
       if (res.error) throw res.error;
       return res.data || [];
     },
+    enabled: !!parishId,
   });
 }
 

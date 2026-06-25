@@ -122,9 +122,15 @@ export default function ComposeMessageModal() {
       <ScreenHeader title="New Broadcast" rightElement={rightEl} />
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardShouldPersistTaps="handled"
+        >
           
           {/* ── Group Selection (Multi-Select Dropdown) ── */}
           <Animated.View entering={FadeInDown.duration(400)} style={styles.section}>

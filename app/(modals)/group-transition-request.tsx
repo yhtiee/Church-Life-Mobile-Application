@@ -183,7 +183,6 @@ export default function GroupTransitionRequestScreen() {
         {/* Reason Field */}
         <Animated.View entering={FadeInDown.delay(180).duration(450)}>
           <Input
-            label="Reason for Transition"
             placeholder="e.g. I turned 36 and aged out of the youth group"
             value={reason}
             onChangeText={setReason}

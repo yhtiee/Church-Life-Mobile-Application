@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { Gradients } from '@/constants/theme';
 import GlobalLoader from '@/components/ui/GlobalLoader';
 import AnnouncementCarousel from '@/components/ui/AnnouncementCarousel';
-import { useAllProfilesQuery } from '@/hooks/queries/useProfiles';
+import { useProfilesByParishQuery } from '@/hooks/queries/useProfiles';
 import { useGroupRequestsByParishQuery } from '@/hooks/queries/useGroups';
 import { useDonationsByParishQuery } from '@/hooks/queries/useFinance';
 import { useAllActivitiesQuery } from '@/hooks/queries/useActivities';
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { data: profiles = [], isLoading: loadingProfiles } = useAllProfilesQuery();
+  const { data: profiles = [], isLoading: loadingProfiles } = useProfilesByParishQuery(user?.parishId as string);
   const { data: groupRequests = [], isLoading: loadingRequests } = useGroupRequestsByParishQuery(user?.parishId as string);
   const { data: donations = [], isLoading: loadingDonations } = useDonationsByParishQuery(user?.parishId as string);
   const { data: activities = [], isLoading: loadingActivities } = useAllActivitiesQuery(10, 0);
@@ -76,7 +76,7 @@ export default function AdminDashboard() {
       setAnnouncementLoading(true);
       try {
         const announcementService = new AnnoucementService();
-        const { data: announcementData, error } = await announcementService.fetchAnnouncements();
+        const { data: announcementData, error } = await announcementService.fetchAnnouncements(user?.parishId);
         if (!error && announcementData) {
           setAnnouncements(announcementData);
         }
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
       }
     };
     fetchAnnouncements();
-  }, []);
+  }, [user?.parishId]);
 
   const weeklyCollection = useMemo(() => {
     const now = new Date();

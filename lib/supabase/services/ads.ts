@@ -18,6 +18,7 @@ export interface Ad {
   created_by: string;
   created_at: string;
   updated_at: string;
+  parish_id?: string | null;
 }
 
 export class AdsService {
@@ -147,6 +148,18 @@ export class AdsService {
     imageFile?: { uri: string; name: string; type: string }
   ): Promise<{ data: Ad | null; error: any }> {
     try {
+      const { data: { session } } = await supaBaseClient.auth.getSession();
+      const userId = session?.user?.id;
+      let parishId: string | null = null;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      }
+
       let imageUrl = ad.image_url;
 
       // Upload image if provided
@@ -161,6 +174,7 @@ export class AdsService {
       const adData = {
         ...ad,
         image_url: imageUrl,
+        parish_id: parishId,
       };
 
       const { data, error } = await supaBaseClient

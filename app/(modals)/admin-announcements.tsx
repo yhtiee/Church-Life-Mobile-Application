@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal, Alert, TextInput, Dimensions,
+  KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -380,10 +381,17 @@ export default function AdminAnnouncementsModal() {
             <View style={{ width: 28 }} />
           </View>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 40 }}
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+            style={{ flex: 1 }}
           >
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 40 }}
+              automaticallyAdjustKeyboardInsets={true}
+              keyboardShouldPersistTaps="handled"
+            >
             {/* ── Form Fields ── */}
             <View style={styles.formSection}>
               <Text style={[styles.formLabel, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
@@ -507,7 +515,8 @@ export default function AdminAnnouncementsModal() {
                 />
               </View>
             </View>
-          </ScrollView>
+            </ScrollView>
+          </KeyboardAvoidingView>
         </ScreenWrapper>
       </Modal>
     </ScreenWrapper>

@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TextInputProps,
   ViewStyle,
+  TextStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, {
@@ -80,6 +81,13 @@ export function Input({
 
   const iconColor = isFocused ? colors.primary : colors.icon;
 
+  const flatStyle = StyleSheet.flatten(style);
+  const isMultiline = props.multiline;
+  const containerHeight = isMultiline ? (flatStyle?.height ?? 120) : 56;
+
+  // For multiline, we strip height from style passed to TextInput to avoid conflict
+  const inputStyle = isMultiline && flatStyle ? ({ ...flatStyle, height: '100%' } as TextStyle) : style;
+
   return (
     <View style={[styles.container, containerStyle]}>
       <AnimatedView
@@ -89,7 +97,9 @@ export function Input({
             borderRadius: radius.md,
             borderWidth: 1.5,
             paddingHorizontal: 14,
-            height: 56,
+            height: containerHeight,
+            alignItems: isMultiline ? 'flex-start' : 'center',
+            paddingVertical: isMultiline ? 12 : 0,
           },
           containerAnimStyle,
         ]}
@@ -99,7 +109,7 @@ export function Input({
             name={leftIcon}
             size={18}
             color={iconColor}
-            style={styles.leftIcon}
+            style={[styles.leftIcon, isMultiline && { marginTop: 2 }]}
           />
         )}
 
@@ -110,8 +120,9 @@ export function Input({
               color: colors.text,
               fontFamily: typography.fontFamily.regular,
               fontSize: 16,
+              textAlignVertical: isMultiline ? 'top' : 'center',
             },
-            style,
+            inputStyle,
           ]}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={isPassword && !showPassword}
@@ -122,7 +133,10 @@ export function Input({
         />
 
         {isPassword && (
-          <TouchableOpacity onPress={() => setShowPassword((v) => !v)}>
+          <TouchableOpacity 
+            onPress={() => setShowPassword((v) => !v)}
+            style={isMultiline && { marginTop: 2 }}
+          >
             <Ionicons
               name={showPassword ? 'eye-off-outline' : 'eye-outline'}
               size={18}
@@ -132,7 +146,10 @@ export function Input({
         )}
 
         {rightIcon && !isPassword && (
-          <TouchableOpacity onPress={onRightIconPress}>
+          <TouchableOpacity 
+            onPress={onRightIconPress}
+            style={isMultiline && { marginTop: 2 }}
+          >
             <Ionicons name={rightIcon} size={18} color={iconColor} />
           </TouchableOpacity>
         )}
@@ -159,7 +176,6 @@ const styles = StyleSheet.create({
   container: { marginBottom: 16 },
   inputRow: {
     flexDirection: 'row',
-    alignItems: 'center',
   },
   leftIcon: { marginRight: 10 },
   input: { flex: 1, height: '100%', paddingHorizontal: 0 },

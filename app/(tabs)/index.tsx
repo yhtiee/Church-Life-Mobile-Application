@@ -13,6 +13,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { PARISH_HISTORY, MASS_TIMES } from '@/constants/mockData';
+import { useParishQuery } from '@/hooks/queries/useParishes';
 import { AnnoucementService } from '@/lib/supabase/services/announcements';
 import { AdsService } from '@/lib/supabase/services/ads';
 import { BibleService } from '@/lib/supabase/services/bible';
@@ -106,6 +107,9 @@ const TODAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date()
 export default function HomeScreen() {
   const { colors, typography, radius, isDark } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+
+  const { data: parishDetails } = useParishQuery(user?.parishId as string);
 
   const [dailyVerse, setDailyVerse] = useState<any>(null);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -121,7 +125,7 @@ export default function HomeScreen() {
       try {
         // Fetch announcements
         const announcementService = new AnnoucementService();
-        const { data: announcementData, error: announcementError } = await announcementService.fetchAnnouncements();
+        const { data: announcementData, error: announcementError } = await announcementService.fetchAnnouncements(user?.parishId);
         if (active) {
           if (!announcementError && announcementData) {
             setAnnouncements(announcementData);
@@ -165,7 +169,7 @@ export default function HomeScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [user?.parishId]);
 
   const handleCarouselSelect = (item: any) => {
     if ('important' in item) {
@@ -301,7 +305,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(modals)/parish-history')}
           >
             <Image
-              source={require('@/assets/images/church_interior_hero.png')}
+              source={parishDetails?.image_url ? { uri: parishDetails.image_url } : require('@/assets/images/church_interior_hero.png')}
               style={styles.halfCardImage}
               contentFit="cover"
             />
@@ -314,10 +318,10 @@ export default function HomeScreen() {
                 <Ionicons name="business-outline" size={16} color="#D4AF37" />
               </View>
               <Text style={[styles.halfCardLabel, { fontFamily: typography.fontFamily.semiBold }]}>
-                Founded {PARISH_HISTORY.founded}
+                Founded {parishDetails?.founded || PARISH_HISTORY.founded}
               </Text>
               <Text style={[styles.halfCardTitle, { fontFamily: typography.fontFamily.bold }]} numberOfLines={2}>
-                {PARISH_HISTORY.patron}
+                {parishDetails?.patron || PARISH_HISTORY.patron}
               </Text>
               <Text style={[styles.halfCardLink, { fontFamily: typography.fontFamily.semiBold }]}>
                 Read More →

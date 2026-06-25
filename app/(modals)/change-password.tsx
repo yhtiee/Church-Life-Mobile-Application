@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -96,7 +96,17 @@ export default function ChangePasswordScreen() {
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title="Change Password" />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardShouldPersistTaps="handled"
+        >
         
         <Animated.View entering={FadeInDown.duration(400)}>
           <Text style={[styles.description, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
@@ -190,7 +200,8 @@ export default function ChangePasswordScreen() {
         </Animated.View>
 
       </ScrollView>
-    </ScreenWrapper>
+    </KeyboardAvoidingView>
+  </ScreenWrapper>
   );
 }
 

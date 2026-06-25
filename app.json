@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "churchlife-app",
+    "name": "Church Life",
     "slug": "churchlife-app",
     "owner": "mobile-applications-yhutiee",
     "version": "1.0.0",
@@ -25,6 +25,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "pan",
       "package": "com.yhutiee.churchlifeapp"
     },
     "web": {

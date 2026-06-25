@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, Platform, KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -187,7 +187,17 @@ export default function LogDonationModal() {
       <ScreenHeader title="Log Donation/Pledge" />
       <GlobalLoader visible={isSubmitting || parishionersLoading} />
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          showsVerticalScrollIndicator={false} 
+          contentContainerStyle={{ paddingBottom: 40 }}
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardShouldPersistTaps="handled"
+        >
         {/* ── Type Selector ── */}
         <Animated.View entering={FadeInDown.delay(60).duration(400)} style={styles.section}>
           <Text style={[styles.label, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
@@ -608,7 +618,8 @@ export default function LogDonationModal() {
           />
         </Animated.View>
       </ScrollView>
-    </ScreenWrapper>
+    </KeyboardAvoidingView>
+  </ScreenWrapper>
   );
 }
 

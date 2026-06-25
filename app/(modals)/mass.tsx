@@ -746,6 +746,7 @@ export default function MassScheduleScreen() {
 
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
           style={styles.bottomSheetContainer}
         >
           <View
@@ -780,6 +781,8 @@ export default function MassScheduleScreen() {
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.sheetScroll}
+              automaticallyAdjustKeyboardInsets={true}
+              keyboardShouldPersistTaps="handled"
             >
               {/* Day & Time Selection */}
               <View style={styles.formRow}>
@@ -803,7 +806,6 @@ export default function MassScheduleScreen() {
 
               {/* Booker Name */}
               <Input
-                label="Booker Name"
                 placeholder="e.g. Chidi Okonkwo"
                 value={bookerName}
                 onChangeText={setBookerName}

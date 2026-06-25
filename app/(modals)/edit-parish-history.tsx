@@ -1,50 +1,113 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, Alert, KeyboardAvoidingView, Platform, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-
-const INITIAL_HISTORY = "Our parish was founded in 1952 by Father James O'Connell. It began as a small wooden structure serving 20 families in the local community. Over the decades, it has grown into a vibrant spiritual hub for over 2,000 parishioners, known for its dedication to community service and youth development.";
+import { useParishQuery } from '@/hooks/queries/useParishes';
+import { useUpdateParishMutation } from '@/hooks/mutations/useParishes';
+import { Label } from '@/components/ui/Label';
 
 export default function EditParishHistoryModal() {
   const { colors, typography, radius } = useTheme();
   const router = useRouter();
+  const { user } = useAuth();
+  const parishId = user?.parishId;
 
-  const [history, setHistory] = useState(INITIAL_HISTORY);
+  const { data: parishData, isLoading } = useParishQuery(parishId || '');
+  const updateParishMutation = useUpdateParishMutation();
 
-  const handleSave = () => {
-    Alert.alert('Success', 'Parish history updated successfully.');
-    router.back();
+  const [patron, setPatron] = useState('');
+  const [founded, setFounded] = useState('');
+  const [bishop, setBishop] = useState('');
+  const [parishPriest, setParishPriest] = useState('');
+  const [brief, setBrief] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+
+  useEffect(() => {
+    if (parishData) {
+      setPatron(parishData.patron || '');
+      setFounded(parishData.founded || '');
+      setBishop(parishData.bishop || '');
+      setParishPriest(parishData.parish_priest || '');
+      setBrief(parishData.brief || '');
+      setImageUrl(parishData.image_url || '');
+    }
+  }, [parishData]);
+
+  const handleSave = async () => {
+    if (!parishId) {
+      Alert.alert('Error', 'No parish assigned to your account.');
+      return;
+    }
+    if (!patron.trim() || !founded.trim() || !bishop.trim() || !parishPriest.trim() || !brief.trim()) {
+      Alert.alert('Missing Info', 'Please fill in all fields.');
+      return;
+    }
+
+    try {
+      await updateParishMutation.mutateAsync({
+        parishId,
+        updates: {
+          patron,
+          founded,
+          bishop,
+          parish_priest: parishPriest,
+          brief,
+          image_url: imageUrl || null,
+        },
+      });
+      Alert.alert('Success', 'Parish history updated successfully.');
+      router.back();
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Failed to update parish history.');
+    }
   };
 
-  const handleChangePhoto = () => {
-    Alert.alert('Upload Photo', 'Photo library access coming soon.');
-  };
+  if (isLoading) {
+    return (
+      <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
+        <ScreenHeader title="Edit History" />
+        <View style={[styles.centered, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={{ marginTop: 12, color: colors.textSecondary, fontFamily: typography.fontFamily.medium }}>
+            Loading parish details...
+          </Text>
+        </View>
+      </ScreenWrapper>
+    );
+  }
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title="Edit History" />
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         style={{ flex: 1 }}
       >
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardShouldPersistTaps="handled"
+        >
 
-          {/* Image Preview Area */}
+          {/* Cover Photo */}
           <Animated.View entering={FadeInDown.delay(100).duration(450)} style={styles.imageSection}>
             <Text style={[styles.label, { color: colors.textSecondary, fontFamily: typography.fontFamily.bold }]}>
               Parish Cover Photo
             </Text>
             <View style={[styles.imageCard, { borderRadius: radius.lg, overflow: 'hidden' }]}>
               <Image
-                source={require('@/assets/images/church_exterior_hero.png')}
+                source={imageUrl ? { uri: imageUrl } : require('@/assets/images/church_exterior_hero.png')}
                 style={StyleSheet.absoluteFillObject}
                 contentFit="cover"
               />
@@ -52,41 +115,89 @@ export default function EditParishHistoryModal() {
                 colors={['rgba(7,21,36,0.2)', 'rgba(7,21,36,0.6)']}
                 style={StyleSheet.absoluteFillObject}
               />
-              <TouchableOpacity 
-                onPress={handleChangePhoto}
-                activeOpacity={0.85} 
-                style={styles.imageOverlayBtn}
-              >
+              <View style={styles.imageOverlayBtn}>
                 <View style={[styles.cameraCircle, { backgroundColor: colors.surface }]}>
-                  <Ionicons name="camera" size={20} color={colors.primary} />
+                  <Ionicons name="image-outline" size={20} color={colors.primary} />
                 </View>
                 <Text style={[styles.cameraText, { fontFamily: typography.fontFamily.bold }]}>
-                  Change Cover Photo
+                  Cover Image Preview
                 </Text>
-              </TouchableOpacity>
+              </View>
             </View>
           </Animated.View>
 
-          {/* Text Area Input */}
-          <Animated.View entering={FadeInDown.delay(180).duration(450)}>
-            <Input
-              label="Parish Story"
-              placeholder="Type the parish history here..."
-              value={history}
-              onChangeText={setHistory}
-              multiline
-              numberOfLines={6}
-              style={styles.textArea}
-            />
+          {/* Form Fields */}
+          <Animated.View entering={FadeInDown.delay(150).duration(450)} style={styles.form}>
+
+            <View>
+              <Label label="Patron Saint / Name" required />
+              <Input
+                placeholder="e.g. St. Patrick"
+                value={patron}
+                onChangeText={setPatron}
+              />
+            </View>
+
+            <View>
+              <Label label="Founded Year" required />
+              <Input
+                placeholder="e.g. 1952"
+                value={founded}
+                onChangeText={setFounded}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <View>
+              <Label label="Bishop Name" required />
+              <Input
+                placeholder="e.g. Most Rev. Ignatius Kaigama"
+                value={bishop}
+                onChangeText={setBishop}
+              />
+            </View>
+
+            <View>
+              <Label label="Parish Priest Name" required />
+              <Input
+                placeholder="e.g. Rev. Fr. Emmanuel Okafor"
+                value={parishPriest}
+                onChangeText={setParishPriest}
+              />
+            </View>
+
+            <View>
+              <Label label="Cover Image URL" />
+              <Input
+                placeholder="https://example.com/church.png (optional)"
+                value={imageUrl}
+                onChangeText={setImageUrl}
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            <View>
+              <Label label="Our Story / History Brief" required />
+              <Input
+                placeholder="Type the parish history here..."
+                value={brief}
+                onChangeText={setBrief}
+                multiline
+                numberOfLines={6}
+                style={styles.textArea}
+              />
+            </View>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(260).duration(450)}>
-            <Button 
+            <Button
               label="Save Changes"
               onPress={handleSave}
               fullWidth
               size="lg"
-              style={{ marginTop: 16 }}
+              loading={updateParishMutation.isPending}
+              style={{ marginTop: 24 }}
             />
           </Animated.View>
 
@@ -98,9 +209,7 @@ export default function EditParishHistoryModal() {
 
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 60 },
-  header: { marginBottom: 24 },
-  title: { fontSize: 24 },
-  subtitle: { fontSize: 14, marginTop: 4, lineHeight: 20 },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   label: {
     fontSize: 11,
     textTransform: 'uppercase',
@@ -131,6 +240,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
   cameraText: {
     fontSize: 13,
@@ -138,6 +248,9 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.4)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+  },
+  form: {
+    gap: 16,
   },
   textArea: {
     height: 160,

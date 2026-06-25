@@ -8,12 +8,39 @@ export class MassService {
    */
   async createMassBookingRaw(booking: Omit<DatabaseMassBooking, 'id' | 'createdAt'>) {
     try {
+      let parishId: string | null = null;
+      const userId = booking.user_id;
+      if (userId) {
+        const { data: profile } = await supaBaseClient
+          .from('profiles')
+          .select('parishId')
+          .eq('id', userId)
+          .single();
+        parishId = profile?.parishId;
+      } else {
+        const { data: { session } } = await supaBaseClient.auth.getSession();
+        const sessUserId = session?.user?.id;
+        if (sessUserId) {
+          const { data: profile } = await supaBaseClient
+            .from('profiles')
+            .select('parishId')
+            .eq('id', sessUserId)
+            .single();
+          parishId = profile?.parishId;
+        }
+      }
+
       const { data, error } = await supaBaseClient
         .from('mass_bookings')
-        .insert([booking])
+        .insert([
+          {
+            ...booking,
+            parish_id: parishId,
+          },
+        ])
         .select()
         .single();
-
+ 
       if (error) throw error;
       return { data: data as DatabaseMassBooking, error: null };
     } catch (error: any) {
@@ -78,10 +105,10 @@ export class MassService {
     try {
       const { data, error } = await supaBaseClient
         .from('mass_bookings')
-        .select('*, profiles:user_id(id, fullName, parishId)')
-        .eq('profiles.parishId', parishId)
+        .select('*, profiles:user_id(id, fullName)')
+        .eq('parish_id', parishId)
         .order('createdAt', { ascending: false });
-
+ 
       if (error) throw error;
       return { data: data as DatabaseMassBooking[], error: null };
     } catch (error: any) {

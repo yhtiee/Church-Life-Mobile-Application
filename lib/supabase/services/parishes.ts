@@ -39,5 +39,25 @@ export class ParishServices {
       return { data: null, error };
     }
   }
+
+  /**
+   * Updates a parish's details (e.g. history, patron, priest, bishop).
+   */
+  async updateParishDetails(parishId: string, updates: Partial<Parish>) {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('parishes')
+        .update(updates)
+        .eq('id', parishId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: data as Parish, error: null };
+    } catch (error: any) {
+      console.error(`Error updating parish details (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
 }
 

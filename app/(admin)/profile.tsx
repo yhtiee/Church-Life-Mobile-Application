@@ -67,7 +67,7 @@ export default function AdminProfileScreen() {
             <Animated.View entering={FadeInDown.delay(160).duration(400)} style={styles.badgesRow}>
               <View style={[styles.heroBadge, { backgroundColor: colors.dangerBg, borderColor: colors.danger + '60' }]}>
                 <Text style={[styles.heroBadgeText, { color: colors.danger, fontFamily: typography.fontFamily.bold }]}>
-                  {user?.role === 'parish_admin' ? 'Parish Priest' : 'Secretary'}
+                  {user?.role === 'parish_admin' ? 'Parish Admin' : 'Secretary'}
                 </Text>
               </View>
             </Animated.View>
@@ -125,6 +125,22 @@ export default function AdminProfileScreen() {
               />
             </View>
           </Animated.View>
+
+          {/* ── Parish Management ── */}
+          {user?.role === 'parish_admin' && (
+            <Animated.View entering={FadeInDown.delay(190).duration(400)}>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
+                Parish Management
+              </Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <SettingRow
+                  icon="business-outline"
+                  label="Edit Parish History"
+                  onPress={() => router.push('/(modals)/edit-parish-history')}
+                />
+              </View>
+            </Animated.View>
+          )}
 
           {/* ── System & UI ── */}
           <Animated.View entering={FadeInDown.delay(220).duration(400)}>

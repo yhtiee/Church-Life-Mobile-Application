@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -127,7 +127,17 @@ export default function NewPledgeScreen() {
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title="New Pledge" />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
+          keyboardShouldPersistTaps="handled"
+        >
         
         <Animated.View entering={FadeInDown.duration(400)}>
           <Card 
@@ -241,7 +251,8 @@ export default function NewPledgeScreen() {
         </View>
 
       </ScrollView>
-    </ScreenWrapper>
+    </KeyboardAvoidingView>
+  </ScreenWrapper>
   );
 }
 

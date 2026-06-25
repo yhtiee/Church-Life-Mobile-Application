@@ -175,7 +175,6 @@ export default function GroupAccessRequestScreen() {
         {/* Form Reason Input */}
         <Animated.View entering={FadeInDown.delay(180).duration(450)}>
           <Input
-            label="Reason for Request"
             placeholder="Why do you want to join this group?"
             value={reason}
             onChangeText={setReason}

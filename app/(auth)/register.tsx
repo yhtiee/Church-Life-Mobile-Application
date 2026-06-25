@@ -137,7 +137,11 @@ export default function RegisterScreen() {
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+        style={{ flex: 1 }}
+      >
 
         {/* Header bar */}
         <View style={[styles.headerBar, { borderBottomColor: colors.border }]}>
@@ -172,7 +176,12 @@ export default function RegisterScreen() {
           ))}
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <ScrollView 
+          contentContainerStyle={styles.scroll} 
+          keyboardShouldPersistTaps="handled" 
+          showsVerticalScrollIndicator={false}
+          automaticallyAdjustKeyboardInsets={true}
+        >
 
           {/* Error banner */}
           {/* {!!error && (

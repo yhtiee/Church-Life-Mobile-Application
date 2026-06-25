@@ -29,12 +29,20 @@ export class FinanaceService {
    */
   async createDonationRaw(userId: string, donation: Omit<Donation, 'id' | 'date' | 'status' | 'fulfilled_amount' | 'approved_at' | 'approved_by' | 'admin_notes'>) {
     try {
+      const { data: profile } = await supaBaseClient
+        .from('profiles')
+        .select('parishId')
+        .eq('id', userId)
+        .single();
+      const parishId = profile?.parishId;
+
       const { data, error } = await supaBaseClient
         .from('donations')
         .insert([
           {
             ...donation,
             user_id: userId,
+            parish_id: parishId,
             date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
             status: 'pending', // Default to pending for admin approval
           },
@@ -88,12 +96,20 @@ export class FinanaceService {
    */
   async createPledgeRaw(userId: string, pledge: Omit<Pledge, 'id' | 'isPaid' | 'paidDate' | 'paidAmount' | 'status' | 'fulfilled_amount' | 'approved_at' | 'approved_by' | 'admin_notes'>) {
     try {
+      const { data: profile } = await supaBaseClient
+        .from('profiles')
+        .select('parishId')
+        .eq('id', userId)
+        .single();
+      const parishId = profile?.parishId;
+
       const { data, error } = await supaBaseClient
         .from('pledges')
         .insert([
           {
             ...pledge,
             user_id: userId,
+            parish_id: parishId,
             isPaid: false,
             status: 'pending', // Default to pending for admin approval
           },
@@ -146,8 +162,8 @@ export class FinanaceService {
     try {
       const { data, error } = await supaBaseClient
         .from('donations')
-        .select('*, profiles:user_id(id, fullName, parishId)')
-        .eq('profiles.parishId', parishId)
+        .select('*, profiles:user_id(id, fullName)')
+        .eq('parish_id', parishId)
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -183,8 +199,8 @@ export class FinanaceService {
     try {
       const { data, error } = await supaBaseClient
         .from('pledges')
-        .select('*, profiles:user_id(id, fullName, parishId)')
-        .eq('profiles.parishId', parishId)
+        .select('*, profiles:user_id(id, fullName)')
+        .eq('parish_id', parishId)
         .order('dueDate', { ascending: true });
 
       if (error) throw error;
@@ -220,12 +236,13 @@ export class FinanaceService {
   /**
    * Fetches all pending donations across the parish (admin view).
    */
-  async getPendingDonations() {
+  async getPendingDonations(parishId: string) {
     try {
       const { data, error } = await supaBaseClient
         .from('donations')
         .select('*, profiles:user_id(id, fullName, email)')
         .eq('status', 'pending')
+        .eq('parish_id', parishId)
         .order('date', { ascending: false });
 
       if (error) throw error;
@@ -239,12 +256,13 @@ export class FinanaceService {
   /**
    * Fetches all pending pledges across the parish (admin view).
    */
-  async getPendingPledges() {
+  async getPendingPledges(parishId: string) {
     try {
       const { data, error } = await supaBaseClient
         .from('pledges')
         .select('*, profiles:user_id(id, fullName, email)')
         .eq('status', 'pending')
+        .eq('parish_id', parishId)
         .order('dueDate', { ascending: true });
 
       if (error) throw error;
