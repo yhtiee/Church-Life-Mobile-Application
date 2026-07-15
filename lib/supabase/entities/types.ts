@@ -44,6 +44,7 @@ export interface DatabaseProfile {
   fullName: string;
   baptismalName?: string | null;
   email: string;
+  phoneNumber?: string | null;
   sex?: Sex | null;
   birthdayMonth: string;
   parishId?: string | null;

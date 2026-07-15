@@ -122,48 +122,41 @@ export default function HomeScreen() {
   useEffect(() => {
     let active = true;
     const fetchData = async () => {
-      try {
-        // Fetch announcements
-        const announcementService = new AnnoucementService();
-        const { data: announcementData, error: announcementError } = await announcementService.fetchAnnouncements(user?.parishId);
-        if (active) {
-          if (!announcementError && announcementData) {
-            setAnnouncements(announcementData);
-          } else {
-            setAnnouncements([]);
-          }
-        }
+      const announcementService = new AnnoucementService();
+      const adsService = new AdsService();
+      const bibleService = new BibleService();
 
-        // Fetch ads
-        const adsService = new AdsService();
-        const { data: adsData, error: adsError } = await adsService.fetchActiveAds();
-        if (active) {
-          if (!adsError && adsData) {
-            setAds(adsData);
-          } else {
-            setAds([]);
-          }
-        }
+      // Run the three startup requests concurrently instead of sequentially so
+      // content appears as soon as the slowest one (not their sum) resolves.
+      const [announcementsRes, adsRes, verse] = await Promise.all([
+        announcementService.fetchAnnouncements(user?.parishId).catch((e) => {
+          console.error('Failed to load announcements:', e);
+          return { data: null, error: e };
+        }),
+        adsService.fetchActiveAds().catch((e) => {
+          console.error('Failed to load ads:', e);
+          return { data: null, error: e };
+        }),
+        bibleService.getVerseOfDay().catch((e) => {
+          console.error('Failed to load verse:', e);
+          return null;
+        }),
+      ]);
 
-        // Fetch verse of the day
-        const bibleService = new BibleService();
-        const verse = await bibleService.getVerseOfDay();
-        if (active && verse) {
-          setDailyVerse(verse);
-        } else if (active) {
-          // Fallback if daily verse fails
-          const randomVerse = await bibleService.getRandomVerse();
-          setDailyVerse(randomVerse);
-        }
-      } catch (err) {
-        console.error('Failed to load data:', err);
-        if (active) {
-          setAnnouncements([]);
-          setAds([]);
-        }
-      } finally {
-        if (active) setLoading(false);
+      if (!active) return;
+
+      setAnnouncements(!announcementsRes.error && announcementsRes.data ? announcementsRes.data : []);
+      setAds(!adsRes.error && adsRes.data ? adsRes.data : []);
+
+      if (verse) {
+        setDailyVerse(verse);
+      } else {
+        // Only fall back to a random verse if the deterministic one failed.
+        const randomVerse = await bibleService.getRandomVerse().catch(() => null);
+        if (active) setDailyVerse(randomVerse);
       }
+
+      if (active) setLoading(false);
     };
     fetchData();
     return () => {
@@ -290,6 +283,37 @@ export default function HomeScreen() {
           animationDelay={220}
         />
 
+        {/* ── Advertise With Us CTA ── */}
+        <Animated.View
+          entering={FadeInDown.delay(260).duration(450)}
+          style={styles.advertiseSection}
+        >
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/(modals)/advertise' as any)}
+          >
+            <LinearGradient
+              colors={['#0A1929', '#1D3557']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.advertiseCard}
+            >
+              <View style={styles.advertiseIcon}>
+                <Ionicons name="megaphone" size={22} color="#D4AF37" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.advertiseTitle, { fontFamily: typography.fontFamily.bold }]}>
+                  Advertise With Us
+                </Text>
+                <Text style={[styles.advertiseBody, { fontFamily: typography.fontFamily.regular }]}>
+                  Feature your business here — tap to enquire.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
         {/* ── Two-column: Parish & Bible ── */}
         <Animated.View
           entering={FadeInDown.delay(300).duration(450)}
@@ -392,6 +416,36 @@ const styles = StyleSheet.create({
   // Section
   section: {
     marginBottom: 4,
+  },
+  advertiseSection: {
+    paddingHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  advertiseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    borderRadius: 16,
+  },
+  advertiseIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(212,175,55,0.15)',
+  },
+  advertiseTitle: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 3,
+  },
+  advertiseBody: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.75)',
+    lineHeight: 18,
   },
   quickActionSection: {
     marginBottom: 20,

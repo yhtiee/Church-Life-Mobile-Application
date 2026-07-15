@@ -5,7 +5,7 @@
     "owner": "mobile-applications-yhutiee",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/cross-dove-background.png",
+    "icon": "./assets/images/new-logo.jpeg",
     "scheme": "churchlifeapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -18,10 +18,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/cross-dove-background.png",
-        "backgroundImage": "./assets/images/cross-dove-background.png",
-        "monochromeImage": "./assets/images/cross-dove-background.png"
+        "backgroundColor": "#FFFFFF",
+        "foregroundImage": "./assets/images/new-logo.jpeg"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -30,14 +28,14 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/new-logo.jpeg"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/cross-dove-background.png",
+          "image": "./assets/images/new-logo.jpeg",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

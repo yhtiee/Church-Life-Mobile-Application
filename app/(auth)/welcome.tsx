@@ -62,8 +62,8 @@ export default function WelcomeScreen() {
         <Animated.View entering={FadeIn.duration(700)} style={styles.heroContent}>
           <View style={styles.logoCircle}>
             <Image
-              source={require('@/assets/images/cross-dove-background.png')}
-              style={{ width: 60, height: 60 }}
+              source={require('@/assets/images/new-logo.jpeg')}
+              style={{ width: 60, height: 60, borderRadius: 30 }}
               contentFit="contain"
             />
           </View>
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   logoCircle: {
     width: 80,
     height: 80,
-    borderRadius: 24,
+    borderRadius: 40,
     backgroundColor: 'rgba(255,255,255,0.90)',
     alignItems: 'center',
     justifyContent: 'center',

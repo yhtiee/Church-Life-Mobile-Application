@@ -94,11 +94,11 @@ export const ALL_GROUPS = [...OPEN_GROUPS, ...SECURED_GROUPS];
 
 export function getGroupMetadata(groupName: string) {
   const name = groupName.toLowerCase();
-  if (name.includes('men')) {
-    return { shortName: 'CMO', icon: 'man-outline', color: '#1D3557', name: name };
-  }
   if (name.includes('women')) {
     return { shortName: 'CWO', icon: 'woman-outline', color: '#3F51B5', name: name };
+  }
+  if (name.includes('men')) {
+    return { shortName: 'CMO', icon: 'man-outline', color: '#1D3557', name: name };
   }
   if (name.includes('youth') || name.includes('cyon')) {
     return { shortName: 'CYON', icon: 'people-outline', color: '#D4AF37', name: name };

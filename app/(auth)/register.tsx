@@ -20,6 +20,7 @@ import { getGroupMetadata } from '@/constants/groups';
 import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
 import { useParishesQuery } from '@/hooks/queries/useParishes';
 import { supaBaseClient } from '@/lib/supabase/client';
+import { normalizePhoneForWhatsApp } from '@/constants/contact';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -63,6 +64,7 @@ export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
   const [baptismalName, setBaptismalName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [sex, setSex] = useState<Sex | null>(null);
@@ -83,6 +85,8 @@ export default function RegisterScreen() {
   const validateStep1 = () => {
     if (!fullName.trim()) return 'Please enter your full name.';
     if (!email.trim() || !email.includes('@')) return 'Please enter a valid email.';
+    if (!phoneNumber.trim()) return 'Please enter your phone number.';
+    if (!normalizePhoneForWhatsApp(phoneNumber)) return 'Please enter a valid phone number.';
     if (password.length < 6) return 'Password must be at least 6 characters.';
     if (password !== confirmPassword) return 'Passwords do not match.';
     if (!sex) return 'Please select your sex.';
@@ -116,7 +120,7 @@ export default function RegisterScreen() {
     setLoading(true);
     const payload: RegisterPayload = {
       fullName, baptismalName: baptismalName || undefined,
-      email, password, sex: sex!, birthdayMonth: birthdayMonth!,
+      email, phoneNumber: phoneNumber.trim(), password, sex: sex!, birthdayMonth: birthdayMonth!,
       parishId: noParish ? null : parishId,
       parishName: noParish ? null : parishName,
       groupId: groupId!,
@@ -203,8 +207,8 @@ export default function RegisterScreen() {
               >
                 <View style={styles.stepHeaderIcon}>
                   <Image 
-                    source={require('@/assets/images/cross-dove-background.png')} 
-                    style={{ width: 34, height: 34 }}
+                    source={require('@/assets/images/new-logo.jpeg')}
+                    style={{ width: 34, height: 34, borderRadius: 17 }}
                     contentFit="contain"
                   />
                 </View>
@@ -229,6 +233,10 @@ export default function RegisterScreen() {
               <View>
                 <Label label="Email Address" required />
                 <Input placeholder="you@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" leftIcon="mail-outline" />
+              </View>
+              <View>
+                <Label label="Phone Number" required />
+                <Input placeholder="e.g. 0803 123 4567" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" leftIcon="call-outline" />
               </View>
               <View>
                 <Label label="Password" required />
@@ -292,8 +300,8 @@ export default function RegisterScreen() {
               >
                 <View style={styles.stepHeaderIcon}>
                   <Image 
-                    source={require('@/assets/images/cross-dove-background.png')} 
-                    style={{ width: 34, height: 34 }}
+                    source={require('@/assets/images/new-logo.jpeg')}
+                    style={{ width: 34, height: 34, borderRadius: 17 }}
                     contentFit="contain"
                   />
                 </View>

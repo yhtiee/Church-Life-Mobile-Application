@@ -1,70 +1,94 @@
+/**
+ * BibleService — Douay-Rheims (Challoner) scripture provider.
+ *
+ * Backed by https://thedouayrheims.com/api (Catholic canon, no auth/key).
+ * The canon table, markup parser, and endpoint constants live in
+ * `lib/bible/douayRheims.ts`; this class is the app-facing façade.
+ *
+ * IMPORTANT: `BibleVerse.text` is always the CLEAN (markup-stripped) verse so
+ * preview surfaces (home screen, cards) stay safe. Screens that want footnotes
+ * read `rawText` + `notes` and render them via <ScriptureText />.
+ */
+import {
+  DR_API_BASE,
+  DR_BOOKS,
+  findBookByName,
+  findBookBySlug,
+  parseScripture,
+  stripMarkup,
+  type DouayBook,
+  type Note,
+  type Testament,
+} from '@/lib/bible/douayRheims';
+
 export interface BibleVerse {
   reference: string;
+  /** Clean, markup-free verse text — safe for previews and cards. */
   text: string;
+  /** Original verse text with <na>/<cr>/<i> markup, for footnote rendering. */
+  rawText: string;
   book: string;
   chapter: number;
   verse: number;
+  /** Footnotes and cross-references referenced by this verse. */
+  notes: Note[];
 }
 
-// Bible books with IDs matching the API
-const BIBLE_BOOKS = [
-  { name: 'Genesis', id: 'GEN', testament: 'OT', chapters: 50 },
-  { name: 'Exodus', id: 'EXO', testament: 'OT', chapters: 40 },
-  { name: 'Leviticus', id: 'LEV', testament: 'OT', chapters: 27 },
-  { name: 'Numbers', id: 'NUM', testament: 'OT', chapters: 36 },
-  { name: 'Deuteronomy', id: 'DEU', testament: 'OT', chapters: 34 },
-  { name: 'Joshua', id: 'JOS', testament: 'OT', chapters: 24 },
-  { name: 'Judges', id: 'JDG', testament: 'OT', chapters: 21 },
-  { name: 'Ruth', id: 'RUT', testament: 'OT', chapters: 4 },
-  { name: '1 Samuel', id: '1SA', testament: 'OT', chapters: 31 },
-  { name: '2 Samuel', id: '2SA', testament: 'OT', chapters: 24 },
-  { name: 'Psalms', id: 'PSA', testament: 'OT', chapters: 150 },
-  { name: 'Proverbs', id: 'PRO', testament: 'OT', chapters: 31 },
-  { name: 'Isaiah', id: 'ISA', testament: 'OT', chapters: 66 },
-  { name: 'Jeremiah', id: 'JER', testament: 'OT', chapters: 52 },
-  { name: 'Matthew', id: 'MAT', testament: 'NT', chapters: 28 },
-  { name: 'Mark', id: 'MRK', testament: 'NT', chapters: 16 },
-  { name: 'Luke', id: 'LUK', testament: 'NT', chapters: 24 },
-  { name: 'John', id: 'JHN', testament: 'NT', chapters: 21 },
-  { name: 'Romans', id: 'ROM', testament: 'NT', chapters: 16 },
-  { name: '1 Corinthians', id: '1CO', testament: 'NT', chapters: 16 },
-  { name: 'Galatians', id: 'GAL', testament: 'NT', chapters: 6 },
-  { name: 'Ephesians', id: 'EPH', testament: 'NT', chapters: 6 },
-  { name: 'Philippians', id: 'PHP', testament: 'NT', chapters: 4 },
-  { name: 'Colossians', id: 'COL', testament: 'NT', chapters: 4 },
-  { name: '1 Thessalonians', id: '1TH', testament: 'NT', chapters: 5 },
-  { name: '1 Timothy', id: '1TI', testament: 'NT', chapters: 6 },
-  { name: 'Hebrews', id: 'HEB', testament: 'NT', chapters: 13 },
-  { name: 'James', id: 'JAS', testament: 'NT', chapters: 5 },
-  { name: '1 Peter', id: '1PE', testament: 'NT', chapters: 5 },
-  { name: '1 John', id: '1JN', testament: 'NT', chapters: 5 },
-  { name: 'Revelation', id: 'REV', testament: 'NT', chapters: 22 },
-];
+/** A single verse inside a chapter reader. */
+export interface ChapterVerse {
+  verse: number;
+  text: string;      // clean
+  rawText: string;   // with markup
+  notes: Note[];
+}
+
+async function fetchJson(url: string): Promise<any | null> {
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.error('Bible API error:', res.status, url);
+    return null;
+  }
+  const body = await res.text();
+  if (body.trim().startsWith('<')) return null; // HTML error page
+  return JSON.parse(body);
+}
+
+/** Build a BibleVerse from a raw /api/verse or /api/random payload. */
+function toBibleVerse(data: any): BibleVerse | null {
+  if (!data || typeof data.verse !== 'number') return null;
+  const book = findBookBySlug(data.book);
+  const name = book?.name ?? data.book;
+  const rawText = String(data.text ?? '');
+  const { notes } = parseScripture(rawText, data.notes, data.cross_refs);
+  return {
+    reference: `${name} ${data.chapter}:${data.verse}`,
+    text: stripMarkup(rawText),
+    rawText,
+    book: name,
+    chapter: data.chapter,
+    verse: data.verse,
+    notes,
+  };
+}
 
 export class BibleService {
   /**
-   * Get verse of the day from Bible API
-   * Ensures same verse throughout the day, different verse each day
+   * Verse of the day — deterministic per calendar day, stable within the day.
    */
   async getVerseOfDay(): Promise<BibleVerse | null> {
     try {
-      // Generate deterministic book and chapter for today
       const today = new Date();
       const dayOfYear = Math.floor(
-        (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+        (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000,
       );
 
-      // Pick a book based on day of year
-      const bookIndex = dayOfYear % BIBLE_BOOKS.length;
-      const book = BIBLE_BOOKS[bookIndex];
+      // Only draw daily verses from the canonical books (skip the appendix).
+      const canon = DR_BOOKS.filter((b) => !b.appendix);
+      const book = canon[dayOfYear % canon.length];
+      const chapter = (Math.floor(dayOfYear / canon.length) % book.chapters) + 1;
+      const verse = (dayOfYear % 10) + 1;
 
-      // Pick a chapter in that book
-      const chapterIndex = Math.floor((dayOfYear / BIBLE_BOOKS.length) % book.chapters) + 1;
-
-      // Pick a verse in that chapter (usually first few verses, or random within chapter)
-      const verse = (dayOfYear % 10) + 1; // Verses 1-10 variation
-
-      return await this.getVerse(book.id, chapterIndex, verse);
+      return await this.getVerse(book.slug, chapter, verse);
     } catch (err) {
       console.error('Error getting verse of day:', err);
       return null;
@@ -72,116 +96,121 @@ export class BibleService {
   }
 
   /**
-   * Fetch a specific verse from Bible API
+   * Fetch one verse by book slug, chapter and verse. Falls back to the first
+   * verse of the chapter if the requested verse is out of range.
    */
-  async getVerse(
-    bookId: string,
-    chapter: number,
-    verse: number
-  ): Promise<BibleVerse | null> {
+  async getVerse(slug: string, chapter: number, verse: number): Promise<BibleVerse | null> {
     try {
-      // Fetch the entire chapter
-      const url = `https://bible-api.com/data/kjv/${bookId}/${chapter}`;
-      const res = await fetch(url);
+      const direct = await fetchJson(`${DR_API_BASE}/api/verse/${slug}/${chapter}/${verse}`);
+      const built = toBibleVerse(direct);
+      if (built) return built;
 
-      if (!res.ok) {
-        console.error('Failed to fetch chapter:', res.status);
-        return null;
-      }
-
-      const text = await res.text();
-      if (text.trim().startsWith('<')) {
-        // HTML response means error
-        return null;
-      }
-
-      const data = JSON.parse(text);
-      const verseList: any[] = Array.isArray(data) ? data : (data.verses ?? []);
-
-      // Find the specific verse
-      const verseData = verseList.find((v: any) => v.verse === verse);
-      if (!verseData) {
-        // If specific verse not found, get first verse of chapter
-        if (verseList.length > 0) {
-          const firstVerse = verseList[0];
-          const book = BIBLE_BOOKS.find((b) => b.id === bookId);
-          return {
-            reference: `${book?.name} ${chapter}:${firstVerse.verse}`,
-            text: (firstVerse.text ?? '').trim(),
-            book: book?.name ?? bookId,
-            chapter,
-            verse: firstVerse.verse,
-          };
-        }
-        return null;
-      }
-
-      const book = BIBLE_BOOKS.find((b) => b.id === bookId);
-      return {
-        reference: `${book?.name} ${chapter}:${verse}`,
-        text: (verseData.text ?? '').trim(),
-        book: book?.name ?? bookId,
-        chapter,
-        verse,
-      };
+      // Requested verse missing → fall back to verse 1 of the chapter.
+      if (verse !== 1) return this.getVerse(slug, chapter, 1);
+      return null;
     } catch (err) {
       console.error('Exception fetching verse:', err);
       return null;
     }
   }
 
-  /**
-   * Get a random verse from any book
-   */
-  async getRandomVerse(): Promise<BibleVerse | null> {
+  /** Fetch a full chapter as a list of parsed verses. */
+  async getChapter(slug: string, chapter: number): Promise<ChapterVerse[] | null> {
     try {
-      const randomBook = BIBLE_BOOKS[Math.floor(Math.random() * BIBLE_BOOKS.length)];
-      const randomChapter = Math.floor(Math.random() * randomBook.chapters) + 1;
-      const randomVerse = Math.floor(Math.random() * 10) + 1;
+      const data = await fetchJson(`${DR_API_BASE}/api/chapter/${slug}/${chapter}`);
+      const verses: any[] = Array.isArray(data?.verses) ? data.verses : [];
+      if (verses.length === 0) return null;
 
-      return await this.getVerse(randomBook.id, randomChapter, randomVerse);
+      return verses.map((v: any) => {
+        const rawText = String(v.text ?? '');
+        const { notes } = parseScripture(rawText, v.notes, v.cross_refs);
+        return {
+          verse: v.verse,
+          text: stripMarkup(rawText),
+          rawText,
+          notes,
+        };
+      });
+    } catch (err) {
+      console.error('Exception fetching chapter:', err);
+      return null;
+    }
+  }
+
+  /** Random verse, optionally restricted to one Testament. */
+  async getRandomVerse(testament?: Testament): Promise<BibleVerse | null> {
+    try {
+      const qs = testament ? `?testament=${testament}` : '';
+      const data = await fetchJson(`${DR_API_BASE}/api/random${qs}`);
+      return toBibleVerse(data);
     } catch (err) {
       console.error('Error getting random verse:', err);
       return null;
     }
   }
 
-  /**
-   * Get verse by reference (e.g., "John 3:16")
-   */
+  /** Resolve a reference like "John 3:16" or "1 Corinthians 13:4". */
   async getVerseByReference(reference: string): Promise<BibleVerse | null> {
     try {
-      // Parse reference format: "BookName Chapter:Verse"
-      const parts = reference.split(' ');
-      let bookName = '';
-      let chapterVerse = '';
-
-      // Handle books with multiple words (e.g., "1 John", "Song of Solomon")
+      const parts = reference.trim().split(' ');
+      let chapterVerseIdx = -1;
       for (let i = 0; i < parts.length; i++) {
         if (parts[i].includes(':')) {
-          bookName = parts.slice(0, i).join(' ');
-          chapterVerse = parts[i];
+          chapterVerseIdx = i;
           break;
         }
       }
+      if (chapterVerseIdx === -1) return null;
 
-      const [chapterStr, verseStr] = chapterVerse.split(':');
+      const bookName = parts.slice(0, chapterVerseIdx).join(' ');
+      const [chapterStr, verseStr] = parts[chapterVerseIdx].split(':');
       const chapter = parseInt(chapterStr, 10);
       const verse = parseInt(verseStr, 10);
 
-      const book = BIBLE_BOOKS.find((b) =>
-        b.name.toLowerCase() === bookName.toLowerCase()
-      );
-
+      const book: DouayBook | undefined = findBookByName(bookName);
       if (!book) {
         console.warn('Book not found:', bookName);
         return null;
       }
-
-      return await this.getVerse(book.id, chapter, verse);
+      return await this.getVerse(book.slug, chapter, verse);
     } catch (err) {
       console.error('Error parsing reference:', err);
       return null;
+    }
+  }
+
+  /**
+   * Full-text search across verse text.
+   * @returns lightweight hits with clean text and a resolved reference.
+   */
+  async search(
+    query: string,
+    limit = 50,
+  ): Promise<{ reference: string; text: string; slug: string; chapter: number; verse: number }[]> {
+    try {
+      const q = encodeURIComponent(query.trim());
+      if (!q) return [];
+      const data = await fetchJson(`${DR_API_BASE}/api/search?q=${q}&scope=verses&limit=${limit}`);
+      const results: any[] = Array.isArray(data?.results) ? data.results : [];
+
+      const hits: { reference: string; text: string; slug: string; chapter: number; verse: number }[] = [];
+      for (const r of results) {
+        const book = findBookBySlug(r.slug);
+        const name = book?.name ?? r.bookName ?? r.slug;
+        for (const v of r.verses ?? []) {
+          hits.push({
+            reference: `${name} ${r.chapter}:${v.verse}`,
+            text: stripMarkup(String(v.text ?? '')),
+            slug: r.slug,
+            chapter: r.chapter,
+            verse: v.verse,
+          });
+        }
+      }
+      return hits;
+    } catch (err) {
+      console.error('Error searching scripture:', err);
+      return [];
     }
   }
 }

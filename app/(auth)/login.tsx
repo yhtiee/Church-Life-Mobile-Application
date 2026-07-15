@@ -90,8 +90,8 @@ export default function LoginScreen() {
           <Animated.View entering={FadeIn.duration(600)} style={styles.heroContent}>
             <View style={styles.logoCircle}>
               <Image
-                source={require('@/assets/images/cross-dove-background.png')}
-                style={{ width: 56, height: 56 }}
+                source={require('@/assets/images/new-logo.jpeg')}
+                style={{ width: 56, height: 56, borderRadius: 28 }}
                 contentFit="contain"
               />
             </View>

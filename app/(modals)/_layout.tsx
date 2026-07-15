@@ -21,12 +21,14 @@ export default function ModalsLayout() {
       <Stack.Screen name="pledge-detail" />
       <Stack.Screen name="log-donation" />
       <Stack.Screen name="edit-email" />
+      <Stack.Screen name="edit-phone" />
       <Stack.Screen name="edit-birthday" />
       <Stack.Screen name="change-password" />
       <Stack.Screen name="compose-message" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="edit-parish-history" />
       <Stack.Screen name="hymn" />
       <Stack.Screen name="mass" />
+      <Stack.Screen name="advertise" />
     </Stack>
   );
 }

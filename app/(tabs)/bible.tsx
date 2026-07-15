@@ -7,91 +7,15 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ScriptureText } from '@/components/ui/ScriptureText';
+import { DR_BOOKS, type DouayBook } from '@/lib/bible/douayRheims';
+import { BibleService, type ChapterVerse } from '@/lib/supabase/services/bible';
 
 // ── Bible data ─────────────────────────────────────────────────────────────────
-interface BibleBook {
-  name: string;
-  abbr: string;
-  bookId: string;    // exact ID for /data/kjv/BOOK_ID/CHAPTER
-  chapters: number;
-  testament: 'OT' | 'NT';
-}
-
-const BIBLE_BOOKS: BibleBook[] = [
-  // ─ Old Testament ─
-  { name: 'Genesis',         abbr: 'Gen', bookId: 'GEN', chapters: 50,  testament: 'OT' },
-  { name: 'Exodus',          abbr: 'Exo', bookId: 'EXO', chapters: 40,  testament: 'OT' },
-  { name: 'Leviticus',       abbr: 'Lev', bookId: 'LEV', chapters: 27,  testament: 'OT' },
-  { name: 'Numbers',         abbr: 'Num', bookId: 'NUM', chapters: 36,  testament: 'OT' },
-  { name: 'Deuteronomy',     abbr: 'Deu', bookId: 'DEU', chapters: 34,  testament: 'OT' },
-  { name: 'Joshua',          abbr: 'Jos', bookId: 'JOS', chapters: 24,  testament: 'OT' },
-  { name: 'Judges',          abbr: 'Jdg', bookId: 'JDG', chapters: 21,  testament: 'OT' },
-  { name: 'Ruth',            abbr: 'Rut', bookId: 'RUT', chapters: 4,   testament: 'OT' },
-  { name: '1 Samuel',        abbr: '1Sa', bookId: '1SA', chapters: 31,  testament: 'OT' },
-  { name: '2 Samuel',        abbr: '2Sa', bookId: '2SA', chapters: 24,  testament: 'OT' },
-  { name: '1 Kings',         abbr: '1Ki', bookId: '1KI', chapters: 22,  testament: 'OT' },
-  { name: '2 Kings',         abbr: '2Ki', bookId: '2KI', chapters: 25,  testament: 'OT' },
-  { name: '1 Chronicles',    abbr: '1Ch', bookId: '1CH', chapters: 29,  testament: 'OT' },
-  { name: '2 Chronicles',    abbr: '2Ch', bookId: '2CH', chapters: 36,  testament: 'OT' },
-  { name: 'Ezra',            abbr: 'Ezr', bookId: 'EZR', chapters: 10,  testament: 'OT' },
-  { name: 'Nehemiah',        abbr: 'Neh', bookId: 'NEH', chapters: 13,  testament: 'OT' },
-  { name: 'Esther',          abbr: 'Est', bookId: 'EST', chapters: 10,  testament: 'OT' },
-  { name: 'Job',             abbr: 'Job', bookId: 'JOB', chapters: 42,  testament: 'OT' },
-  { name: 'Psalms',          abbr: 'Psa', bookId: 'PSA', chapters: 150, testament: 'OT' },
-  { name: 'Proverbs',        abbr: 'Pro', bookId: 'PRO', chapters: 31,  testament: 'OT' },
-  { name: 'Ecclesiastes',    abbr: 'Ecc', bookId: 'ECC', chapters: 12,  testament: 'OT' },
-  { name: 'Song of Solomon', abbr: 'Sol', bookId: 'SNG', chapters: 8,   testament: 'OT' },
-  { name: 'Isaiah',          abbr: 'Isa', bookId: 'ISA', chapters: 66,  testament: 'OT' },
-  { name: 'Jeremiah',        abbr: 'Jer', bookId: 'JER', chapters: 52,  testament: 'OT' },
-  { name: 'Lamentations',    abbr: 'Lam', bookId: 'LAM', chapters: 5,   testament: 'OT' },
-  { name: 'Ezekiel',         abbr: 'Eze', bookId: 'EZK', chapters: 48,  testament: 'OT' },
-  { name: 'Daniel',          abbr: 'Dan', bookId: 'DAN', chapters: 12,  testament: 'OT' },
-  { name: 'Hosea',           abbr: 'Hos', bookId: 'HOS', chapters: 14,  testament: 'OT' },
-  { name: 'Joel',            abbr: 'Joe', bookId: 'JOL', chapters: 3,   testament: 'OT' },
-  { name: 'Amos',            abbr: 'Amo', bookId: 'AMO', chapters: 9,   testament: 'OT' },
-  { name: 'Obadiah',         abbr: 'Oba', bookId: 'OBA', chapters: 1,   testament: 'OT' },
-  { name: 'Jonah',           abbr: 'Jon', bookId: 'JON', chapters: 4,   testament: 'OT' },
-  { name: 'Micah',           abbr: 'Mic', bookId: 'MIC', chapters: 7,   testament: 'OT' },
-  { name: 'Nahum',           abbr: 'Nah', bookId: 'NAM', chapters: 3,   testament: 'OT' },
-  { name: 'Habakkuk',        abbr: 'Hab', bookId: 'HAB', chapters: 3,   testament: 'OT' },
-  { name: 'Zephaniah',       abbr: 'Zep', bookId: 'ZEP', chapters: 3,   testament: 'OT' },
-  { name: 'Haggai',          abbr: 'Hag', bookId: 'HAG', chapters: 2,   testament: 'OT' },
-  { name: 'Zechariah',       abbr: 'Zec', bookId: 'ZEC', chapters: 14,  testament: 'OT' },
-  { name: 'Malachi',         abbr: 'Mal', bookId: 'MAL', chapters: 4,   testament: 'OT' },
-  // ─ New Testament ─
-  { name: 'Matthew',         abbr: 'Mat', bookId: 'MAT', chapters: 28,  testament: 'NT' },
-  { name: 'Mark',            abbr: 'Mar', bookId: 'MRK', chapters: 16,  testament: 'NT' },
-  { name: 'Luke',            abbr: 'Luk', bookId: 'LUK', chapters: 24,  testament: 'NT' },
-  { name: 'John',            abbr: 'Joh', bookId: 'JHN', chapters: 21,  testament: 'NT' },
-  { name: 'Acts',            abbr: 'Act', bookId: 'ACT', chapters: 28,  testament: 'NT' },
-  { name: 'Romans',          abbr: 'Rom', bookId: 'ROM', chapters: 16,  testament: 'NT' },
-  { name: '1 Corinthians',   abbr: '1Co', bookId: '1CO', chapters: 16,  testament: 'NT' },
-  { name: '2 Corinthians',   abbr: '2Co', bookId: '2CO', chapters: 13,  testament: 'NT' },
-  { name: 'Galatians',       abbr: 'Gal', bookId: 'GAL', chapters: 6,   testament: 'NT' },
-  { name: 'Ephesians',       abbr: 'Eph', bookId: 'EPH', chapters: 6,   testament: 'NT' },
-  { name: 'Philippians',     abbr: 'Phi', bookId: 'PHP', chapters: 4,   testament: 'NT' },
-  { name: 'Colossians',      abbr: 'Col', bookId: 'COL', chapters: 4,   testament: 'NT' },
-  { name: '1 Thessalonians', abbr: '1Th', bookId: '1TH', chapters: 5,   testament: 'NT' },
-  { name: '2 Thessalonians', abbr: '2Th', bookId: '2TH', chapters: 3,   testament: 'NT' },
-  { name: '1 Timothy',       abbr: '1Ti', bookId: '1TI', chapters: 6,   testament: 'NT' },
-  { name: '2 Timothy',       abbr: '2Ti', bookId: '2TI', chapters: 4,   testament: 'NT' },
-  { name: 'Titus',           abbr: 'Tit', bookId: 'TIT', chapters: 3,   testament: 'NT' },
-  { name: 'Philemon',        abbr: 'Phm', bookId: 'PHM', chapters: 1,   testament: 'NT' },
-  { name: 'Hebrews',         abbr: 'Heb', bookId: 'HEB', chapters: 13,  testament: 'NT' },
-  { name: 'James',           abbr: 'Jam', bookId: 'JAS', chapters: 5,   testament: 'NT' },
-  { name: '1 Peter',         abbr: '1Pe', bookId: '1PE', chapters: 5,   testament: 'NT' },
-  { name: '2 Peter',         abbr: '2Pe', bookId: '2PE', chapters: 3,   testament: 'NT' },
-  { name: '1 John',          abbr: '1Jo', bookId: '1JN', chapters: 5,   testament: 'NT' },
-  { name: '2 John',          abbr: '2Jo', bookId: '2JN', chapters: 1,   testament: 'NT' },
-  { name: '3 John',          abbr: '3Jo', bookId: '3JN', chapters: 1,   testament: 'NT' },
-  { name: 'Jude',            abbr: 'Jud', bookId: 'JUD', chapters: 1,   testament: 'NT' },
-  { name: 'Revelation',      abbr: 'Rev', bookId: 'REV', chapters: 22,  testament: 'NT' },
-];
-
-interface BibleVerse {
-  verse: number;
-  text: string;
-}
+// Canon + markup parser live in lib/bible/douayRheims. Douay-Rheims (Catholic).
+type BibleBook = DouayBook;
+const BIBLE_BOOKS = DR_BOOKS;
+const bibleService = new BibleService();
 
 type BibleView = 'books' | 'chapters' | 'reader';
 
@@ -103,7 +27,7 @@ export default function BibleScreen() {
   const [testament, setTestament]             = useState<'OT' | 'NT'>('NT');
   const [selectedBook, setSelectedBook]       = useState<BibleBook | null>(null);
   const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-  const [verses, setVerses]                   = useState<BibleVerse[]>([]);
+  const [verses, setVerses]                   = useState<ChapterVerse[]>([]);
   const [loading, setLoading]                 = useState(false);
   const [error, setError]                     = useState<string | null>(null);
 
@@ -120,26 +44,12 @@ export default function BibleScreen() {
     setError(null);
     setVerses([]);
     try {
-      // Parameterized API: /data/TRANSLATION/BOOK_ID/CHAPTER
-      const url = `https://bible-api.com/data/kjv/${book.bookId}/${chapter}`;
-      const res = await fetch(url);
-
-      const text = await res.text();
-      if (!res.ok || text.trim().startsWith('<')) {
-        setError('Could not load this passage. Please try again.');
-        return;
-      }
-
-      const data = JSON.parse(text);
-
-      // /data endpoint returns { verses: [{verse, text}, ...] }
-      const verseList: any[] = Array.isArray(data) ? data : (data.verses ?? []);
-      if (verseList.length > 0) {
-        setVerses(verseList.map((v: any) => ({ verse: v.verse, text: (v.text ?? '').trim() })));
-      } else if (data.error) {
-        setError(data.error);
+      // Douay-Rheims API: /api/chapter/:slug/:chapter (parsed by BibleService).
+      const chapterVerses = await bibleService.getChapter(book.slug, chapter);
+      if (chapterVerses && chapterVerses.length > 0) {
+        setVerses(chapterVerses);
       } else {
-        setError('No verses found for this passage.');
+        setError('Could not load this passage. Please try again.');
       }
     } catch {
       setError('Network error. Please check your connection.');
@@ -326,9 +236,17 @@ export default function BibleScreen() {
                   <Text style={[styles.verseNum, { color: colors.primary, fontFamily: typography.fontFamily.bold }]}>
                     {v.verse}
                   </Text>
-                  <Text style={[styles.verseText, { color: colors.text, fontFamily: typography.fontFamily.regular }]}>
-                    {v.text}
-                  </Text>
+                  <View style={{ flex: 1 }}>
+                    <ScriptureText
+                      rawText={v.rawText}
+                      notes={v.notes}
+                      color={colors.text}
+                      fontSize={16}
+                      lineHeight={26}
+                      fontFamily={typography.fontFamily.regular}
+                      markerColor={colors.primary}
+                    />
+                  </View>
                 </Animated.View>
               ))}
 

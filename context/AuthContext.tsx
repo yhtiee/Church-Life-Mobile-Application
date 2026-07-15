@@ -14,6 +14,7 @@ export interface AuthUser {
   fullName: string;
   baptismalName?: string;
   email: string;
+  phoneNumber?: string | null;
   sex: Sex;
   birthdayMonth: BirthdayMonth;
   parishId: string | null;
@@ -30,6 +31,7 @@ export interface RegisterPayload {
   fullName: string;
   baptismalName?: string;
   email: string;
+  phoneNumber?: string;
   password: string;
   sex: Sex;
   birthdayMonth: BirthdayMonth;
@@ -58,55 +60,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore session and subscribe to auth state changes on start
   useEffect(() => {
+    let mounted = true;
+
+    // Load the DB profile for a session user, falling back to auth metadata
+    // if the profiles row isn't ready yet (e.g. mid-registration).
+    const loadProfile = async (sessionUser: any) => {
+      const profile = await authService.getUserProfile(sessionUser.id);
+      if (!mounted) return;
+      if (profile.data) {
+        setUser(profile.data);
+      } else {
+        setUser({
+          id: sessionUser.id,
+          fullName: sessionUser.user_metadata?.fullName || '',
+          baptismalName: sessionUser.user_metadata?.baptismalName || '',
+          email: sessionUser.email || '',
+          phoneNumber: sessionUser.user_metadata?.phoneNumber || null,
+          sex: sessionUser.user_metadata?.sex || 'Male',
+          birthdayMonth: sessionUser.user_metadata?.birthdayMonth || 'January',
+          parishId: sessionUser.user_metadata?.parishId || null,
+          parishName: sessionUser.user_metadata?.parishName || null,
+          groupId: sessionUser.user_metadata?.groupId || null,
+          groupName: sessionUser.user_metadata?.groupName || null,
+          role: 'member',
+          hasParishAccess: !!sessionUser.user_metadata?.parishId,
+          createdAt: sessionUser.created_at,
+        });
+      }
+    };
+
+    // Initial session restore (a single profile fetch gating the splash).
     const restore = async () => {
       try {
         const { data: { session } } = await supaBaseClient.auth.getSession();
-        if (session?.user) {
-          const profile = await authService.getUserProfile(session.user.id);
-          if (profile.data) {
-            setUser(profile.data);
-          }
-        }
+        if (session?.user) await loadProfile(session.user);
       } catch (error) {
         console.error('Error restoring session:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
     restore();
 
-    // Listen for auth changes to sync state
-    const { data: { subscription } } = supaBaseClient.auth.onAuthStateChange(async (event, session) => {
+    // React only to *transitions* (sign-in/out, token refresh). The initial
+    // event is skipped because restore() already handles it — this avoids a
+    // duplicate startup fetch. Supabase calls are deferred out of the callback
+    // to avoid the auth-client lock/deadlock warned about in supabase-js v2.
+    const { data: { subscription } } = supaBaseClient.auth.onAuthStateChange((event, session) => {
+      if (event === 'INITIAL_SESSION') return;
       if (session?.user) {
-        const profile = await authService.getUserProfile(session.user.id);
-        if (profile.data) {
-          setUser(profile.data);
-        } else {
-          // If profiles entry is not created yet (failing or delay during registration),
-          // fallback to user metadata or base profile schema
-          setUser({
-            id: session.user.id,
-            fullName: session.user.user_metadata?.fullName || '',
-            baptismalName: session.user.user_metadata?.baptismalName || '',
-            email: session.user.email || '',
-            sex: session.user.user_metadata?.sex || 'Male',
-            birthdayMonth: session.user.user_metadata?.birthdayMonth || 'January',
-            parishId: session.user.user_metadata?.parishId || null,
-            parishName: session.user.user_metadata?.parishName || null,
-            groupId: session.user.user_metadata?.groupId || null,
-            groupName: session.user.user_metadata?.groupName || null,
-            role: 'member',
-            hasParishAccess: !!session.user.user_metadata?.parishId,
-            createdAt: session.user.created_at,
-          });
-        }
+        setTimeout(() => { if (mounted) loadProfile(session.user); }, 0);
       } else {
         setUser(null);
       }
-      setIsLoading(false);
+      if (mounted) setIsLoading(false);
     });
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);

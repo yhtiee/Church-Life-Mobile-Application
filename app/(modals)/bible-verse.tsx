@@ -7,6 +7,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { ScriptureText } from '@/components/ui/ScriptureText';
 import { BibleService } from '@/lib/supabase/services/bible';
 
 export default function BibleVerseScreen() {
@@ -66,16 +67,31 @@ export default function BibleVerseScreen() {
             </Text>
           </View>
 
-          <Text style={{
-            fontSize: 22,
-            fontFamily: typography.fontFamily.medium,
-            color: '#FFFFFF',
-            lineHeight: 34,
-            marginTop: 24,
-            fontStyle: 'italic',
-          }}>
-            {loading ? 'Loading verse...' : `"${verse?.text || ''}"`}
-          </Text>
+          {loading ? (
+            <Text style={{
+              fontSize: 22,
+              fontFamily: typography.fontFamily.medium,
+              color: '#FFFFFF',
+              lineHeight: 34,
+              marginTop: 24,
+              fontStyle: 'italic',
+            }}>
+              Loading verse...
+            </Text>
+          ) : (
+            <View style={{ marginTop: 24 }}>
+              <ScriptureText
+                rawText={`“${verse?.rawText || ''}”`}
+                notes={verse?.notes}
+                color="#FFFFFF"
+                fontSize={22}
+                lineHeight={34}
+                fontFamily={typography.fontFamily.medium}
+                italic
+                markerColor="#D4AF37"
+              />
+            </View>
+          )}
 
           <View style={styles.divider} />
           

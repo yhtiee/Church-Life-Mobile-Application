@@ -142,8 +142,8 @@ const GlobalLoader: React.FC<GlobalLoaderProps> = ({
         {!isSmall && (
           <Animated.View style={[logoStyle, styles.logoWrap]}>
             <Image
-              source={require('@/assets/images/cross-dove-background.png')}
-              style={{ width: 60, height: 60 }}
+              source={require('@/assets/images/new-logo.jpeg')}
+              style={{ width: 60, height: 60, borderRadius: 30 }}
               contentFit="contain"
             />
           </Animated.View>

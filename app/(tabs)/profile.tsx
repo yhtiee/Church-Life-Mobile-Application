@@ -155,6 +155,13 @@ export default function ProfileScreen() {
                 onPress={() => router.push('/(modals)/edit-email')}
               />
               <SettingRow
+                icon="call-outline"
+                label="Phone Number"
+                value={user?.phoneNumber ?? 'Not set'}
+                showEditIcon
+                onPress={() => router.push('/(modals)/edit-phone' as any)}
+              />
+              <SettingRow
                 icon="calendar-outline"
                 label="Birthday Month"
                 value={user?.birthdayMonth}

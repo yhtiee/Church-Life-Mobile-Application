@@ -36,6 +36,7 @@ export class AuthService {
           data: {
             fullName: payload.fullName,
             baptismalName: payload.baptismalName,
+            phoneNumber: payload.phoneNumber,
           },
         },
       });
@@ -62,6 +63,7 @@ export class AuthService {
         fullName: payload.fullName,
         baptismalName: payload.baptismalName,
         email: payload.email,
+        phoneNumber: payload.phoneNumber ?? null,
         sex: payload.sex,
         birthdayMonth: payload.birthdayMonth,
         parishId: payload.parishId,
@@ -157,6 +159,30 @@ export class AuthService {
     } catch (error: any) {
       console.error('Error fetching all profiles:', error.message || error);
       return { data: null, error };
+    }
+  }
+
+  /**
+   * Fetches the WhatsApp/phone number of the parish administrator for a parish.
+   * Used to route "advertise with us" enquiries to the right admin.
+   * @returns the admin's phoneNumber, or null if none is set / found.
+   */
+  async getParishAdminPhone(parishId: string): Promise<{ phone: string | null; error: any }> {
+    try {
+      const { data, error } = await supaBaseClient
+        .from('profiles')
+        .select('phoneNumber')
+        .eq('parishId', parishId)
+        .eq('role', 'parish_admin')
+        .not('phoneNumber', 'is', null)
+        .limit(1);
+
+      if (error) throw error;
+      const phone = data && data.length > 0 ? (data[0].phoneNumber as string | null) : null;
+      return { phone: phone || null, error: null };
+    } catch (error: any) {
+      console.error(`Error fetching parish admin phone (${parishId}):`, error.message || error);
+      return { phone: null, error };
     }
   }
 
