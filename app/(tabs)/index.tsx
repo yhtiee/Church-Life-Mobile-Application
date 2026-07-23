@@ -93,6 +93,14 @@ const QUICK_ACTIONS = [
     route: '/(modals)/hymn',
   },
   {
+    icon: 'heart-outline' as const,
+    label: 'Prayers',
+    bg: '#FCE7F3',
+    iconColor: '#DB2777',
+    gradient: Gradients.cardGold,
+    route: '/(modals)/prayers',
+  },
+  {
     icon: 'calendar-outline' as const,
     label: 'Mass',
     bg: '#D1FAE5',
@@ -240,7 +248,11 @@ export default function HomeScreen() {
               Quick Access
             </Text>
           </View>
-          <View style={styles.quickRow}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickRow}
+          >
             {QUICK_ACTIONS.map((qa, i) => (
               <Animated.View key={qa.label} entering={ZoomIn.delay(i * 50 + 160).duration(350)}>
                 <TouchableOpacity
@@ -268,7 +280,7 @@ export default function HomeScreen() {
                 </TouchableOpacity>
               </Animated.View>
             ))}
-          </View>
+          </ScrollView>
         </Animated.View>
 
         {/* ── Ads Carousel ── */}
@@ -469,9 +481,9 @@ const styles = StyleSheet.create({
   // Quick actions
   quickRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingBottom: 4,
+    gap: 12,
   },
   quickTile: {
     alignItems: 'center',

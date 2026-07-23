@@ -13,7 +13,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
-import hymnsData from '@/constants/hymns.json';
+import hymnsData from '@/constants/new_hymns.json';
 
 interface LyricLine {
   verse?: number;

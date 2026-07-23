@@ -27,6 +27,7 @@ export default function ModalsLayout() {
       <Stack.Screen name="compose-message" options={{ presentation: 'fullScreenModal' }} />
       <Stack.Screen name="edit-parish-history" />
       <Stack.Screen name="hymn" />
+      <Stack.Screen name="prayers" />
       <Stack.Screen name="mass" />
       <Stack.Screen name="advertise" />
     </Stack>

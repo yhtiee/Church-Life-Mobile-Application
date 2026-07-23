@@ -1,0 +1,388 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-07-23",
+  "sections": [
+    {
+      "id": "introductory_rites",
+      "sectionTitle": "I. INTRODUCTORY RITES",
+      "parts": [
+        {
+          "id": "sign_of_cross",
+          "title": "Sign of the Cross",
+          "rubric": "All make the Sign of the Cross.",
+          "latin": {
+            "priest": "In nomine Patris, et Filii, et Spiritus Sancti.",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "In the name of the Father, and of the Son, and of the Holy Spirit.",
+            "people": "Amen."
+          }
+        },
+        {
+          "id": "greeting",
+          "title": "Greeting",
+          "latin": {
+            "priest": "Gratia Domini nostri Iesu Christi, et caritas Dei, et communicatio Sancti Spiritus sit cum omnibus vobis.",
+            "people": "Et cum Spiritu tuo."
+          },
+          "english": {
+            "priest": "The grace of our Lord Jesus Christ, and the love of God, and the communion of the Holy Spirit be with you all.",
+            "people": "And with your spirit."
+          }
+        },
+        {
+          "id": "penitential_act",
+          "title": "Penitential Act (Confiteor)",
+          "rubric": "The Priest invites the faithful to repent of their sins.",
+          "latin": {
+            "priest": "Fratres, agnoscamus peccata nostra, ut apti simus ad sacra mysteria celebranda.",
+            "people": "Confiteor Deo omnipotenti et vobis, fratres, quia peccavi nimis cogitatione, verbo, opera et omissione: mea culpa, mea culpa, mea maxima culpa. Ideo precor beatam Mariam semper Virginem, omnes Angelos et Sanctos, et vos, fratres, orare pro me ad Dominum Deum nostrum."
+          },
+          "english": {
+            "priest": "Brethren (brothers and sisters), let us acknowledge our sins, and so prepare ourselves to celebrate the sacred mysteries.",
+            "people": "I confess to almighty God and to you, my brothers and sisters, that I have greatly sinned, in my thoughts and in my words, in what I have done and in what I have failed to do, through my fault, through my fault, through my most grievous fault; therefore I ask blessed Mary ever-Virgin, all the Angels and Saints, and you, my brothers and sisters, to pray for me to the Lord our God."
+          }
+        },
+        {
+          "id": "absolution",
+          "title": "Absolution",
+          "latin": {
+            "priest": "Misereatur nostri omnipotens Deus et, dimissis peccatis nostris, perducat nos ad vitam aeternam.",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "May almighty God have mercy on us, forgive us our sins, and bring us to everlasting life.",
+            "people": "Amen."
+          }
+        },
+        {
+          "id": "kyrie",
+          "title": "Kyrie Eleison (Lord, Have Mercy)",
+          "latin": {
+            "text": "C: Kyrie, eleison.  R: Kyrie, eleison.\nC: Christe, eleison.  R: Christe, eleison.\nC: Kyrie, eleison.  R: Kyrie, eleison."
+          },
+          "english": {
+            "text": "C: Lord, have mercy.  R: Lord, have mercy.\nC: Christ, have mercy.  R: Christ, have mercy.\nC: Lord, have mercy.  R: Lord, have mercy."
+          }
+        },
+        {
+          "id": "gloria",
+          "title": "Gloria (Glory to God)",
+          "latin": {
+            "text": "Gloria in excelsis Deo, et in terra pax hominibus bonae voluntatis. Laudamus te, benedicimus te, adoramus te, glorificamus te, gratias agimus tibi propter magnam gloriam tuam, Domine Deus, Rex caelestis, Deus Pater omnipotens. Domine Fili unigenite, Iesu Christe, Domine Deus, Agnus Dei, Filius Patris, qui tollis peccata mundi, miserere nobis; qui tollis peccata mundi, suscipe deprecationem nostram. Qui sedes ad dexteram Patris, miserere nobis. Quoniam tu solus Sanctus, tu solus Dominus, tu solus Altissimus, Iesu Christe, cum Sancto Spiritu: in gloria Dei Patris. Amen."
+          },
+          "english": {
+            "text": "Glory to God in the highest, and on earth peace to people of good will. We praise you, we bless you, we adore you, we glorify you, we give you thanks for your great glory, Lord God, heavenly King, O God, almighty Father. Lord Jesus Christ, Only Begotten Son, Lord God, Lamb of God, Son of the Father, you take away the sins of the world, have mercy on us; you take away the sins of the world, receive our prayer; you are seated at the right hand of the Father, have mercy on us. For you alone are the Holy One, you alone are the Lord, you alone are the Most High, Jesus Christ, with the Holy Spirit, in the glory of God the Father. Amen."
+          }
+        },
+        {
+          "id": "collect",
+          "title": "Collect (Opening Prayer)",
+          "latin": {
+            "priest": "Oremus...",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "Let us pray...",
+            "people": "Amen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "liturgy_of_the_word",
+      "sectionTitle": "II. LITURGY OF THE WORD",
+      "parts": [
+        {
+          "id": "readings_response",
+          "title": "Response After Readings",
+          "latin": {
+            "priest": "Verbum Domini.",
+            "people": "Deo gratias."
+          },
+          "english": {
+            "priest": "The word of the Lord.",
+            "people": "Thanks be to God."
+          }
+        },
+        {
+          "id": "gospel_acclamation",
+          "title": "Gospel Proclamation",
+          "latin": {
+            "priest": "Dominus vobiscum.",
+            "people": "Et cum spiritu tuo."
+          },
+          "english": {
+            "priest": "The Lord be with you.",
+            "people": "And with your spirit."
+          }
+        },
+        {
+          "id": "gospel_announcement",
+          "title": "Announcement of the Gospel",
+          "latin": {
+            "priest": "Lectio Sancti Evangelii secundum N...",
+            "people": "Gloria tibi, Domine."
+          },
+          "english": {
+            "priest": "A reading from the holy Gospel according to N...",
+            "people": "Glory to You, O Lord."
+          }
+        },
+        {
+          "id": "gospel_end",
+          "title": "End of the Gospel",
+          "latin": {
+            "priest": "Verbum Domini.",
+            "people": "Laus tibi, Christe."
+          },
+          "english": {
+            "priest": "The Gospel of the Lord.",
+            "people": "Praise to You, Lord Jesus Christ."
+          }
+        },
+        {
+          "id": "credo",
+          "title": "Credo (Profession of Faith / Nicene Creed)",
+          "latin": {
+            "text": "Credo in unum Deum, Patrem omnipotentes, factorem caeli et terrae, visibilium omnium et invisibilium. Et in unum Dominum Iesum Christum, Filium Dei unigenitum, et ex Patre natum ante omnia saecula. Deum de Deo, lumen de lumine, Deum verum de Deo vero, genitum, non factum, consubstantialem Patri: per quem omnia facta sunt. Qui propter nos homines et propter nostram salutem descendit de caelis. Et incarnatus est de Spiritu Sancto ex Maria Virgine, et homo factus est. Crucifixus etiam pro nobis sub Pontio Pilato; passus et sepultus est, et resurrexit tertia die, secundum Scripturas, et ascendit in caelum, sedet ad dexteram Patris. Et iterum venturus est cum gloria, iudicare vivos et mortuos, cuius regni non erit finis. Et in Spiritum Sanctum, Dominum et vivificantem: qui ex Patre Filioque procedit. Qui cum Patre et Filio simul adoratur et conglorificatur: qui locutus est per prophetas. Et unam, sanctam, catholicam et apostolicam Ecclesiam. Confiteor unum baptisma in remissionem peccatorum. Et exspecto resurrectionem mortuorum, et vitam venturi saeculi. Amen."
+          },
+          "english": {
+            "text": "I believe in one God, the Father almighty, maker of heaven and earth, of all things visible and invisible. I believe in one Lord Jesus Christ, the Only Begotten Son of God, born of the Father before all ages. God from God, Light from Light, true God from true God, begotten, not made, consubstantial with the Father; through him all things were made. For us men and for our salvation he came down from heaven, and by the Holy Spirit was incarnate of the Virgin Mary, and became man. For our sake he was crucified under Pontius Pilate, he suffered death and was buried, and rose again on the third day in accordance with the Scriptures. He ascended into heaven and is seated at the right hand of the Father. He will come again in glory to judge the living and the dead and his kingdom will have no end. I believe in the Holy Spirit, the Lord, the giver of life, who proceeds from the Father and the Son, who with the Father and the Son is adored and glorified, who has spoken through the prophets. I believe in one, holy, catholic and apostolic Church. I confess one Baptism for the forgiveness of sins and I look forward to the resurrection of the dead and the life of the world to come. Amen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "liturgy_of_the_eucharist",
+      "sectionTitle": "III. LITURGY OF THE EUCHARIST",
+      "parts": [
+        {
+          "id": "offertory_bread",
+          "title": "Preparation of the Bread",
+          "latin": {
+            "priest": "Benedictus es, Domine, Deus universi, quia de tua largitate accepimus panem, quem tibi offerimus, fructum terrae et operis manuum hominum: ex quo nobis fiet panis vitae.",
+            "people": "Benedictus Deus in saecula."
+          },
+          "english": {
+            "priest": "Blessed are you, Lord God of all creation, for through your goodness we have received the bread we offer you: fruit of the earth and work of human hands, it will become for us the bread of life.",
+            "people": "Blessed be God for ever."
+          }
+        },
+        {
+          "id": "offertory_wine",
+          "title": "Preparation of the Wine",
+          "latin": {
+            "priest": "Benedictus es, Domine, Deus universi, quia de tua largitate accepimus vinum, quod tibi offerimus, fructum vitis et operis manuum hominum, ex quo nobis fiet potus spiritalis.",
+            "people": "Benedictus Deus in saecula."
+          },
+          "english": {
+            "priest": "Blessed are you, Lord God of all creation, for through your goodness we have received the wine we offer you: fruit of the vine and work of human hands, it will become our spiritual drink.",
+            "people": "Blessed be God for ever."
+          }
+        },
+        {
+          "id": "orate_fratres",
+          "title": "Orate Fratres (Prayer Over Offerings)",
+          "latin": {
+            "priest": "Orate, fratres, ut meum ac vestrum sacrificium acceptabile fiat apud Deum Patrem omnipotentem.",
+            "people": "Suscipiat Dominus sacrificium de manibus tuis ad laudem et gloriam nominis sui, ad utilitatem quoque nostram totiusque Ecclesiae suae sanctae."
+          },
+          "english": {
+            "priest": "Pray, brethren (brothers and sisters), that my sacrifice and yours may be acceptable to God, the almighty Father.",
+            "people": "May the Lord accept the sacrifice at your hands for the praise and glory of his name, for our good and the good of all his holy Church."
+          }
+        },
+        {
+          "id": "preface_dialogue",
+          "title": "Preface Dialogue",
+          "latin": {
+            "priest": "Dominus vobiscum.",
+            "people": "Et cum spiritu tuo."
+          },
+          "english": {
+            "priest": "The Lord be with you.",
+            "people": "And with your spirit."
+          }
+        },
+        {
+          "id": "sursum_corda",
+          "title": "Sursum Corda (Lift Up Your Hearts)",
+          "latin": {
+            "priest": "Sursum corda.",
+            "people": "Habemus ad Dominum."
+          },
+          "english": {
+            "priest": "Lift up your hearts.",
+            "people": "We lift them up to the Lord."
+          }
+        },
+        {
+          "id": "gratias_agamus",
+          "title": "Giving Thanks",
+          "latin": {
+            "priest": "Gratias agamus Domino Deo nostro.",
+            "people": "Dignum et iustum est."
+          },
+          "english": {
+            "priest": "Let us give thanks to the Lord our God.",
+            "people": "It is right and just."
+          }
+        },
+        {
+          "id": "sanctus",
+          "title": "Sanctus (Holy, Holy, Holy)",
+          "latin": {
+            "text": "Sanctus, Sanctus, Sanctus Dominus Deus Sabaoth. Pleni sunt caeli et terra gloria tua. Hosanna in excelsis. Benedictus qui venit in nomine Domini. Hosanna in excelsis."
+          },
+          "english": {
+            "text": "Holy, Holy, Holy Lord God of hosts. Heaven and earth are full of your glory. Hosanna in the highest. Blessed is he who comes in the name of the Lord. Hosanna in the highest."
+          }
+        },
+        {
+          "id": "mysterium_fidei",
+          "title": "Mysterium Fidei (Memorial Acclamation)",
+          "latin": {
+            "priest": "Mysterium fidei.",
+            "people": "(A) Mortem tuam annuntiamus, Domine, et tuam resurrectionem confitemur, donec venias.\n(B) Quotiescumque manducamus panem hunc et calicem bibimus, mortem tuam annuntiamus, Domine, donec venias.\n(C) Salvator mundi, salva nos, qui per crucem et resurrectionem tuam liberasti nos."
+          },
+          "english": {
+            "priest": "The mystery of faith.",
+            "people": "(A) We proclaim your Death, O Lord, and profess your Resurrection until you come again.\n(B) When we eat this Bread and drink this Cup, we proclaim your Death, O Lord, until you come again.\n(C) Save us, Savior of the world, for by your Cross and Resurrection you have set us free."
+          }
+        },
+        {
+          "id": "doxology",
+          "title": "Doxology & Great Amen",
+          "latin": {
+            "priest": "Per Ipsum, et cum Ipso, et in Ipso, est tibi Deo Patri omnipotenti, in unitate Spiritus Sancti, omnis honor et gloria per omnia saecula saeculorum.",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "Through him, and with him, and in him, O God, almighty Father, in the unity of the Holy Spirit, all glory and honor is yours, for ever and ever.",
+            "people": "Amen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "communion_rite",
+      "sectionTitle": "IV. COMMUNION RITE",
+      "parts": [
+        {
+          "id": "pater_noster",
+          "title": "Pater Noster (The Lord's Prayer)",
+          "latin": {
+            "priest": "Praeceptis salutaribus moniti, et divina institutione formati, audemus dicere:",
+            "people": "Pater noster, qui es in caelis; sanctificetur nomen tuum; adveniat regnum tuum; fiat voluntas tua, sicut in caelo, et in terra. Panem nostrum quotidianum da nobis hodie; et dimitte nobis debita nostra, sicut et nos dimittimus debitoribus nostris; et ne nos inducas in tentationem; sed libera nos a malo."
+          },
+          "english": {
+            "priest": "At the Savior's command and formed by divine teaching, we dare to say:",
+            "people": "Our Father, who art in heaven, hallowed be thy name; thy kingdom come; thy will be done on earth as it is in heaven. Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil."
+          }
+        },
+        {
+          "id": "embolism",
+          "title": "Embolism & Doxology",
+          "latin": {
+            "priest": "Libera nos, quaesumus, Domine, ab omnibus malis, da propitius pacem in diebus nostris, ut, ope misericordiae tuae adiuti, et a peccato simus semper liberi et ab omni perturbatione securi: exspectantes beatam spem et adventum Salvatoris nostri Iesu Christi.",
+            "people": "Quia tuum est regnum, et potestas, et gloria in saecula."
+          },
+          "english": {
+            "priest": "Deliver us, Lord, we pray, from every evil, graciously grant peace in our days, that, by the help of your mercy, we may be always free from sin and safe from all distress, as we await the blessed hope and the coming of our Savior, Jesus Christ.",
+            "people": "For the kingdom, the power and the glory are yours now and for ever."
+          }
+        },
+        {
+          "id": "sign_of_peace",
+          "title": "Sign of Peace",
+          "latin": {
+            "priest": "Domine Iesu Christe, qui dixisti Apostolis tuis: Pacem relinquo vobis, pacem meam do vobis... Pax Domini sit semper vobiscum.",
+            "people": "Et cum spiritu tuo."
+          },
+          "english": {
+            "priest": "Lord Jesus Christ, who said to your Apostles: Peace I leave you, my peace I give you... The peace of the Lord be with you always.",
+            "people": "And with your spirit."
+          }
+        },
+        {
+          "id": "agnus_dei",
+          "title": "Agnus Dei (Lamb of God)",
+          "latin": {
+            "text": "Agnus Dei, qui tollis peccata mundi: miserere nobis.\nAgnus Dei, qui tollis peccata mundi: miserere nobis.\nAgnus Dei, qui tollis peccata mundi: dona nobis pacem."
+          },
+          "english": {
+            "text": "Lamb of God, you take away the sins of the world, have mercy on us.\nLamb of God, you take away the sins of the world, have mercy on us.\nLamb of God, you take away the sins of the world, grant us peace."
+          }
+        },
+        {
+          "id": "ecce_agnus_dei",
+          "title": "Invitation to Communion (Ecce Agnus Dei)",
+          "latin": {
+            "priest": "Ecce Agnus Dei, ecce qui tollis peccata mundi. Beati qui ad cenam Agni vocati sunt.",
+            "people": "Domine, non sum dignus, ut intres sub tectum meum, sed tantum dic verbo et sanabitur anima mea."
+          },
+          "english": {
+            "priest": "Behold the Lamb of God, behold him who takes away the sins of the world. Blessed are those called to the supper of the Lamb.",
+            "people": "Lord, I am not worthy that you should enter under my roof, but only say the word and my soul shall be healed."
+          }
+        },
+        {
+          "id": "communion_distribution",
+          "title": "Communion",
+          "latin": {
+            "priest": "Corpus Christi.",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "The Body of Christ.",
+            "people": "Amen."
+          }
+        }
+      ]
+    },
+    {
+      "id": "concluding_rites",
+      "sectionTitle": "V. CONCLUDING RITES",
+      "parts": [
+        {
+          "id": "final_greeting",
+          "title": "Final Greeting & Blessing",
+          "latin": {
+            "priest": "Dominus vobiscum.",
+            "people": "Et cum spiritu tuo."
+          },
+          "english": {
+            "priest": "The Lord be with you.",
+            "people": "And with your spirit."
+          }
+        },
+        {
+          "id": "final_blessing",
+          "title": "Solemn Blessing",
+          "latin": {
+            "priest": "Benedicat vos omnipotens Deus, Pater, et Filius, et Spiritus Sanctus.",
+            "people": "Amen."
+          },
+          "english": {
+            "priest": "May almighty God bless you, the Father, and the Son, and the Holy Spirit.",
+            "people": "Amen."
+          }
+        },
+        {
+          "id": "dismissal",
+          "title": "Dismissal",
+          "latin": {
+            "priest": "Ite, missa est.",
+            "people": "Deo gratias."
+          },
+          "english": {
+            "priest": "Go forth, the Mass is ended.",
+            "people": "Thanks be to God."
+          }
+        }
+      ]
+    }
+  ]
+}

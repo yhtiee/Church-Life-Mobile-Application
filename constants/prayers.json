@@ -1,0 +1,230 @@
+{
+  "version": 1,
+  "lastUpdated": "2026-07-23",
+  "prayers": [
+    {
+      "id": 1,
+      "number": "1",
+      "title": "Eucharistic Adoration and Benediction",
+      "category": "Benediction",
+      "content": "O Salutaris Hostia, Tantum Ergo, The Divine Praises, and Adoremus In Aeternum with English translations.",
+      "tags": ["Benediction", "Adoration", "Eucharist", "Latin"],
+      "sections": [
+        {
+          "title": "O SALUTARIS HOSTIA (Latin)",
+          "content": "O salutaris hostia,\nQuae coeli Pandis ostium;\nBella premunt hostilia,\nDa robur, fer auxilium.\n\nUni trinoque Domino\nSit sempiterna gloria,\nQui vitam sine termino,\nNobis donet in patria. Amen"
+        },
+        {
+          "title": "O SAVING VICTIM (English)",
+          "content": "O Saving Victim, opening wide\nThe Gate of Heaven to man below\nOur foes press on from every side,\nThine Aid supply, Thy Strength bestow.\n\nTo Thy great Name be endless praise,\nImmortal Godhead, One in Three:\nOh, grant us endless length of days\nIn our true native land with Thee. Amen."
+        },
+        {
+          "title": "TANTUM ERGO (Latin)",
+          "content": "Tantum ergo sacramentum\nVeneremur cernui;\nEt antiquum documentum\nNovo cedat ritui:\nPraestet fides supplementum\nSensuum defectui.\n\nGenitori, Genitoque\nLaus et jubilatio.\nSalus, honor, virtus quoque\nSit et benedictio;\nProcendenti ab utroque;\nCompar sit laudatio. Amen.\n\nPriest: Panem de caelo praetitisti eis.\nPeople: Omne delectamentum in se habentem.\n\nOREMUS\nPriest: Deus qui nobis sub Sacramento mirabili, passion is tuae memoriam reliquisti, tribue, quaesumus, ita nos corporis et sanguinis tui sacra mysteria venerari, ut redemptionis tuae fructum in nobis jugiter sentiamus. Qui vivis et regnas in saecula saeculorum.\nPeople: Amen."
+        },
+        {
+          "title": "DOWN IN ADORATION FALLING (English)",
+          "content": "Down in adoration falling,\nLo! The sacred Host we hail;\nLo! Over ancient forms departing,\nNewer rites of grace prevail;\nFaith for all defects supplying\nWhere the feeble senses fail.\n\nTo the Everlasting Father,\nAnd the Son, who reigns on high,\nWith the Spirit blest proceeding\nForth from Each eternally,\nBe salvation, honor, blessing,\nMight and endless Majesty. Amen.\n\nPriest: You have given us bread from heaven.\nPeople: The Bread which is full of all goodness.\n\nLET US PRAY\nPriest: O God, Who in this wonderful Sacrament has left us a memorial of Thy Passion, grant, we implore Thee, that we may so venerate the sacred mysteries of Thy Body and Blood as always to be conscious of the Fruit of Thy Redemption, Thou Who livest and reignest forever and ever.\nPeople: Amen."
+        },
+        {
+          "title": "THE DIVINE PRAISES",
+          "content": "Blessed be God.\nBlessed be His Holy Name.\nBlessed be Jesus Christ, true God and true man.\nBlessed be the Name of Jesus.\nBlessed be His Most Sacred Heart.\nBlessed be His Most Precious Blood.\nBlessed be Jesus in the Most Holy Sacrament of the Altar.\nBlessed be the Holy Spirit, the Paraclete.\nBlessed be the great Mother of God, Mary Most Holy.\nBlessed be Her Holy and Immaculate Conception.\nBlessed be Her glorious Assumption.\nBlessed be the name of Mary, Virgin and Mother.\nBlessed be St. Joseph, Her most chaste spouse.\nBlessed be God in His Angels and in His Saints."
+        },
+        {
+          "title": "ADOREMUS IN AETERNUM (Latin)",
+          "content": "Ant. Adoremus in aeternum\nSanctissimum sacramentum.\n\nPs. Laudate Dominum,\nOmnes gentes; laudate eum omnes populi.\nQuoniam confirmata est super nos misericordia ejus;\n\nEt veritas Domini manet in aeternum.\nGloria Patri, et filio, et Spiritui santo.\n\nSicut erat in principio, et nunc, et semper, et in saecula\nSaeculorum. Amen.\n\nAnt. Adoremus in aeternum\nSanctissimum sacramentum."
+        },
+        {
+          "title": "LET US ADORE FOR EVER (English)",
+          "content": "Chorus: Let us adore for ever,\nThe Most Holy Sacrament.\n\nPraise ye the Lord all nations; praise Him all peoples.\nFor His mercy has been confirmed upon us;\n\nAnd the truth of the Lord abides for ever.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, and now, and always, and unto ages of ages. Amen.\n\nChorus: Let us adore for ever,\nThe Most Holy Sacrament."
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "number": "2",
+      "title": "Litany of the Blessed Virgin Mary",
+      "category": "Litanies",
+      "content": "Litany of Loreto to the Blessed Virgin Mary.",
+      "tags": ["Marian", "Litany", "Mary", "Devotion"],
+      "sections": [
+        {
+          "title": "INTRODUCTORY SUPPLICATIONS",
+          "content": "V: Lord, have mercy.\nR: Lord, have mercy.\nV: Christ, have mercy.\nR: Christ, have mercy.\nV: Lord, have mercy.\nR: Lord, have mercy.\nV: Christ hear us,\nR: Christ graciously hear us.\n\nGod the Father of Heaven, have mercy on us.\nGod the Son, Redeemer of the world, have mercy on us.\nGod the Holy Spirit, have mercy on us.\nHoly Trinity one God, have mercy on us."
+        },
+        {
+          "title": "INVOCATIONS TO OUR LADY",
+          "content": "Holy Mary — Pray for us.\nHoly Mother of God — Pray for us.\nHoly Virgin of Virgins — Pray for us.\nMother of Christ — Pray for us.\nMother of the Church — Pray for us.\nMother of Mercy — Pray for us.\nMother of Divine Grace — Pray for us.\nMother of Hope — Pray for us.\nMother most Pure — Pray for us.\nMother most Chaste — Pray for us.\nMother Inviolate — Pray for us.\nMother Undefiled — Pray for us.\nMother most Amiable — Pray for us.\nMother most Admirable — Pray for us.\nMother of good Counsel — Pray for us.\nMother of our Creator — Pray for us.\nMother of our Saviour — Pray for us.\n\nVirgin most Prudent — Pray for us.\nVirgin most Venerable — Pray for us.\nVirgin most Renowned — Pray for us.\nVirgin most Powerful — Pray for us.\nVirgin most Merciful — Pray for us.\nVirgin most Faithful — Pray for us.\n\nMirror of Justice — Pray for us.\nSeat of Wisdom — Pray for us.\nCause of our Joy — Pray for us.\nSpiritual Vessel — Pray for us.\nVessel of Honour — Pray for us.\nSingular Vessel of Devotion — Pray for us.\nMystical Rose — Pray for us.\nTower of David — Pray for us.\nTower of Ivory — Pray for us.\nHouse of Gold — Pray for us.\nArk of the Covenant — Pray for us.\nGate of Heaven — Pray for us.\nMorning Star — Pray for us.\n\nHealth of the Sick — Pray for us.\nRefuge of Sinners — Pray for us.\nComfort of Migrants — Pray for us.\nComforter of the Afflicted — Pray for us.\nHelp of Christians — Pray for us.\n\nQueen of Angels — Pray for us.\nQueen of Patriarchs — Pray for us.\nQueen of Prophets — Pray for us.\nQueen of Apostles — Pray for us.\nQueen of Martyrs — Pray for us.\nQueen of Confessors — Pray for us.\nQueen of Virgins — Pray for us.\nQueen of all Saints — Pray for us.\nQueen conceived without original sin — Pray for us.\nQueen assumed into Heaven — Pray for us.\nQueen of the most Holy Rosary — Pray for us.\nQueen of families — Pray for us.\nQueen of Peace — Pray for us."
+        },
+        {
+          "title": "CONCLUDING PRAYER",
+          "content": "V: Lamb of God, who takes away the sins of the world,\nR: Spare us, O Lord.\nV: Lamb of God, who takes away the sins of the world,\nR: Graciously hear us, O Lord.\nV: Lamb of God, who takes away the sins of the world,\nR: Have mercy on us.\n\nV: Pray for us, O Holy Mother of God,\nR: That we may be made worthy of the promises of Christ.\n\nLET US PRAY\nGrant we beseech Thee, O Lord, that we your servants may enjoy perpetual health of mind and body and by the glorious intercession of the blessed Mary ever Virgin, may be delivered from present sorrows and attain to eternal joy, through Christ our Lord. Amen."
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "number": "3",
+      "title": "The Chaplet of Divine Mercy",
+      "category": "Divine Mercy",
+      "content": "The Chaplet of Divine Mercy recited on standard Rosary beads as given to St. Faustina Kowalska.",
+      "tags": ["Divine Mercy", "Chaplet", "St. Faustina", "Rosary"],
+      "sections": [
+        {
+          "title": "HOW TO RECITE THE CHAPLET",
+          "content": "The Chaplet of Divine Mercy is recited using ordinary Rosary beads of five decades.\n\nThe Chaplet is preceded by two opening prayers from the Diary of Saint Maria Faustina Kowalska and followed by a closing prayer."
+        },
+        {
+          "title": "1. SIGN OF THE CROSS",
+          "content": "In the name of the Father, and of the Son, and of the Holy Spirit. Amen."
+        },
+        {
+          "title": "2. OPENING PRAYERS",
+          "content": "St. Faustina’s Prayer for Sinners:\nO Jesus, eternal Truth, our Life, I call upon You and I beg Your mercy for poor sinners. O sweetest Heart of my Lord, full of pity and unfathomable mercy, I plead with You for poor sinners. O Most Sacred Heart, Fount of Mercy from which gush forth rays of inconceivable graces upon the entire human race, I beg of You light for poor sinners. O Jesus, be mindful of Your own bitter Passion and do not permit the loss of souls redeemed at so dear a price of Your most precious Blood. O Jesus, when I consider the great price of Your Blood, I rejoice at its immensity, for one drop alone would have been enough for the salvation of all sinners. Although sin is an abyss of wickedness and ingratitude, the price paid for us can never be equalled. Therefore, let every soul trust in the Passion of the Lord, and place its hope in His mercy. God will not deny His mercy to anyone. Heaven and earth may change, but God's mercy will never be exhausted. Oh, what immense joy burns in my heart when I contemplate Your incomprehensible goodness, O Jesus! I desire to bring all sinners to Your feet that they may glorify Your mercy throughout endless ages.\n\n(Repeat 3 times):\nYou expired, Jesus, but the source of life gushed forth for souls, and the ocean of mercy opened up for the whole world. O Fount of Life, unfathomable Divine Mercy, envelop the whole world and empty Yourself out upon us.\nO Blood and Water, which gushed forth from the Heart of Jesus as a fount of mercy for us, I trust in You!"
+        },
+        {
+          "title": "3. OUR FATHER",
+          "content": "Our Father, Who art in Heaven, hallowed be Thy name; Thy kingdom come; Thy will be done on earth as it is in Heaven. Give us this day our daily bread; and forgive us our trespasses, as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen."
+        },
+        {
+          "title": "4. HAIL MARY",
+          "content": "Hail Mary, full of grace. The Lord is with thee. Blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen."
+        },
+        {
+          "title": "5. THE APOSTLES’ CREED",
+          "content": "I believe in God, the Father almighty, Creator of Heaven and earth, and in Jesus Christ, His only Son, our Lord, who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, was crucified, died and was buried; He descended into hell; on the third day He rose again from the dead; He ascended into Heaven, and is seated at the right hand of God the Father almighty; from there He will come to judge the living and the dead. I believe in the Holy Spirit, the holy Catholic Church, the Communion of Saints, the forgiveness of sins, the Resurrection of the body, and life everlasting. Amen."
+        },
+        {
+          "title": "6. ON THE LARGE BEADS (ETERNAL FATHER)",
+          "content": "Eternal Father, I offer You the Body and Blood, Soul and Divinity of Your Dearly Beloved Son, Our Lord, Jesus Christ, in atonement for our sins and those of the whole world."
+        },
+        {
+          "title": "7. ON THE 10 SMALL BEADS (SORROWFUL PASSION)",
+          "content": "For the sake of His sorrowful Passion, have mercy on us and on the whole world."
+        },
+        {
+          "title": "8. REPEAT FOR ALL 5 DECADES",
+          "content": "Repeat saying the 'Eternal Father' on each large bead and 10 'For the sake of His sorrowful Passion' on the small beads."
+        },
+        {
+          "title": "9. CONCLUDING DOXOLOGY (HOLY GOD)",
+          "content": "(Repeat 3 times):\nHoly God, Holy Mighty One, Holy Immortal One, have mercy on us and on the whole world."
+        },
+        {
+          "title": "10. CLOSING PRAYERS",
+          "content": "Eternal God, in Whom mercy is endless and the treasury of compassion — inexhaustible, look kindly upon us and increase Your mercy in us, that in difficult moments we might not despair nor become despondent, but with great confidence submit ourselves to Your holy will, which is Love and Mercy itself.\n\nO Greatly Merciful God, Infinite Goodness, today all mankind calls out from the abyss of its misery to Your mercy — to Your compassion, O God; and it is with its mighty voice of misery that it cries out. Gracious God, do not reject the prayer of this earth's exiles! O Lord, Goodness beyond our understanding, Who are acquainted with our misery through and through, and know that by our own power we cannot ascend to You, we implore You: anticipate us with Your grace and keep on increasing Your mercy in us, that we may faithfully do Your holy will all through our life and at death's hour. Let the omnipotence of Your mercy shield us from the darts of our salvation’s enemies, that we may with confidence, as Your children, await Your Son’s final coming — that day known to You alone. And we expect to obtain everything promised us by Jesus in spite of all our wretchedness. For Jesus is our Hope: through His merciful Heart, as through an open gate, we pass through to Heaven. Amen."
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "number": "4",
+      "title": "Litany to the Divine Mercy",
+      "category": "Divine Mercy",
+      "content": "Litany of Divine Mercy from the Diary of St. Maria Faustina Kowalska.",
+      "tags": ["Divine Mercy", "Litany", "St. Faustina"],
+      "sections": [
+        {
+          "title": "INVOCATIONS TO THE DIVINE MERCY",
+          "content": "Divine Mercy, gushing forth from the bosom of the Father — I trust in You.\nDivine Mercy, greatest attribute of God — I trust in You.\nDivine Mercy, incomprehensible mystery — I trust in You.\nDivine Mercy, fountain gushing forth from the mystery of the Most Blessed Trinity — I trust in You.\nDivine Mercy, unfathomed by any intellect, human or angelic — I trust in You.\nDivine Mercy, from which wells forth all life and happiness — I trust in You.\nDivine Mercy, better than the heavens — I trust in You.\nDivine Mercy, source of miracles and wonders — I trust in You.\nDivine Mercy, encompassing the whole universe — I trust in You.\nDivine Mercy, descending to earth in the Person of the Incarnate Word — I trust in You.\nDivine Mercy, which flowed out from the open wound of the Heart of Jesus — I trust in You.\nDivine Mercy, enclosed in the Heart of Jesus for us, and especially for sinners — I trust in You.\nDivine Mercy, unfathomed in the institution of the Sacred Host — I trust in You.\nDivine Mercy, in the founding of the Holy Church — I trust in You.\nDivine Mercy, in the Sacrament of Holy Baptism — I trust in You.\nDivine Mercy, in our justification through Jesus Christ — I trust in You.\nDivine Mercy, accompanying us through our whole life — I trust in You.\nDivine Mercy, embracing us especially at the hour of death — I trust in You.\nDivine Mercy, endowing us with immortal life — I trust in You.\nDivine Mercy, accompanying us every moment of our life — I trust in You.\nDivine Mercy, shielding us from the fire of hell — I trust in You.\nDivine Mercy, in the conversion of hardened sinners — I trust in You.\nDivine Mercy, astonishment for Angels, incomprehensible to Saints — I trust in You.\nDivine Mercy, unfathomed in all the mysteries of God — I trust in You.\nDivine Mercy, lifting us out of every misery — I trust in You.\nDivine Mercy, source of our happiness and joy — I trust in You.\nDivine Mercy, in calling us forth from nothingness to existence — I trust in You.\nDivine Mercy, embracing all the works of His hands — I trust in You.\nDivine Mercy, crown of all God's handiwork — I trust in You.\nDivine Mercy, in which we are all immersed — I trust in You.\nDivine Mercy, sweet relief for anguished hearts — I trust in You.\nDivine Mercy, only hope of despairing souls — I trust in You.\nDivine Mercy, repose of hearts, peace amidst fear — I trust in You.\nDivine Mercy, delight and ecstasy of holy souls — I trust in You.\nDivine Mercy, inspiring hope against all hope — I trust in You."
+        },
+        {
+          "title": "LET US PRAY",
+          "content": "Eternal God, in whom mercy is endless and the treasury of compassion inexhaustible, look kindly upon us and increase Your mercy in us, that in difficult moments we might not despair nor become despondent, but with great confidence submit ourselves to Your holy will, which is Love and Mercy itself. Amen."
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "number": "5",
+      "title": "Divine Mercy Act of Consecration",
+      "category": "Divine Mercy",
+      "content": "We consecrate our entire family life here on to you without reserve.\n\nInto your Hands we abandon our past, our present, our future. Jesus, we ask you, from this day on, look after this family. Help us to be true children of God and children of your Blessed Mother Mary.\n\nThrough this image, may your divine Mercy triumph over all the powers of evil the world over. May all who venerate it never perish. May it be their joy in life, their hope in death and glory in eternity.\n\nThis we ask through Christ our Lord. Amen.\n\n\"JESUS, I TRUST IN YOU\"",
+      "tags": ["Divine Mercy", "Consecration", "Family"]
+    },
+    {
+      "id": 6,
+      "number": "6",
+      "title": "My Agonizing Life (Precious Blood Prayer)",
+      "category": "Precious Blood",
+      "content": "May the Most Precious Blood that comes out from the Sacred Head of our Lord Jesus Christ the Temple of Divine Wisdom, Tabernacle of Divine Knowledge and Sunshine of Heaven and earth, cover us and set us free. Agonizing and Sorrowful Hearts of Jesus and Mary - be our Salvation. Amen.",
+      "tags": ["Precious Blood", "Protection", "Salvation"]
+    },
+    {
+      "id": 7,
+      "number": "7",
+      "title": "The Angelus",
+      "category": "Daily Prayers",
+      "content": "V. The angel of the Lord declared unto Mary.\nR. And She conceived of the Holy Spirit.\n(Hail Mary...)\n\nV. Behold the handmaid of the Lord.\nR. Let it be done unto me according to your word.\n(Hail Mary...)\n\nV. And the Word was made Flesh.\nR. And dwelt among us.\n(Hail Mary...)\n\nV. Pray for us, O Holy Mother of God.\nR. That we may be made worthy of the promises of Christ.\n\nLET US PRAY\nPour forth, we beseech You, O Lord, your grace into our hearts, that we, to whom the incarnation of Christ your Son was made known by the message of an angel, may, by His Passion and Cross, be brought to the glory of His Resurrection through the same Christ our Lord. Amen.",
+      "tags": ["Angelus", "Daily", "Marian", "Incarnation"]
+    },
+    {
+      "id": 8,
+      "number": "8",
+      "title": "The Regina Caeli",
+      "category": "Daily Prayers",
+      "content": "V. O Queen of Heaven rejoice, alleluia\nR. For He whom you did merit to bear, alleluia\nV. Has risen as He said, alleluia\nR. Pray for us to God, alleluia.\n\nV. Rejoice and be glad, O Virgin Mary, alleluia.\nR. For the Lord has truly risen, alleluia.\n\nLET US PRAY\nO God, who gave joy to the world through the resurrection of Thy Son, our Lord Jesus Christ, grant we beseech Thee, that through the intercession of the Virgin Mary, His Mother, we may obtain the joys of everlasting life. Through the same Christ our Lord. Amen.",
+      "tags": ["Regina Caeli", "Easter", "Marian", "Daily"]
+    },
+    {
+      "id": 9,
+      "number": "9",
+      "title": "Pray the Rosary",
+      "category": "Rosary",
+      "content": "Complete guide to praying the Holy Rosary including Joyful, Luminous, Sorrowful, and Glorious mysteries.",
+      "tags": ["Rosary", "Marian", "Mysteries", "Daily"],
+      "sections": [
+        {
+          "title": "OPENING PRAYERS & CREED",
+          "content": "In the name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nTHE CREED\nL: I believe in God, the Father Almighty, Creator of Heaven and earth; and in Jesus Christ, His only Son, Our Lord, Who was conceived by the Holy Spirit, born of the Virgin Mary, suffered under Pontius Pilate, who was crucified; died, and was buried. He descended to the dead. On the third day, He arose again, He ascended into Heaven, and is seated at the right hand of God, the Father Almighty; from thence He shall come to judge the living and the dead.\nR: I believe in the Holy Spirit, the holy Catholic Church, the communion of saints, the forgiveness of sins, the resurrection of the body, and the life everlasting. Amen.\n\nOUR FATHER\nL: Our Father, Who art in heaven, hallowed be Thy name; Thy kingdom come; Thy will be done on earth as it is in heaven.\nR: Give us this day our daily bread; and forgive us our trespasses as we forgive those who trespass against us; and lead us not into temptation, but deliver us from evil. Amen.\n\nHAIL MARY (3x on initial beads)\nL: Hail Mary, full of grace. The Lord is with thee. Blessed art thou amongst women, and blessed is the fruit of thy womb, Jesus.\nR: Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGLORY BE\nL: Glory be to the Father, and to the Son, and to the Holy Spirit,\nR: As it was in the beginning, is now, and ever shall be, world without end. Amen."
+        },
+        {
+          "title": "THE MYSTERIES OF THE ROSARY",
+          "content": "THE JOYFUL MYSTERIES:\n1. The Annunciation (Lk. 1:31-32)\n2. The Visitation (Lk. 1:42-45)\n3. The Nativity (Lk. 2:6-7)\n4. The Presentation (Lk. 2:22)\n5. The Finding in the Temple (Lk. 2:46-47)\n\nTHE MYSTERIES OF LIGHT (LUMINOUS):\n1. The Baptism of the Lord (Lk. 1:10)\n2. The Self Revelation at the Wedding in Cana (Jn. 2:11)\n3. The Proclamation of the Kingdom (Mk. 1:15)\n4. The Transfiguration (Matt. 17:2)\n5. The Institution of the Eucharist (Lk. 22:19)\n\nTHE SORROWFUL MYSTERIES:\n1. The Prayer and Agony in the Garden (Matt. 26:36-39)\n2. The Scourging at the Pillar (Matt. 27:25-26)\n3. The Crowning with Thorns (Matt. 27:28-29)\n4. The Carrying of the Cross (Jn. 19:17-18)\n5. The Crucifixion (Lk. 23:45-46)\n\nTHE GLORIOUS MYSTERIES:\n1. The Resurrection (Matt. 28:5-6)\n2. The Ascension (Lk. 24:50-51)\n3. The Descent of the Holy Spirit (Acts 2:3-4)\n4. The Assumption (Judith 13:18)\n5. The Coronation (Rev. 12:1)"
+        },
+        {
+          "title": "PRAYING THE DECADES",
+          "content": "Pick one set of MYSTERIES at a time (JOYFUL, LIGHT, SORROWFUL, or GLORIOUS) to ponder on as you pray:\n- 1x Our Father\n- 10x Hail Mary\n- 1x Glory Be\n- 1x Fatima Prayer: \"O my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls into heaven, especially those in most need of Thy mercy.\""
+        },
+        {
+          "title": "CONCLUDING PRAYERS (HAIL HOLY QUEEN & COLLECT)",
+          "content": "HAIL, HOLY QUEEN\nHail, Holy Queen, Mother of Mercy, hail our life, our sweetness and our hope. To Thee do we cry, poor banished children of Eve: to Thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious Advocate, thine eyes of mercy toward us, and after this our exile, show unto us the blessed Fruit of Thy Womb, Jesus. O clement, O loving, O sweet Virgin Mary!\n\nL: Pray for us, O Holy Mother of God,\nR: That we may be made worthy of the promises of Christ.\n\nLET US PRAY\nO God, whose only begotten Son by His Life, Death, and Resurrection has purchased for us the rewards of eternal life; grant we beseech Thee, that meditating on these mysteries of the Most Holy Rosary of the Blessed Virgin Mary, we may imitate what they contain and obtain what they promise through the same Christ our Lord. Amen.\n\nCONCLUDING INVOCATIONS:\nL: Most Sacred Heart of Jesus. R: Have mercy on us.\nL: Immaculate Heart of Mary. R: Pray for us.\nL: St. Joseph. R: Pray for us.\nL: St. John the Evangelist. R: Pray for us.\nL: St. Louis-Marie de Montfort. R: Pray for us.\n\nIn the name of the Father, and of the Son, and of the Holy Spirit. Amen."
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "number": "10",
+      "title": "The Benedictus (Canticle of Zechariah)",
+      "category": "Canticles",
+      "content": "Lk. 1:68-79\n\nBlessed be the Lord, the God of Israel!\nHe has visited His people and redeemed them.\nHe has raised up for us a mighty Savior, in the house of David His servant, as He promised by the lips of holy men, those who were His Prophets from of old.\nA Savior who would free us from our foes, from the hands of all who hate us.\nSo His love for our fathers is fulfilled and His covenant remembered.\nHe swore to Abraham our father to grant us, that free from fear, and saved from the hands of our foes, we might serve Him in holiness and justice all the days of our lives in His Presence.\nAs for you, little child, you shall be called a prophet of God, the Most High.\nYou shall go ahead of the Lord to prepare His ways before Him.\nTo make known to His people their salvation, through forgiveness of all their sins, the loving-kindness of the Heart of our God, who visit us like the dawn from on High.\nHe will give light to those in darkness, those who dwell in the shadow of death, and guide us into the way of peace.\n\nGlory Be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+      "tags": ["Benedictus", "Canticle", "Zechariah", "Liturgy of the Hours", "Morning Prayer"]
+    },
+    {
+      "id": 11,
+      "number": "11",
+      "title": "The Magnificat (Canticle of Mary)",
+      "category": "Canticles",
+      "content": "Lk. 1:46-55\n\nMy soul glorifies the Lord,\nMy spirit rejoice in God, my Savior.\nHe looks on His servant in her lowliness; henceforth all ages will call me blessed.\nThe Almighty works marvels for me.\nHoly His Name!\nHis mercy is from age to age, on those who fear Him.\nHe puts forth His Arm in strength and scatters the proud-hearted.\nHe cast the mighty from their thrones and raises the lowly.\nHe fills the starving with good things, sends the rich away empty.\nHe protects Israel, His servant, remembering His mercy.\nThe mercy promised to our fathers, to Abraham and his sons for ever.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+      "tags": ["Magnificat", "Canticle", "Mary", "Marian", "Evening Prayer"]
+    },
+    {
+      "id": 12,
+      "number": "12",
+      "title": "Anima Christi",
+      "category": "Communion Prayers",
+      "content": "Soul of Christ, sanctify me. Body of Christ, save me. Traditional post-Communion prayer in Latin and English.",
+      "tags": ["Anima Christi", "Communion", "Eucharist", "Latin", "Post-Mass"],
+      "sections": [
+        {
+          "title": "ANIMA CHRISTI (Latin)",
+          "content": "Anima Christi, sanctifica me.\nCorpus Christi, salva me.\nSanguis Christi, inebria me.\nAqua lateris Christi, lava me.\nPassio Christi, conforta me.\nO Bone Iesu, exaudi me.\nIntra tua vulnera absconde me.\nNe permittas me separari a te.\nAb hoste maligno defende me.\nIn hora mortis meae voca me,\net iube me venire ad te,\nUt cum Sanctis tuis Iaudem te\nIn saecula saeculorum. Amen."
+        },
+        {
+          "title": "SOUL OF CHRIST (English)",
+          "content": "Soul of Christ, sanctify me.\nBody of Christ, save me.\nBlood of Christ, inebriate me.\nWater from the side of Christ, wash me.\nPassion of Christ, strengthen me.\nO good Jesus, hear me.\nWithin Thy wounds hide me.\nSuffer me not to be separated from Thee.\nFrom the malignant enemy defend me.\nIn the hour of my death call me and bid me come unto Thee, that with Thy saints I may praise Thee for ever and ever. Amen."
+        }
+      ]
+    }
+  ]
+}
