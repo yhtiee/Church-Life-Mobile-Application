@@ -50,8 +50,9 @@ export default function AnnouncementsModal() {
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
       <ScreenHeader title="Announcements" />
       <ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { backgroundColor: colors.background }]}
+        contentContainerStyle={[styles.scroll, { flexGrow: 1, backgroundColor: colors.background }]}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    borderLeftWidth: 1,
+    borderLeftWidth: 4,
     overflow: 'hidden',
     flexDirection: 'row',
   },
@@ -236,8 +237,7 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   thumb: {
-    width: 80,
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
   },
   thumbOverlay: {
     ...StyleSheet.absoluteFillObject,
