@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -13,6 +13,7 @@ import { AuthService } from '@/lib/supabase/services/auth';
 import {
   ADMIN_WHATSAPP,
   ADVERTISE_ENQUIRY_MESSAGE,
+  CELEBRATION_ENQUIRY_MESSAGE,
   buildWhatsAppUrl,
   normalizePhoneForWhatsApp,
 } from '@/constants/contact';
@@ -21,25 +22,66 @@ const authService = new AuthService();
 
 const WHATSAPP_GREEN = '#25D366';
 
-const BENEFITS = [
-  {
-    icon: 'people-outline' as const,
-    title: 'Reach the community',
-    body: 'Your ad appears in the home feed seen by parishioners every day.',
+/**
+ * Both enquiries reach the parish admin over WhatsApp, so they share this
+ * screen and differ only in copy. `topic` selects which.
+ */
+const TOPICS = {
+  ad: {
+    header: 'Advertise With Us',
+    icon: 'megaphone' as const,
+    title: 'Promote your business here',
+    intro:
+      'Interested in featuring your business, event, or service in the app? Let the admin know and they’ll help you get started.',
+    message: ADVERTISE_ENQUIRY_MESSAGE,
+    benefits: [
+      {
+        icon: 'people-outline' as const,
+        title: 'Reach the community',
+        body: 'Your ad appears in the home feed seen by parishioners every day.',
+      },
+      {
+        icon: 'heart-outline' as const,
+        title: 'Support the parish',
+        body: 'Advertising fees help sustain the parish and its ministries.',
+      },
+      {
+        icon: 'chatbubble-ellipses-outline' as const,
+        title: 'Simple setup',
+        body: 'One quick chat with the admin and your promotion goes live.',
+      },
+    ],
   },
-  {
-    icon: 'heart-outline' as const,
-    title: 'Support the parish',
-    body: 'Advertising fees help sustain the parish and its ministries.',
+  celebration: {
+    header: 'Celebrate With Us',
+    icon: 'gift' as const,
+    title: 'Announce a birthday or anniversary',
+    intro:
+      'Have a birthday, wedding anniversary or ordination coming up? Ask the admin to announce it, and the parish can celebrate and support you.',
+    message: CELEBRATION_ENQUIRY_MESSAGE,
+    benefits: [
+      {
+        icon: 'gift-outline' as const,
+        title: 'Share the occasion',
+        body: 'Your celebration appears on the home slides for the whole parish to see.',
+      },
+      {
+        icon: 'hand-left-outline' as const,
+        title: 'Receive prayers',
+        body: 'Members can send you a prayer or message alongside their support.',
+      },
+      {
+        icon: 'chatbubble-ellipses-outline' as const,
+        title: 'Posted by the admin',
+        body: 'Send the details once and the parish admin puts it up for you.',
+      },
+    ],
   },
-  {
-    icon: 'chatbubble-ellipses-outline' as const,
-    title: 'Simple setup',
-    body: 'One quick chat with the admin and your promotion goes live.',
-  },
-];
+} as const;
 
 export default function AdvertiseScreen() {
+  const { topic } = useLocalSearchParams<{ topic?: keyof typeof TOPICS }>();
+  const content = TOPICS[topic ?? 'ad'] ?? TOPICS.ad;
   const { colors, typography, radius } = useTheme();
   const { showAlert } = useAlert();
   const { user } = useAuth();
@@ -60,7 +102,7 @@ export default function AdvertiseScreen() {
   }, [user?.parishId]);
 
   const handleWhatsApp = async () => {
-    const url = buildWhatsAppUrl(ADVERTISE_ENQUIRY_MESSAGE, adminPhone);
+    const url = buildWhatsAppUrl(content.message, adminPhone);
     try {
       await Linking.openURL(url);
     } catch {
@@ -74,7 +116,7 @@ export default function AdvertiseScreen() {
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-      <ScreenHeader title="Advertise With Us" />
+      <ScreenHeader title={content.header} />
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
         {/* Intro */}
@@ -83,20 +125,19 @@ export default function AdvertiseScreen() {
           style={[styles.introCard, { backgroundColor: colors.surface, borderColor: '#D4AF37', borderRadius: radius.lg }]}
         >
           <View style={[styles.iconBadge, { backgroundColor: 'rgba(212,175,55,0.15)' }]}>
-            <Ionicons name="megaphone" size={26} color="#D4AF37" />
+            <Ionicons name={content.icon} size={26} color="#D4AF37" />
           </View>
           <Text style={[styles.introTitle, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
-            Promote your business here
+            {content.title}
           </Text>
           <Text style={[styles.introBody, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-            Interested in featuring your business, event, or service in the app? Let the admin know and
-            they’ll help you get started.
+            {content.intro}
           </Text>
         </Animated.View>
 
         {/* Benefits */}
         <View style={styles.benefits}>
-          {BENEFITS.map((b, i) => (
+          {content.benefits.map((b, i) => (
             <Animated.View
               key={b.title}
               entering={FadeInDown.delay(120 + i * 80).duration(400)}

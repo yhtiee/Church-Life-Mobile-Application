@@ -15,6 +15,11 @@ export const ADVERTISE_ENQUIRY_MESSAGE =
   "Hello! I'm interested in displaying an ad on the ChurchLife app. " +
   'Please share the details, pricing, and next steps.';
 
+/** Default message pre-filled when a user asks about a celebration post. */
+export const CELEBRATION_ENQUIRY_MESSAGE =
+  "Hello! I'd like a birthday or anniversary celebration announced on the ChurchLife app. " +
+  'Please let me know what details you need.';
+
 /** Default country calling code used when a number is entered in local format. */
 export const DEFAULT_COUNTRY_CODE = '234'; // Nigeria
 

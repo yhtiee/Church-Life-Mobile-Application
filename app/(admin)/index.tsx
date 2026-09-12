@@ -46,7 +46,7 @@ const QUICK_ACTIONS = [
   },
   {
     icon: 'image-outline' as const,
-    label: 'Ads',
+    label: 'Ads & Celebrations',
     bg: '#EDE9FE',
     iconColor: '#7C3AED',
     gradient: Gradients.cardPurple,

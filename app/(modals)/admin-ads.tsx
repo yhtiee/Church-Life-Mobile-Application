@@ -11,6 +11,7 @@ import { useAlert } from '@/context/FeedbackContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
+import { CelebrationsManager } from '@/components/admin/CelebrationsManager';
 import { AdminSearchBar } from '@/components/admin/AdminSearchBar';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -39,6 +40,9 @@ export default function AdminAdsModal() {
 
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
+  // Ads and celebrations are both slides on the same home carousel, so they
+  // are managed from one screen rather than two.
+  const [activeSection, setActiveSection] = useState<'ads' | 'celebrations'>('ads');
   const [formModalVisible, setFormModalVisible] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [selectedAd, setSelectedAd] = useState<Ad | null>(null);
@@ -249,10 +253,37 @@ export default function AdminAdsModal() {
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-      <ScreenHeader title="Manage Ads" />
+      <ScreenHeader title="Ads & Celebrations" />
       <GlobalLoader visible={isLoading || formSubmitting || pickingImage} />
 
+      <View style={[styles.sectionTabs, { backgroundColor: colors.surfaceMuted }]}>
+        {(['ads', 'celebrations'] as const).map((section) => {
+          const isActive = activeSection === section;
+          return (
+            <TouchableOpacity
+              key={section}
+              onPress={() => setActiveSection(section)}
+              style={[styles.sectionTab, isActive && { backgroundColor: colors.surface }]}
+            >
+              <Text
+                style={{
+                  fontSize: 13,
+                  color: isActive ? colors.primary : colors.textMuted,
+                  fontFamily: isActive ? typography.fontFamily.bold : typography.fontFamily.medium,
+                }}
+              >
+                {section === 'ads' ? 'Ads' : 'Celebrations'}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+        {activeSection === 'celebrations' && <CelebrationsManager />}
+
+        {activeSection === 'ads' && (
+        <>
         {/* ── Search Bar ── */}
         <Animated.View entering={FadeInDown.delay(60).duration(400)}>
           <AdminSearchBar
@@ -397,6 +428,8 @@ export default function AdminAdsModal() {
             </View>
           )}
         </Animated.View>
+        </>
+        )}
       </ScrollView>
 
       {/* ── Form Modal ── */}
@@ -622,6 +655,19 @@ export default function AdminAdsModal() {
 }
 
 const styles = StyleSheet.create({
+  sectionTabs: {
+    flexDirection: 'row',
+    marginHorizontal: 20,
+    marginTop: 4,
+    padding: 4,
+    borderRadius: 12,
+  },
+  sectionTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 9,
+    borderRadius: 9,
+  },
   filterSection: {
     paddingHorizontal: 20,
     marginTop: 16,

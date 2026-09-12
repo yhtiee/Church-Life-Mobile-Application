@@ -324,7 +324,7 @@ export default function HomeScreen() {
         >
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => router.push('/(modals)/advertise' as any)}
+            onPress={() => router.push('/(modals)/advertise?topic=ad' as any)}
           >
             <LinearGradient
               colors={['#0A1929', '#1D3557']}
@@ -341,6 +341,37 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={[styles.advertiseBody, { fontFamily: typography.fontFamily.regular }]}>
                   Feature your business here — tap to enquire.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── Celebrate With Us CTA ── */}
+        <Animated.View
+          entering={FadeInDown.delay(280).duration(450)}
+          style={styles.advertiseSection}
+        >
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/(modals)/advertise?topic=celebration' as any)}
+          >
+            <LinearGradient
+              colors={['#1D3557', '#6B21A8']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.advertiseCard}
+            >
+              <View style={styles.advertiseIcon}>
+                <Ionicons name="gift" size={22} color="#D4AF37" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.advertiseTitle, { fontFamily: typography.fontFamily.bold }]}>
+                  Celebrate With Us
+                </Text>
+                <Text style={[styles.advertiseBody, { fontFamily: typography.fontFamily.regular }]}>
+                  Birthday or anniversary coming up? Tap to have it announced.
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />

@@ -146,11 +146,6 @@ export default function AdminProfileScreen() {
                   label="Parish Account Details"
                   onPress={() => router.push('/(modals)/admin-bank-accounts')}
                 />
-                <SettingRow
-                  icon="gift-outline"
-                  label="Celebrations"
-                  onPress={() => router.push('/(modals)/admin-celebrations')}
-                />
               </View>
             </Animated.View>
           )}

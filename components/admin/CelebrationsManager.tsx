@@ -5,8 +5,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/FeedbackContext';
-import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
-import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
@@ -49,7 +47,11 @@ const EMPTY: Draft = {
   isActive: true,
 };
 
-export default function AdminCelebrationsScreen() {
+/**
+ * Celebration posts, managed beside ads because both are slides on the same
+ * home carousel and a parish admin thinks of them together.
+ */
+export function CelebrationsManager() {
   const { colors, typography, radius } = useTheme();
   const { user } = useAuth();
   const { showAlert } = useAlert();
@@ -156,9 +158,7 @@ export default function AdminCelebrationsScreen() {
   };
 
   return (
-    <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-      <ScreenHeader title="Celebrations" />
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+    <View style={styles.scroll}>
         <Text
           style={{
             fontSize: 13,
@@ -237,8 +237,6 @@ export default function AdminCelebrationsScreen() {
           fullWidth
           style={{ marginTop: 18 }}
         />
-      </ScrollView>
-
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.backdrop}>
           <ScrollView contentContainerStyle={styles.sheetScroll} keyboardShouldPersistTaps="handled">
@@ -352,7 +350,7 @@ export default function AdminCelebrationsScreen() {
       </Modal>
 
       <GlobalLoader visible={isLoading} />
-    </ScreenWrapper>
+    </View>
   );
 }
 
