@@ -22,7 +22,7 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { useMassBookingsQuery } from '@/hooks/queries/useMass';
 import { useCreateMassBookingMutation, useDeleteMassBookingMutation } from '@/hooks/mutations/useMass';
-import { MASS_TIMES } from '@/constants/mockData';
+import { useParishScheduleQuery } from '@/hooks/queries/useParishContent';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
@@ -115,6 +115,14 @@ export default function MassScheduleScreen() {
   // Receipt Slip Modal State
   const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [currentBookingReceipt, setCurrentBookingReceipt] = useState<MassBooking | null>(null);
+
+  // Schedules, devotions and sacraments are per-parish now. The seed migration
+  // gave every existing parish the previous hardcoded defaults, so this is
+  // never empty for a parish that has not edited anything yet.
+  const { data: scheduleItems = [] } = useParishScheduleQuery(user?.parishId ?? undefined);
+  const massDays = scheduleItems.filter((i) => i.kind === 'mass');
+  const sacraments = scheduleItems.filter((i) => i.kind === 'sacrament');
+  const devotions = scheduleItems.filter((i) => i.kind === 'devotion');
 
   const { data: bookings = [], isLoading: loadingBookings, refetch } = useMassBookingsQuery(user?.id || '');
   const { mutateAsync: createMassBooking, isPending: submittingBooking } = useCreateMassBookingMutation(user?.id || '');
@@ -369,16 +377,12 @@ export default function MassScheduleScreen() {
     setSuccessModalVisible(true);
   };
 
-  // Dropdown options
-  const dayOptions = [
-    { label: 'Sunday', value: 'Sunday' },
-    { label: 'Weekdays', value: 'Weekdays' },
-    { label: 'Saturday', value: 'Saturday' },
-  ];
+  // Dropdown options, driven by whatever the parish has configured
+  const dayOptions = massDays.map((m) => ({ label: m.label, value: m.label }));
 
   // Get available times for selected day
   const getTimesForSelectedDay = () => {
-    const found = MASS_TIMES.find((m) => m.day.toLowerCase() === selectedDay.toLowerCase());
+    const found = massDays.find((m) => m.label.toLowerCase() === selectedDay.toLowerCase());
     return found ? found.times.map((t) => ({ label: t, value: t })) : [];
   };
 
@@ -444,9 +448,9 @@ export default function MassScheduleScreen() {
           </Text>
 
           <View style={styles.cardsContainer}>
-            {MASS_TIMES.map((item, index) => (
+            {massDays.map((item, index) => (
               <Animated.View
-                key={item.day}
+                key={item.id}
                 entering={FadeInDown.delay(100 + index * 50).duration(400)}
                 style={[
                   styles.scheduleCard,
@@ -465,7 +469,7 @@ export default function MassScheduleScreen() {
                       { color: colors.text, fontFamily: typography.fontFamily.bold },
                     ]}
                   >
-                    {item.day}
+                    {item.label}
                   </Text>
                 </View>
                 <View style={styles.timeChipsContainer}>
@@ -473,7 +477,7 @@ export default function MassScheduleScreen() {
                     <TouchableOpacity
                       key={time}
                       activeOpacity={0.7}
-                      onPress={() => handleTimeChipPress(item.day, time)}
+                      onPress={() => handleTimeChipPress(item.label, time)}
                       style={[
                         styles.timeChip,
                         {
@@ -636,101 +640,119 @@ export default function MassScheduleScreen() {
           )}
         </Animated.View>
 
-        {/* Confession Times */}
-        <Animated.View
-          entering={FadeInDown.delay(300).duration(450)}
-          style={styles.section}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
-            ]}
+        {/* Sacraments — whatever this parish has listed */}
+        {sacraments.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.delay(300).duration(450)}
+            style={styles.section}
           >
-            Sacrament of Reconciliation
-          </Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
+              ]}
+            >
+              Sacrament of Reconciliation
+            </Text>
 
-          <View
-            style={[
-              styles.infoCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: radius.md,
-              },
-            ]}
-          >
-            <View style={styles.infoRow}>
-              <Ionicons name="heart-half-sharp" size={20} color={colors.accent} />
-              <View style={styles.infoTextContainer}>
-                <Text
-                  style={[
-                    styles.infoLabel,
-                    { color: colors.text, fontFamily: typography.fontFamily.bold },
-                  ]}
-                >
-                  Confession Times
-                </Text>
-                <Text
-                  style={[
-                    styles.infoValue,
-                    { color: colors.textSecondary, fontFamily: typography.fontFamily.regular },
-                  ]}
-                >
-                  Every Saturday after the Morning Mass (approx. 7:45 AM) & before the Evening Mass (4:15 PM - 4:45 PM). Or by private appointment with the Parish Priest.
-                </Text>
+            {sacraments.map((item) => (
+              <View
+                key={item.id}
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                  },
+                ]}
+              >
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name={(item.icon as any) || 'heart-half-sharp'}
+                    size={20}
+                    color={colors.accent}
+                  />
+                  <View style={styles.infoTextContainer}>
+                    <Text
+                      style={[
+                        styles.infoLabel,
+                        { color: colors.text, fontFamily: typography.fontFamily.bold },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoValue,
+                        { color: colors.textSecondary, fontFamily: typography.fontFamily.regular },
+                      ]}
+                    >
+                      {item.details}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
-        </Animated.View>
+            ))}
+          </Animated.View>
+        )}
 
-        {/* Devotions Section */}
-        <Animated.View
-          entering={FadeInDown.delay(350).duration(450)}
-          style={[styles.section, { marginBottom: 32 }]}
-        >
-          <Text
-            style={[
-              styles.sectionTitle,
-              { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
-            ]}
+        {/* Devotions — whatever this parish has listed */}
+        {devotions.length > 0 && (
+          <Animated.View
+            entering={FadeInDown.delay(350).duration(450)}
+            style={[styles.section, { marginBottom: 32 }]}
           >
-            Parish Devotions
-          </Text>
+            <Text
+              style={[
+                styles.sectionTitle,
+                { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
+              ]}
+            >
+              Parish Devotions
+            </Text>
 
-          <View
-            style={[
-              styles.infoCard,
-              {
-                backgroundColor: colors.surface,
-                borderColor: colors.border,
-                borderRadius: radius.md,
-              },
-            ]}
-          >
-            <View style={styles.infoRow}>
-              <Ionicons name="flame-sharp" size={20} color={colors.primary} />
-              <View style={styles.infoTextContainer}>
-                <Text
-                  style={[
-                    styles.infoLabel,
-                    { color: colors.text, fontFamily: typography.fontFamily.bold },
-                  ]}
-                >
-                  Eucharistic Adoration
-                </Text>
-                <Text
-                  style={[
-                    styles.infoValue,
-                    { color: colors.textSecondary, fontFamily: typography.fontFamily.regular },
-                  ]}
-                >
-                  Every Thursday evening at 5:30 PM followed by Benediction. Come and spend quiet time in the presence of the Blessed Sacrament.
-                </Text>
+            {devotions.map((item) => (
+              <View
+                key={item.id}
+                style={[
+                  styles.infoCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                  },
+                ]}
+              >
+                <View style={styles.infoRow}>
+                  <Ionicons
+                    name={(item.icon as any) || 'flame-sharp'}
+                    size={20}
+                    color={colors.primary}
+                  />
+                  <View style={styles.infoTextContainer}>
+                    <Text
+                      style={[
+                        styles.infoLabel,
+                        { color: colors.text, fontFamily: typography.fontFamily.bold },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.infoValue,
+                        { color: colors.textSecondary, fontFamily: typography.fontFamily.regular },
+                      ]}
+                    >
+                      {item.details}
+                    </Text>
+                  </View>
+                </View>
               </View>
-            </View>
-          </View>
-        </Animated.View>
+            ))}
+          </Animated.View>
+        )}
       </ScrollView>
 
       {/* ─── BOOKING MODAL (BOTTOM SHEET STYLE) ─── */}

@@ -16,6 +16,11 @@ export const QUERY_KEYS = {
   allProfiles: () => ['allProfiles'] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   groupRequests: () => ['groupRequests'] as const,
+  parishSchedule: (parishId: string, kind?: string) =>
+    ['parishSchedule', parishId, kind ?? 'all'] as const,
+  parishReading: (parishId: string, dateKey: string) =>
+    ['parishReading', parishId, dateKey] as const,
+  parishReadings: (parishId: string) => ['parishReadings', parishId] as const,
   parishTransfers: (parishId: string) => ['parishTransfers', parishId] as const,
   myParishTransfers: (userId: string) => ['myParishTransfers', userId] as const,
   allGroupUpdates: () => ['allGroupUpdates'] as const,

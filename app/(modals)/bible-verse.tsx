@@ -9,11 +9,32 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ScriptureText } from '@/components/ui/ScriptureText';
 import { BibleService } from '@/lib/supabase/services/bible';
+import { useAuth } from '@/context/AuthContext';
+import { useParishDailyReadingQuery } from '@/hooks/queries/useParishContent';
+
+const DEFAULT_REFLECTION =
+  'Take a moment today to reflect on this scripture. How does it apply to your current circumstances? Consider setting aside five minutes of silence to allow these words to take root in your heart before beginning your daily tasks.';
 
 export default function BibleVerseScreen() {
   const { colors, typography, radius } = useTheme();
+  const { user } = useAuth();
   const [verse, setVerse] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // What the parish posted for today, if anything. When it has not posted,
+  // the screen keeps showing the scripture API verse as before.
+  const { data: parishReading } = useParishDailyReadingQuery(user?.parishId ?? undefined);
+
+  const readingRefs = parishReading
+    ? [
+        parishReading.first_reading,
+        parishReading.psalm,
+        parishReading.second_reading,
+        parishReading.gospel,
+      ].filter(Boolean)
+    : [];
+  const hasParishReading = readingRefs.length > 0;
+  const reflection = parishReading?.reflection?.trim() || DEFAULT_REFLECTION;
 
   useEffect(() => {
     const fetchVerse = async () => {
@@ -63,11 +84,31 @@ export default function BibleVerseScreen() {
               letterSpacing: 1.5,
               textTransform: 'uppercase',
             }}>
-              {loading ? 'Loading...' : `${verse?.book || 'Bible'} · Daily Reading`}
+              {hasParishReading
+                ? `${user?.parishName || 'Parish'} · Daily Reading`
+                : loading
+                  ? 'Loading...'
+                  : `${verse?.book || 'Bible'} · Daily Reading`}
             </Text>
           </View>
 
-          {loading ? (
+          {hasParishReading ? (
+            <View style={{ marginTop: 24 }}>
+              {readingRefs.map((ref) => (
+                <Text
+                  key={ref}
+                  style={{
+                    fontSize: 20,
+                    fontFamily: typography.fontFamily.medium,
+                    color: '#FFFFFF',
+                    lineHeight: 32,
+                  }}
+                >
+                  {ref}
+                </Text>
+              ))}
+            </View>
+          ) : loading ? (
             <Text style={{
               fontSize: 22,
               fontFamily: typography.fontFamily.medium,
@@ -102,7 +143,11 @@ export default function BibleVerseScreen() {
             marginTop: 16,
             alignSelf: 'flex-end',
           }}>
-            {loading ? '— Bible' : `— ${verse?.reference || 'Bible'}`}
+            {hasParishReading
+              ? `— ${parishReading?.author || user?.parishName || 'Your parish'}`
+              : loading
+                ? '— Bible'
+                : `— ${verse?.reference || 'Bible'}`}
           </Text>
         </Animated.View>
 
@@ -118,7 +163,7 @@ export default function BibleVerseScreen() {
               <Ionicons name="bulb-outline" size={24} color="#D4AF37" />
             </View>
             <Text style={{ fontSize: 15, fontFamily: typography.fontFamily.regular, color: colors.text, lineHeight: 24, flex: 1 }}>
-              Take a moment today to reflect on this scripture. How does it apply to your current circumstances? Consider setting aside five minutes of silence to allow these words to take root in your heart before beginning your daily tasks.
+              {reflection}
             </Text>
           </View>
         </Animated.View>

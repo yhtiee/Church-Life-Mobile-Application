@@ -52,6 +52,22 @@ const QUICK_ACTIONS = [
     gradient: Gradients.cardPurple,
     route: '/(modals)/admin-ads',
   },
+  {
+    icon: 'time-outline' as const,
+    label: 'Schedules',
+    bg: '#DBEAFE',
+    iconColor: '#2563EB',
+    gradient: Gradients.heroBlue,
+    route: '/(modals)/admin-schedules',
+  },
+  {
+    icon: 'book-outline' as const,
+    label: 'Readings',
+    bg: '#FEE2E2',
+    iconColor: '#DC2626',
+    gradient: Gradients.cardGold,
+    route: '/(modals)/admin-daily-reading',
+  },
 ] as const;
 
 const WEEK_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

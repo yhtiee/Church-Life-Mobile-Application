@@ -228,3 +228,47 @@ export interface DatabaseMassBooking {
   createdAt: string; // timestamptz string
   refId: string; // unique booking ref
 }
+
+/** What a row in public.parish_schedule_items describes. */
+export type ScheduleKind = 'mass' | 'devotion' | 'sacrament';
+
+/**
+ * Maps to the public.parish_schedule_items table.
+ *
+ * For `mass` rows, `label` is a day name and `times` holds that day's mass
+ * times. For `devotion` and `sacrament` rows, `label` names it and `details`
+ * carries the description.
+ */
+export interface DatabaseScheduleItem {
+  id: string; // PK - uuid
+  parish_id: string;
+  kind: ScheduleKind;
+  label: string;
+  times: string[];
+  details?: string | null;
+  /** Ionicons name. Null means the app picks a default for the kind. */
+  icon?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Maps to the public.parish_daily_readings table. One row per parish per day;
+ * when a parish has not posted, the app falls back to the scripture API.
+ */
+export interface DatabaseDailyReading {
+  id: string; // PK - uuid
+  parish_id: string;
+  reading_date: string; // YYYY-MM-DD
+  first_reading?: string | null;
+  psalm?: string | null;
+  second_reading?: string | null;
+  gospel?: string | null;
+  reflection?: string | null;
+  author?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
