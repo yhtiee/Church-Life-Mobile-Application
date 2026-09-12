@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   backdropBg: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   alertBox: {
     width: Math.min(width - 48, 340),

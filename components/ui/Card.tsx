@@ -46,9 +46,11 @@ export function Card({
   }));
 
   const handlePressIn = () => {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
     if (pressable) scale.value = withSpring(0.97, Animation.spring);
   };
   const handlePressOut = () => {
+    // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
     if (pressable) scale.value = withSpring(1, Animation.spring);
   };
 

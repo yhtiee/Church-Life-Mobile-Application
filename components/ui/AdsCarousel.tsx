@@ -133,13 +133,13 @@ export default function AdsCarousel({
               {/* Background image */}
               <Image
                 source={{ uri: item.image_url }}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 contentFit="cover"
               />
               {/* Dark gradient overlay */}
               <LinearGradient
                 colors={Gradients.overlayDark as any}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
 
               {/* Content overlay */}

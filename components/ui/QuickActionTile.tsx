@@ -42,10 +42,12 @@ export function QuickActionTile({
     <AnimatedPressable
       style={[animStyle, styles.wrapper, style]}
       onPressIn={() => {
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
         scale.value = withSpring(0.92, Animation.springBounce);
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }}
       onPressOut={() => {
+        // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
         scale.value = withSpring(1, Animation.spring);
       }}
       onPress={onPress}

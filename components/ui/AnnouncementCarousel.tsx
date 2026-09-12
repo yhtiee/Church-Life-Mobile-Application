@@ -141,13 +141,13 @@ export default function AnnouncementCarousel({
                 {/* Background image */}
                 <Image
                   source={imageSource}
-                  style={StyleSheet.absoluteFillObject}
+                  style={StyleSheet.absoluteFill}
                   contentFit="cover"
                 />
                 {/* Dark gradient overlay */}
                 <LinearGradient
                   colors={Gradients.overlayDark as any}
-                  style={StyleSheet.absoluteFillObject}
+                  style={StyleSheet.absoluteFill}
                 />
 
                 {/* Content overlay */}

@@ -55,12 +55,12 @@ export default function AnnouncementDetailScreen() {
         <Animated.View entering={FadeIn.duration(400)} style={styles.bannerContainer}>
           <Image
             source={heroImage}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
           />
           <LinearGradient
             colors={['rgba(7,21,36,0.3)', 'rgba(7,21,36,0.92)']}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
           <View style={styles.bannerContent}>
             <View style={styles.badges}>

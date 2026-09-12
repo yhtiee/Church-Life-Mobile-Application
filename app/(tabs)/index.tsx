@@ -347,7 +347,7 @@ export default function HomeScreen() {
             />
             <LinearGradient
               colors={Gradients.overlayDark as any}
-              style={[StyleSheet.absoluteFillObject, styles.halfCardGradient]}
+              style={[StyleSheet.absoluteFill, styles.halfCardGradient]}
             />
             <View style={styles.halfCardContent}>
               <View style={styles.halfCardIcon}>
@@ -381,7 +381,7 @@ export default function HomeScreen() {
             />
             <LinearGradient
               colors={['rgba(42,111,219,0.70)', 'rgba(42,111,219,0.96)']}
-              style={[StyleSheet.absoluteFillObject, styles.halfCardGradient]}
+              style={[StyleSheet.absoluteFill, styles.halfCardGradient]}
             />
             <View style={styles.halfCardContent}>
               <View style={[styles.halfCardIcon, { backgroundColor: 'rgba(255,255,255,0.20)' }]}>
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   halfCardImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
   },
   halfCardGradient: {
     borderRadius: 18,

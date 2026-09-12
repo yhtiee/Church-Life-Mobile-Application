@@ -5,10 +5,9 @@
     "owner": "mobile-applications-yhutiee",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/new-logo.jpeg",
+    "icon": "./assets/images/new-logo.png",
     "scheme": "churchlifeapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yhutiee.churchlifeapp",
@@ -19,23 +18,22 @@
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
-        "foregroundImage": "./assets/images/new-logo.jpeg"
+        "foregroundImage": "./assets/images/new-logo.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.yhutiee.churchlifeapp"
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/new-logo.jpeg"
+      "favicon": "./assets/images/new-logo.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/new-logo.jpeg",
+          "image": "./assets/images/new-logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

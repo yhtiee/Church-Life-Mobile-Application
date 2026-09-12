@@ -30,7 +30,9 @@ export function TabSwitcher({ tabs, activeIndex, onTabChange }: TabSwitcherProps
 
   const movePill = (index: number) => {
     if (tabWidths.current[index] !== undefined) {
+      // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
       pillX.value = withSpring(tabOffsets.current[index], Animation.springBounce);
+      // eslint-disable-next-line react-hooks/immutability -- Reanimated shared values are designed to be mutated; see facebook/react#29641
       pillW.value = withSpring(tabWidths.current[index], Animation.spring);
     }
   };

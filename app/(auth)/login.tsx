@@ -66,13 +66,13 @@ export default function LoginScreen() {
           {/* Church image overlay */}
           <Image
             source={require('@/assets/images/church_exterior_hero.png')}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
           />
           {/* Dark overlay on image */}
           <LinearGradient
             colors={['rgba(4,10,20,0.7)', 'rgba(7,21,36,0.92)']}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
 
           {/* Cross watermark */}
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
     alignItems: 'center', justifyContent: 'center', zIndex: 10,
   },
-  crossWrapper: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  crossWrapper: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   crossV: { position: 'absolute', width: 40, top: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.04)' },
   crossH: { position: 'absolute', height: 40, left: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.04)' },
   heroContent: { alignItems: 'center', paddingTop: 8 },
