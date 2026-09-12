@@ -1,6 +1,7 @@
 import { supaBaseClient } from '../client';
 import { notifyOnSuccess } from './notification';
 import type {
+  CelebrationWish,
   DatabaseBankAccount,
   DatabaseCelebration,
   DatabaseDonation,
@@ -173,6 +174,7 @@ export class SupportService {
       celebrationId?: string | null;
       beneficiaryId?: string | null;
       prayerNote?: string | null;
+      isAnonymous?: boolean;
     }
   ) {
     try {
@@ -199,6 +201,7 @@ export class SupportService {
             celebration_id: payment.celebrationId ?? null,
             beneficiary_id: payment.beneficiaryId ?? null,
             prayer_note: payment.prayerNote ?? null,
+            is_anonymous: payment.isAnonymous ?? false,
           },
         ])
         .select()
@@ -232,6 +235,27 @@ export class SupportService {
       return { data: data as DatabaseDonation[], error: null };
     } catch (error: any) {
       console.error(`Error fetching pending payments (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Wishes left on a celebration, for the celebrant.
+   *
+   * Reads through `get_celebration_wishes` rather than the donations table:
+   * row level security can hide rows but not columns, and the celebrant must
+   * not see the amounts attached to each message.
+   */
+  async fetchCelebrationWishes(celebrationId: string) {
+    try {
+      const { data, error } = await supaBaseClient.rpc('get_celebration_wishes', {
+        target_celebration_id: celebrationId,
+      });
+
+      if (error) throw error;
+      return { data: (data ?? []) as CelebrationWish[], error: null };
+    } catch (error: any) {
+      console.error(`Error fetching wishes (${celebrationId}):`, error.message || error);
       return { data: null, error };
     }
   }

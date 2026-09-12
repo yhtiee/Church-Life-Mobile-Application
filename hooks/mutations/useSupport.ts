@@ -76,6 +76,7 @@ interface ReportPaymentInput {
   celebrationId?: string | null;
   beneficiaryId?: string | null;
   prayerNote?: string | null;
+  isAnonymous?: boolean;
 }
 
 /**
@@ -98,6 +99,9 @@ export function useReportPaymentMutation(userId?: string, parishId?: string) {
       if (variables.celebrationId) {
         queryClient.invalidateQueries({
           queryKey: QUERY_KEYS.celebrationSupport(variables.celebrationId),
+        });
+        queryClient.invalidateQueries({
+          queryKey: QUERY_KEYS.celebrationWishes(variables.celebrationId),
         });
       }
     },

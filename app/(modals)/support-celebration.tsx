@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
@@ -29,6 +37,7 @@ export default function SupportCelebrationScreen() {
   const [amount, setAmount] = useState('');
   const [prayer, setPrayer] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [anonymous, setAnonymous] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const { data: celebration, isLoading } = useCelebrationQuery(id);
@@ -55,6 +64,7 @@ export default function SupportCelebrationScreen() {
         celebrationId: celebration.id,
         beneficiaryId: celebration.member_id,
         prayerNote: prayer.trim() || null,
+        isAnonymous: anonymous,
         bankAccountId: selectedAccountId,
       });
       setSubmitted(true);
@@ -227,6 +237,37 @@ export default function SupportCelebrationScreen() {
                 style={{ height: 110, textAlignVertical: 'top' }}
               />
             </View>
+
+            <TouchableOpacity onPress={() => setAnonymous((v) => !v)} style={styles.anonRow}>
+              <Ionicons
+                name={anonymous ? 'checkbox' : 'square-outline'}
+                size={22}
+                color={colors.primary}
+              />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    color: colors.text,
+                    fontFamily: typography.fontFamily.medium,
+                  }}
+                >
+                  Send without my name
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: colors.textMuted,
+                    fontFamily: typography.fontFamily.regular,
+                    marginTop: 2,
+                  }}
+                >
+                  {anonymous
+                    ? 'The celebrant sees your message but not your name.'
+                    : 'Your name is shown with your message.'}
+                </Text>
+              </View>
+            </TouchableOpacity>
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(260).duration(400)} style={styles.block}>
@@ -260,6 +301,7 @@ export default function SupportCelebrationScreen() {
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 60 },
   block: { marginTop: 20 },
+  anonRow: { flexDirection: 'row', alignItems: 'flex-start', marginTop: 16 },
   sectionTitle: {
     fontSize: 13,
     letterSpacing: 0.5,

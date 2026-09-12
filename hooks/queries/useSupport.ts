@@ -86,3 +86,20 @@ export function useCelebrationSupportQuery(celebrationId?: string) {
     enabled: !!celebrationId,
   });
 }
+
+/**
+ * Wishes left on a celebration, readable only by the celebrant and their
+ * parish admins. Amounts are not included.
+ */
+export function useCelebrationWishesQuery(celebrationId?: string, enabled = true) {
+  return useQuery({
+    queryKey: QUERY_KEYS.celebrationWishes(celebrationId ?? ''),
+    queryFn: async () => {
+      if (!celebrationId) return [];
+      const res = await supportService.fetchCelebrationWishes(celebrationId);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!celebrationId && enabled,
+  });
+}

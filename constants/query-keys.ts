@@ -21,6 +21,8 @@ export const QUERY_KEYS = {
   celebrations: (parishId: string, scope: string) =>
     ['celebrations', parishId, scope] as const,
   celebration: (id: string) => ['celebration', id] as const,
+  celebrationWishes: (celebrationId: string) =>
+    ['celebrationWishes', celebrationId] as const,
   celebrationSupport: (celebrationId: string) =>
     ['celebrationSupport', celebrationId] as const,
   pendingPayments: (parishId: string) => ['pendingPayments', parishId] as const,

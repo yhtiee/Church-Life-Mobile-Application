@@ -142,11 +142,16 @@ export default function HomeScreen() {
         body: c.body || `Join us in celebrating ${c.celebrant_name}.`,
         image_url: c.image_url || '',
         category: CELEBRATION_KIND_LABELS[c.kind],
-        cta_url: `/(modals)/support-celebration?id=${c.id}`,
+        // Your own celebration opens the wishes people left you; everyone
+        // else's opens the screen to send support.
+        cta_url:
+          c.member_id && c.member_id === user?.id
+            ? `/(modals)/celebration-wishes?id=${c.id}`
+            : `/(modals)/support-celebration?id=${c.id}`,
       })),
       ...ads,
     ],
-    [celebrations, ads]
+    [celebrations, ads, user?.id]
   );
 
   useEffect(() => {

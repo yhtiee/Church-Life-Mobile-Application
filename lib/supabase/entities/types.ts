@@ -122,6 +122,23 @@ export interface DatabaseDonation {
   beneficiary_id?: string | null;
   prayer_note?: string | null;
   bank_account_id?: string | null;
+  /** Hides the sender's name from the celebrant. Never hides it from admins. */
+  is_anonymous?: boolean;
+}
+
+/**
+ * One celebration wish as the celebrant sees it.
+ *
+ * Amounts are absent by design: the money goes to the parish account rather
+ * than to the celebrant, so showing figures would promise something the app
+ * does not deliver.
+ */
+export interface CelebrationWish {
+  wish_id: string;
+  sender_name: string;
+  message: string;
+  wished_on: string; // YYYY-MM-DD
+  sent_anonymously: boolean;
 }
 
 /**
