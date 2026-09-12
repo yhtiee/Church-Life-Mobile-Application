@@ -122,3 +122,22 @@ export function useGroupMessagesQuery(groupId: string, limit: number = 50, offse
     enabled: !!groupId,
   });
 }
+
+/**
+ * Submits a request to join a secured group or move between groups.
+ * Writes to group_requests, which is what the admin queue reads.
+ */
+export function useRequestGroupChangeMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ targetGroupId, reason }: { targetGroupId: string; reason?: string }) => {
+      const res = await communityService.requestGroupChange(targetGroupId, reason);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groupRequests() });
+    },
+  });
+}

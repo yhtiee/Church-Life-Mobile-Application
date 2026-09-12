@@ -13,6 +13,7 @@ export default function ModalsLayout() {
       <Stack.Screen name="group-chat" />
       <Stack.Screen name="group-access-request" />
       <Stack.Screen name="group-transition-request" />
+      <Stack.Screen name="parish-transfer-request" />
       <Stack.Screen name="manage-groups" />
       <Stack.Screen name="member-detail" />
       <Stack.Screen name="donate" />

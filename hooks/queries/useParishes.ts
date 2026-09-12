@@ -26,3 +26,34 @@ export function useParishQuery(id: string) {
     enabled: !!id,
   });
 }
+
+/**
+ * Pending transfers OUT of a parish — the review queue for that parish's
+ * admins, who are the ones who decide.
+ */
+export function useParishTransferRequestsQuery(parishId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.parishTransfers(parishId ?? ''),
+    queryFn: async () => {
+      if (!parishId) return [];
+      const res = await parishService.fetchTransferRequestsByParish(parishId);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!parishId,
+  });
+}
+
+/** A member's own transfer requests, so they can see where one stands. */
+export function useMyParishTransfersQuery(userId?: string) {
+  return useQuery({
+    queryKey: QUERY_KEYS.myParishTransfers(userId ?? ''),
+    queryFn: async () => {
+      if (!userId) return [];
+      const res = await parishService.fetchMyTransferRequests(userId);
+      if (res.error) throw res.error;
+      return res.data || [];
+    },
+    enabled: !!userId,
+  });
+}

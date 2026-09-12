@@ -20,3 +20,45 @@ export function useUpdateParishMutation() {
     },
   });
 }
+
+/** Submits a parish transfer request for the signed-in member. */
+export function useRequestParishTransferMutation(userId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ targetParishId, reason }: { targetParishId: string; reason?: string }) => {
+      const res = await parishService.requestTransfer(targetParishId, reason);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.myParishTransfers(userId ?? '') });
+    },
+  });
+}
+
+/** Approves or declines a transfer out of the admin's own parish. */
+export function useDecideParishTransferMutation(parishId?: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      requestId,
+      approve,
+      note,
+    }: {
+      requestId: string;
+      approve: boolean;
+      note?: string;
+    }) => {
+      const res = await parishService.decideTransfer(requestId, approve, note);
+      if (res.error) throw res.error;
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.parishTransfers(parishId ?? '') });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allProfiles() });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.groups() });
+    },
+  });
+}

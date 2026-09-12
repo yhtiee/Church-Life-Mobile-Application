@@ -13,8 +13,8 @@ import { Dropdown } from '@/components/ui/Dropdown';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { getGroupMetadata } from '@/constants/groups';
-import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
-import { ActivityService } from '@/lib/supabase/services/activity';
+import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { useRequestGroupChangeMutation } from '@/hooks/mutations/useGroups';
 
 export default function GroupTransitionRequestScreen() {
   const { colors, typography, radius } = useTheme();
@@ -25,43 +25,33 @@ export default function GroupTransitionRequestScreen() {
   const [targetGroupId, setTargetGroupId] = useState<string | null>(null);
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
+
+  const { mutateAsync: requestGroupChange, isPending: loading } = useRequestGroupChangeMutation();
 
   const handleSubmitTransition = async () => {
-    if (!user?.id || !targetGroupId || !currentGroup?.id) {
+    if (!user?.id || !targetGroupId) {
       showAlert({ title: 'Error', message: 'Invalid request. Please try again.', type: 'error' });
       return;
     }
 
-    setLoading(true);
     try {
-      const activityService = new ActivityService();
-      const { error } = await activityService.logGroupTransitionRequest(
-        user.id,
-        currentGroup.id,
-        targetGroupId,
-        currentGroupMeta?.name,
-        targetGroupMeta?.name
-      );
-
-      if (error) {
-        showAlert({ title: 'Failed', message: 'Failed to submit transition request. Please try again.', type: 'error' });
-        console.error('Activity logging error:', error);
-        setLoading(false);
-        return;
-      }
-
+      // The database records the group being left and the parish admin
+      // approves, which is what actually moves the membership.
+      await requestGroupChange({ targetGroupId, reason: reason.trim() || undefined });
       showAlert({ title: 'Success', message: 'Transition request submitted!', type: 'success' });
       setSubmitted(true);
-    } catch (err) {
-      showAlert({ title: 'Error', message: 'An error occurred. Please try again.', type: 'error' });
-      console.error('Submit transition error:', err);
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      showAlert({
+        title: 'Failed',
+        message: err?.message || 'Failed to submit transition request. Please try again.',
+        type: 'error',
+      });
     }
   };
 
-  const { data: groups = [] } = useOpenGroupsQuery();
+  // All groups, not just open ones: a member may want to move into a secured
+  // group, which is exactly the case that needs an approval step.
+  const { data: groups = [] } = useGroupsQuery();
 
   const currentGroup = user?.id ? groups.find((g) => g.member_ids?.includes(user.id)) : undefined;
   const targetGroup = groups.find((g) => g.id === targetGroupId);

@@ -154,6 +154,8 @@ export interface DatabaseGroupUpdate {
 /**
  * Maps to the public.group_requests table.
  */
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
 export interface DatabaseGroupRequest {
   id: string; // PK - uuid
   user_id?: string | null; // FK to profiles.id
@@ -162,6 +164,36 @@ export interface DatabaseGroupRequest {
   targetGroupId: string;
   currentGroupId?: string | null;
   requestDate: string; // timestamptz string
+  reason?: string | null;
+  status: RequestStatus;
+  decided_at?: string | null;
+  decided_by?: string | null;
+  /** Joined in by the admin queries, not a column. */
+  targetGroup?: { name: string } | null;
+  currentGroup?: { name: string } | null;
+}
+
+/**
+ * Maps to the public.parish_transfer_requests table.
+ *
+ * `from_parish_id` is the parish being left, and its admins are the ones who
+ * decide the request.
+ */
+export interface DatabaseParishTransferRequest {
+  id: string; // PK - uuid
+  user_id: string; // FK to profiles.id
+  userName: string;
+  from_parish_id?: string | null;
+  to_parish_id: string;
+  reason?: string | null;
+  status: RequestStatus;
+  requested_at: string; // timestamptz string
+  decided_at?: string | null;
+  decided_by?: string | null;
+  decision_note?: string | null;
+  /** Joined in by the queries, not columns. */
+  fromParish?: { name: string } | null;
+  toParish?: { name: string } | null;
 }
 
 /**
