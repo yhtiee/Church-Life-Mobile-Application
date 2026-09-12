@@ -115,6 +115,13 @@ export interface DatabaseDonation {
   approved_at?: string;
   approved_by?: string;
   admin_notes?: string;
+  /** What this payment is for. Defaults to 'offering' for older rows. */
+  kind?: PaymentKind;
+  celebration_id?: string | null;
+  /** The member being celebrated, kept even if the celebration is removed. */
+  beneficiary_id?: string | null;
+  prayer_note?: string | null;
+  bank_account_id?: string | null;
 }
 
 /**
@@ -268,6 +275,65 @@ export interface DatabaseDailyReading {
   gospel?: string | null;
   reflection?: string | null;
   author?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * What a payment record is for. All three land in the same admin
+ * verification queue; no money moves through the app.
+ */
+export type PaymentKind = 'offering' | 'support' | 'celebration';
+
+export type CelebrationKind =
+  | 'birthday'
+  | 'wedding_anniversary'
+  | 'ordination'
+  | 'profession'
+  | 'other';
+
+export const CELEBRATION_KIND_LABELS: Record<CelebrationKind, string> = {
+  birthday: 'Birthday',
+  wedding_anniversary: 'Wedding Anniversary',
+  ordination: 'Ordination',
+  profession: 'Religious Profession',
+  other: 'Celebration',
+};
+
+/** Maps to the public.parish_bank_accounts table. */
+export interface DatabaseBankAccount {
+  id: string; // PK - uuid
+  parish_id: string;
+  label: string;
+  bank_name: string;
+  account_name: string;
+  /** Text, not a number: account numbers carry leading zeros. */
+  account_number: string;
+  instructions?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Maps to the public.celebrations table. Posted by a parish admin the way
+ * ads are, naming the member being celebrated.
+ */
+export interface DatabaseCelebration {
+  id: string; // PK - uuid
+  parish_id: string;
+  member_id?: string | null;
+  celebrant_name: string;
+  kind: CelebrationKind;
+  title: string;
+  body?: string | null;
+  image_url?: string | null;
+  celebration_date?: string | null; // YYYY-MM-DD
+  starts_on: string; // YYYY-MM-DD
+  ends_on?: string | null; // YYYY-MM-DD
+  is_active: boolean;
   created_by?: string | null;
   created_at: string;
   updated_at: string;

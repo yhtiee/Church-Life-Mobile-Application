@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -11,70 +11,57 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
-import { Dropdown } from '@/components/ui/Dropdown';
 import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 import { BankAccountCard } from '@/components/ui/BankAccountCard';
-import { useBankAccountsQuery } from '@/hooks/queries/useSupport';
+import GlobalLoader from '@/components/ui/GlobalLoader';
+import { useBankAccountsQuery, useCelebrationQuery } from '@/hooks/queries/useSupport';
 import { useReportPaymentMutation } from '@/hooks/mutations/useSupport';
+import { CELEBRATION_KIND_LABELS } from '@/lib/supabase/entities/types';
 
-const CATEGORIES = [
-  { label: 'Sunday Offering', value: 'Sunday Offering' },
-  { label: 'Tithe', value: 'Tithe' },
-  { label: 'Harvest/Bazaar', value: 'Harvest' },
-  { label: 'Building Fund', value: 'Building Fund' },
-  { label: 'Charity/Poor Box', value: 'Charity' },
-];
-
-export default function DonateScreen() {
+export default function SupportCelebrationScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, typography, radius } = useTheme();
   const { user } = useAuth();
   const { showAlert } = useAlert();
   const router = useRouter();
 
   const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
+  const [prayer, setPrayer] = useState('');
   const [accountId, setAccountId] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: accounts = [], isLoading: loadingAccounts } = useBankAccountsQuery(
-    user?.parishId ?? undefined
-  );
-  const { mutateAsync: reportPayment, isPending: loading } = useReportPaymentMutation(
+  const { data: celebration, isLoading } = useCelebrationQuery(id);
+  const { data: accounts = [] } = useBankAccountsQuery(user?.parishId ?? undefined);
+  const { mutateAsync: reportPayment, isPending } = useReportPaymentMutation(
     user?.id,
     user?.parishId ?? undefined
   );
 
-  // With one published account there is nothing to choose between, so treat
-  // it as selected rather than making the member tap it.
   const selectedAccountId = accountId ?? (accounts.length === 1 ? accounts[0].id : null);
   const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
 
-  const handleConfirm = async () => {
-    if (!amount || !category) return;
-    if (!user?.id) {
-      showAlert({
-        title: 'Authentication Required',
-        message: 'You must be logged in to record a payment.',
-        type: 'error',
-      });
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!celebration || !amount) return;
 
     try {
       await reportPayment({
-        kind: 'support',
+        kind: 'celebration',
         amount: Number(amount),
-        category,
-        description: selectedAccount
-          ? `${category} · transfer to ${selectedAccount.label}`
-          : category,
+        category: CELEBRATION_KIND_LABELS[celebration.kind],
+        description: `Support for ${celebration.celebrant_name}${
+          selectedAccount ? ` · transfer to ${selectedAccount.label}` : ''
+        }`,
+        celebrationId: celebration.id,
+        beneficiaryId: celebration.member_id,
+        prayerNote: prayer.trim() || null,
         bankAccountId: selectedAccountId,
       });
       setSubmitted(true);
     } catch (err: any) {
       showAlert({
         title: 'Could not record',
-        message: err.message || 'An error occurred. Please try again.',
+        message: err?.message || 'Something went wrong. Please try again.',
         type: 'error',
       });
     }
@@ -88,7 +75,7 @@ export default function DonateScreen() {
             entering={ZoomIn.springify().damping(12)}
             style={[styles.successCircle, { backgroundColor: colors.successBg }]}
           >
-            <Ionicons name="heart" size={56} color={colors.success} />
+            <Ionicons name="gift" size={56} color={colors.success} />
           </Animated.View>
           <Text
             style={{
@@ -99,7 +86,7 @@ export default function DonateScreen() {
               textAlign: 'center',
             }}
           >
-            Thank You
+            Recorded
           </Text>
           <Text
             style={{
@@ -112,18 +99,11 @@ export default function DonateScreen() {
               paddingHorizontal: 12,
             }}
           >
-            Your{' '}
-            <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.primary }}>
-              ₦{parseInt(amount, 10).toLocaleString()}
-            </Text>{' '}
-            for {category} has been recorded and is{' '}
-            <Text style={{ fontFamily: typography.fontFamily.bold, color: colors.warning }}>
-              awaiting verification
-            </Text>{' '}
-            by your parish. You will be notified once it is confirmed.
+            Your support for {celebration?.celebrant_name} is awaiting verification by your parish.
+            Your prayer will be shared with them.
           </Text>
           <Button
-            label="Back to Finance"
+            label="Done"
             onPress={() => router.back()}
             fullWidth
             size="lg"
@@ -136,77 +116,61 @@ export default function DonateScreen() {
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right', 'bottom']}>
-      <ScreenHeader title="Support the Parish" />
+      <ScreenHeader title="Send Support" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <Animated.View entering={FadeInDown.duration(400)}>
-            <Card elevation="sm" style={{ padding: 16, borderRadius: radius.lg }}>
-              <View style={styles.noteHeader}>
-                <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+          {celebration && (
+            <Animated.View entering={FadeInDown.duration(400)}>
+              <Card elevation="sm" style={{ padding: 18, borderRadius: radius.lg }}>
+                <Badge
+                  label={CELEBRATION_KIND_LABELS[celebration.kind]}
+                  variant="primary"
+                  size="sm"
+                />
                 <Text
                   style={{
-                    fontSize: 14,
-                    marginLeft: 8,
+                    fontSize: 20,
                     color: colors.text,
-                    fontFamily: typography.fontFamily.semiBold,
+                    fontFamily: typography.fontFamily.bold,
+                    marginTop: 10,
                   }}
                 >
-                  How this works
+                  {celebration.celebrant_name}
                 </Text>
-              </View>
+                {celebration.body ? (
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: colors.textSecondary,
+                      fontFamily: typography.fontFamily.regular,
+                      lineHeight: 21,
+                      marginTop: 6,
+                    }}
+                  >
+                    {celebration.body}
+                  </Text>
+                ) : null}
+              </Card>
+            </Animated.View>
+          )}
+
+          <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.block}>
+            <Card elevation="sm" style={{ padding: 16, borderRadius: radius.lg }}>
               <Text
                 style={{
                   fontSize: 13,
                   color: colors.textSecondary,
                   fontFamily: typography.fontFamily.regular,
                   lineHeight: 20,
-                  marginTop: 8,
                 }}
               >
-                Transfer to the parish account in your banking app, then come back and record it
-                here. Nothing is charged in the app. Your parish confirms the transfer before it
-                appears in your giving record.
+                Transfer to the parish account below, then record it here. Nothing is charged in the
+                app, and your parish confirms the transfer before it is counted.
               </Text>
             </Card>
-          </Animated.View>
-
-          <Animated.View entering={FadeInDown.delay(80).duration(400)} style={styles.block}>
-            <Text
-              style={[
-                styles.sectionTitle,
-                { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
-              ]}
-            >
-              {accounts.length > 1 ? 'Choose an account' : 'Parish account'}
-            </Text>
-
-            {accounts.map((account) => (
-              <BankAccountCard
-                key={account.id}
-                account={account}
-                selected={account.id === selectedAccountId}
-                onSelect={accounts.length > 1 ? () => setAccountId(account.id) : undefined}
-              />
-            ))}
-
-            {accounts.length === 0 && !loadingAccounts && (
-              <Card elevation="sm" style={{ padding: 16, borderRadius: radius.lg }}>
-                <Text
-                  style={{
-                    fontSize: 13,
-                    color: colors.textMuted,
-                    fontFamily: typography.fontFamily.regular,
-                    lineHeight: 20,
-                  }}
-                >
-                  Your parish has not published account details yet. Ask a parish admin to add them
-                  before recording a payment.
-                </Text>
-              </Card>
-            )}
           </Animated.View>
 
           <Animated.View entering={FadeInDown.delay(140).duration(400)} style={styles.block}>
@@ -216,9 +180,33 @@ export default function DonateScreen() {
                 { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
               ]}
             >
-              Record your transfer
+              {accounts.length > 1 ? 'Choose an account' : 'Parish account'}
             </Text>
+            {accounts.map((account) => (
+              <BankAccountCard
+                key={account.id}
+                account={account}
+                selected={account.id === selectedAccountId}
+                onSelect={accounts.length > 1 ? () => setAccountId(account.id) : undefined}
+              />
+            ))}
+            {accounts.length === 0 && (
+              <Card elevation="sm" style={{ padding: 16, borderRadius: radius.lg }}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.textMuted,
+                    fontFamily: typography.fontFamily.regular,
+                    lineHeight: 20,
+                  }}
+                >
+                  Your parish has not published account details yet.
+                </Text>
+              </Card>
+            )}
+          </Animated.View>
 
+          <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.block}>
             <Label label="Amount" />
             <Input
               placeholder="0"
@@ -229,22 +217,24 @@ export default function DonateScreen() {
             />
 
             <View style={{ marginTop: 12 }}>
-              <Dropdown
-                label="What is it for"
-                placeholder="Select a category"
-                options={CATEGORIES}
-                value={category}
-                onChange={(value) => setCategory(value)}
+              <Label label="Prayer or message" helperText="Shared with the celebrant" />
+              <Input
+                placeholder="May God continue to bless you"
+                value={prayer}
+                onChangeText={setPrayer}
+                multiline
+                numberOfLines={4}
+                style={{ height: 110, textAlignVertical: 'top' }}
               />
             </View>
           </Animated.View>
 
-          <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.block}>
+          <Animated.View entering={FadeInDown.delay(260).duration(400)} style={styles.block}>
             <Button
               label="I have paid"
-              onPress={handleConfirm}
-              loading={loading}
-              disabled={!amount || !category || accounts.length === 0 || loading}
+              onPress={handleSubmit}
+              loading={isPending}
+              disabled={!amount || accounts.length === 0 || isPending}
               fullWidth
               size="lg"
             />
@@ -262,20 +252,20 @@ export default function DonateScreen() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <GlobalLoader visible={isLoading} />
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 60 },
-  block: { marginTop: 22 },
+  block: { marginTop: 20 },
   sectionTitle: {
     fontSize: 13,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 12,
   },
-  noteHeader: { flexDirection: 'row', alignItems: 'center' },
   successWrapper: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 },
   successCircle: {
     width: 120,

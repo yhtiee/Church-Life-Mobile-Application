@@ -9,40 +9,43 @@ import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
 import { Avatar } from '@/components/ui/Avatar';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 
+// ── Setting row ──
+function SettingRow({
+  icon, label, value, onPress, rightEl, isDestructive,
+}: {
+  icon: any; label: string; value?: string; onPress?: () => void;
+  rightEl?: React.ReactNode; isDestructive?: boolean;
+}) {
+  const { colors, typography } = useTheme();
+  const textColor = isDestructive ? colors.danger : colors.text;
+  const iconColor = isDestructive ? colors.danger : colors.primary;
+  const iconBg = isDestructive ? colors.dangerBg : colors.primaryLight;
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress && !rightEl}
+      style={[styles.settingRow, { borderBottomColor: colors.divider }]}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
+      <View style={[styles.settingIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={icon} size={16} color={iconColor} />
+      </View>
+      <Text style={{ flex: 1, fontSize: 14, fontFamily: typography.fontFamily.medium, color: textColor, marginLeft: 13 }}>
+        {label}
+      </Text>
+      {value && <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>{value}</Text>}
+      {rightEl}
+      {onPress && !isDestructive && !rightEl && <Ionicons name="chevron-forward" size={16} color={colors.border} style={{ marginLeft: 8 }} />}
+    </TouchableOpacity>
+  );
+}
+
 export default function AdminProfileScreen() {
   const { colors, typography, radius, isDark, setColorMode, colorMode } = useTheme();
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const SettingRow = ({
-    icon, label, value, onPress, rightEl, isDestructive,
-  }: {
-    icon: any; label: string; value?: string; onPress?: () => void;
-    rightEl?: React.ReactNode; isDestructive?: boolean;
-  }) => {
-    const textColor = isDestructive ? colors.danger : colors.text;
-    const iconColor = isDestructive ? colors.danger : colors.primary;
-    const iconBg = isDestructive ? colors.dangerBg : colors.primaryLight;
-
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={!onPress && !rightEl}
-        style={[styles.settingRow, { borderBottomColor: colors.divider }]}
-        activeOpacity={onPress ? 0.7 : 1}
-      >
-        <View style={[styles.settingIcon, { backgroundColor: iconBg }]}>
-          <Ionicons name={icon} size={16} color={iconColor} />
-        </View>
-        <Text style={{ flex: 1, fontSize: 14, fontFamily: typography.fontFamily.medium, color: textColor, marginLeft: 13 }}>
-          {label}
-        </Text>
-        {value && <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>{value}</Text>}
-        {rightEl}
-        {onPress && !isDestructive && !rightEl && <Ionicons name="chevron-forward" size={16} color={colors.border} style={{ marginLeft: 8 }} />}
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
@@ -137,6 +140,16 @@ export default function AdminProfileScreen() {
                   icon="business-outline"
                   label="Edit Parish History"
                   onPress={() => router.push('/(modals)/edit-parish-history')}
+                />
+                <SettingRow
+                  icon="card-outline"
+                  label="Parish Account Details"
+                  onPress={() => router.push('/(modals)/admin-bank-accounts')}
+                />
+                <SettingRow
+                  icon="gift-outline"
+                  label="Celebrations"
+                  onPress={() => router.push('/(modals)/admin-celebrations')}
                 />
               </View>
             </Animated.View>

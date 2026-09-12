@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView, View, Text, StyleSheet, TouchableOpacity,
   FlatList, Dimensions, NativeSyntheticEvent, NativeScrollEvent,
@@ -16,6 +16,8 @@ import { PARISH_HISTORY, MASS_TIMES } from '@/constants/mockData';
 import { useParishQuery } from '@/hooks/queries/useParishes';
 import { AnnoucementService } from '@/lib/supabase/services/announcements';
 import { AdsService } from '@/lib/supabase/services/ads';
+import { useActiveCelebrationsQuery } from '@/hooks/queries/useSupport';
+import { CELEBRATION_KIND_LABELS } from '@/lib/supabase/entities/types';
 import { BibleService } from '@/lib/supabase/services/bible';
 import { Gradients } from '@/constants/theme';
 import GlobalLoader from '@/components/ui/GlobalLoader';
@@ -126,6 +128,26 @@ export default function HomeScreen() {
 
   const hasAnnouncements = announcements && announcements.length > 0;
   const carouselData = hasAnnouncements ? announcements : FEATURE_SLIDES;
+
+  // Celebrations ride in the same carousel as ads. They are posted by a parish
+  // admin naming the member, so nothing here is derived from profile birth
+  // dates, which only record a month anyway.
+  const { data: celebrations = [] } = useActiveCelebrationsQuery(user?.parishId ?? undefined);
+
+  const slides = useMemo(
+    () => [
+      ...celebrations.map((c) => ({
+        id: `celebration-${c.id}`,
+        title: c.title,
+        body: c.body || `Join us in celebrating ${c.celebrant_name}.`,
+        image_url: c.image_url || '',
+        category: CELEBRATION_KIND_LABELS[c.kind],
+        cta_url: `/(modals)/support-celebration?id=${c.id}`,
+      })),
+      ...ads,
+    ],
+    [celebrations, ads]
+  );
 
   useEffect(() => {
     let active = true;
@@ -283,9 +305,9 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* ── Ads Carousel ── */}
+        {/* ── Ads & Celebrations Carousel ── */}
         <AdsCarousel
-          data={ads}
+          data={slides}
           onSelect={(item) => {
             if (item.cta_url) {
               router.push(item.cta_url as any);

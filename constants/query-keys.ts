@@ -16,6 +16,14 @@ export const QUERY_KEYS = {
   allProfiles: () => ['allProfiles'] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   groupRequests: () => ['groupRequests'] as const,
+  bankAccounts: (parishId: string, activeOnly: boolean) =>
+    ['bankAccounts', parishId, activeOnly] as const,
+  celebrations: (parishId: string, scope: string) =>
+    ['celebrations', parishId, scope] as const,
+  celebration: (id: string) => ['celebration', id] as const,
+  celebrationSupport: (celebrationId: string) =>
+    ['celebrationSupport', celebrationId] as const,
+  pendingPayments: (parishId: string) => ['pendingPayments', parishId] as const,
   parishSchedule: (parishId: string, kind?: string) =>
     ['parishSchedule', parishId, kind ?? 'all'] as const,
   parishReading: (parishId: string, dateKey: string) =>
