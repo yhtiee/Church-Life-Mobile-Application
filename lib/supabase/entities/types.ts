@@ -65,6 +65,8 @@ export interface DatabaseProfile {
   groupName?: string | null;
   role: UserRole;
   duty_role?: DutyRole | null;
+  /** Platform administrator. Orthogonal to `role`, not a replacement. */
+  is_super_admin?: boolean;
   hasParishAccess: boolean;
   createdAt: string; // timestamptz string
   push_token?: string | null;
@@ -354,4 +356,27 @@ export interface DatabaseCelebration {
   created_by?: string | null;
   created_at: string;
   updated_at: string;
+}
+
+
+/** A row in public.admin_audit_log. */
+export interface DatabaseAuditEntry {
+  id: string;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  action: string;
+  target_type?: string | null;
+  target_id?: string | null;
+  detail?: Record<string, any> | null;
+  created_at: string;
+}
+
+/** One row of sa_parish_overview. Counts only — never amounts. */
+export interface ParishOverviewRow {
+  parish_id: string;
+  parish_name: string;
+  diocese: string;
+  member_count: number;
+  admin_count: number;
+  unverified_payments: number;
 }

@@ -16,6 +16,9 @@ export const QUERY_KEYS = {
   allProfiles: () => ['allProfiles'] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   groupRequests: () => ['groupRequests'] as const,
+  parishOverview: () => ['parishOverview'] as const,
+  platformProfiles: (term: string) => ['platformProfiles', term] as const,
+  auditLog: () => ['auditLog'] as const,
   bankAccounts: (parishId: string, activeOnly: boolean) =>
     ['bankAccounts', parishId, activeOnly] as const,
   celebrations: (parishId: string, scope: string) =>

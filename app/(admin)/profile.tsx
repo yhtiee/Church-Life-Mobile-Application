@@ -129,6 +129,22 @@ export default function AdminProfileScreen() {
             </View>
           </Animated.View>
 
+          {/* ── Platform (super admins only) ── */}
+          {user?.is_super_admin && (
+            <Animated.View entering={FadeInDown.delay(170).duration(400)}>
+              <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
+                Platform
+              </Text>
+              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                <SettingRow
+                  icon="globe-outline"
+                  label="Manage Platform"
+                  onPress={() => router.push('/(modals)/platform')}
+                />
+              </View>
+            </Animated.View>
+          )}
+
           {/* ── Parish Management ── */}
           {user?.role === 'parish_admin' && (
             <Animated.View entering={FadeInDown.delay(190).duration(400)}>

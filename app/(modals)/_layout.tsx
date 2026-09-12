@@ -17,6 +17,7 @@ export default function ModalsLayout() {
       <Stack.Screen name="admin-schedules" />
       <Stack.Screen name="admin-daily-reading" />
       <Stack.Screen name="admin-bank-accounts" />
+      <Stack.Screen name="platform" />
       <Stack.Screen name="support-celebration" />
       <Stack.Screen name="celebration-wishes" />
       <Stack.Screen name="manage-groups" />

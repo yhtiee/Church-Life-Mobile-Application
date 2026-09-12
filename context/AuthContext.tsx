@@ -25,6 +25,8 @@ export interface AuthUser {
   role: UserRole;
   /** Title only — confers no permissions. Access is decided by `role`. */
   duty_role?: DutyRole | null;
+  /** Platform administrator. Orthogonal to `role`, not a replacement. */
+  is_super_admin?: boolean;
   hasParishAccess: boolean;
   createdAt: string;
   push_token?: string | null;

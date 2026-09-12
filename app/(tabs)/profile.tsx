@@ -255,6 +255,13 @@ export default function ProfileScreen() {
                   onPress={() => router.push('/(admin)')}
                 />
               )}
+              {user?.is_super_admin && (
+                <SettingRow
+                  icon="globe-outline"
+                  label="Manage Platform"
+                  onPress={() => router.push('/(modals)/platform')}
+                />
+              )}
             </View>
           </Animated.View>
 

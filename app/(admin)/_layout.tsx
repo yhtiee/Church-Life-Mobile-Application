@@ -68,7 +68,9 @@ export default function AdminLayout() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  if (user?.role === 'member') {
+  // A platform administrator is not necessarily a parish admin, and usually
+  // holds no parish at all, so the role check alone would lock them out.
+  if (user?.role === 'member' && !user?.is_super_admin) {
     return <Redirect href="/(tabs)" />;
   }
 
