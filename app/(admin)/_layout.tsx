@@ -58,7 +58,7 @@ function AnimatedTabIcon({
 export default function AdminLayout() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, effectiveRole } = useAuth();
 
   if (isLoading) {
     return null;
@@ -68,9 +68,9 @@ export default function AdminLayout() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  // A platform administrator is not necessarily a parish admin, and usually
-  // holds no parish at all, so the role check alone would lock them out.
-  if (user?.role === 'member' && !user?.is_super_admin) {
+  // Effective role, so a platform administrator reaches this area even with
+  // no parish role, and leaves it while viewing the member experience.
+  if (effectiveRole === 'member') {
     return <Redirect href="/(tabs)" />;
   }
 

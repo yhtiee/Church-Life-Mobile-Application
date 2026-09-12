@@ -8,6 +8,7 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
+import { ViewAsSwitcher } from '@/components/ui/ViewAsSwitcher';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Avatar } from '@/components/ui/Avatar';
 import { getGroupMetadata } from '@/constants/groups';
@@ -71,7 +72,7 @@ function SettingRow({
 
 export default function ProfileScreen() {
   const { colors, typography, radius, isDark, setColorMode, colorMode } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, viewAs, effectiveRole } = useAuth();
   const router = useRouter();
 
   const { data: groups = [] } = useGroupsQuery();
@@ -248,14 +249,14 @@ export default function ProfileScreen() {
                 label="Request Parish Transfer"
                 onPress={() => router.push('/(modals)/parish-transfer-request')}
               />
-              {user?.role === 'parish_admin' && (
+              {effectiveRole === 'parish_admin' && (
                 <SettingRow
                   icon="settings-outline"
                   label="Admin Dashboard"
                   onPress={() => router.push('/(admin)')}
                 />
               )}
-              {user?.is_super_admin && (
+              {user?.is_super_admin && !viewAs && (
                 <SettingRow
                   icon="globe-outline"
                   label="Manage Platform"
@@ -264,6 +265,8 @@ export default function ProfileScreen() {
               )}
             </View>
           </Animated.View>
+
+          <ViewAsSwitcher />
 
           {/* Logout */}
           <Animated.View entering={FadeInDown.delay(340).duration(400)} style={styles.footerActions}>

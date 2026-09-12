@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ViewProps, StatusBar } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
+import { ViewAsBanner } from '@/components/ui/ViewAsBanner';
 
 interface ScreenWrapperProps extends ViewProps {
   children: React.ReactNode;
@@ -33,6 +34,10 @@ export function ScreenWrapper({
         barStyle={resolvedMode === 'dark' ? 'light-content' : 'dark-content'}
         backgroundColor={bg}
       />
+      {/* Renders nothing unless a platform admin has switched view. It lives
+          here so the way back is present on every screen, including the ones
+          that hide the admin entry points. */}
+      <ViewAsBanner />
       <View style={[{ flex: 1 }, !noPadding && { paddingHorizontal: 0 }]}>
         {children}
       </View>
