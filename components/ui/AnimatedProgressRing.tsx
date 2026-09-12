@@ -83,7 +83,7 @@ export function AnimatedProgressRing({
         />
       </Svg>
       {(label || sublabel) && (
-        <View style={[StyleSheet.absoluteFillObject, styles.labelWrap]}>
+        <View style={[StyleSheet.absoluteFill, styles.labelWrap]}>
           {label && (
             <Text
               style={[

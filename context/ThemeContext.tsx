@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useColorScheme as useDeviceColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme as useDeviceColorScheme } from '@/hooks/use-color-scheme';
 import { Colors, Typography, Spacing, Radius, Shadow } from '@/constants/theme';
 
 export type ColorMode = 'light' | 'dark' | 'system';
@@ -35,7 +35,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const resolvedMode: 'light' | 'dark' =
-    colorMode === 'system' ? (deviceScheme ?? 'light') : colorMode;
+    colorMode === 'system' ? deviceScheme : colorMode;
 
   const setColorMode = async (mode: ColorMode) => {
     setColorModeState(mode);

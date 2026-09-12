@@ -2,11 +2,7 @@ import { Tabs, Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Animation } from '@/constants/theme';
@@ -29,25 +25,23 @@ const ADMIN_TABS: TabConfig[] = [
 function AnimatedTabIcon({
   name,
   size,
-  color,
   focused,
 }: {
   name: keyof typeof Ionicons.glyphMap;
   size: number;
-  color: string;
   focused: boolean;
 }) {
   const { colors } = useTheme();
-  const scale = useSharedValue(1);
+  // Derive the spring straight from `focused` so nothing is mutated during render.
   const animStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [
+      {
+        scale: focused
+          ? withSpring(1.15, Animation.springBounce)
+          : withSpring(1, Animation.spring),
+      },
+    ],
   }));
-
-  if (focused) {
-    scale.value = withSpring(1.15, Animation.springBounce);
-  } else {
-    scale.value = withSpring(1, Animation.spring);
-  }
 
   return (
     <View style={styles.tabItem}>
@@ -118,11 +112,10 @@ export default function AdminLayout() {
           name={tab.name}
           options={{
             title: tab.title,
-            tabBarIcon: ({ focused, color }: { focused: boolean; color: string }) => (
+            tabBarIcon: ({ focused }: { focused: boolean }) => (
               <AnimatedTabIcon
                 name={focused ? tab.iconFocused : tab.icon}
                 size={24}
-                color={color}
                 focused={focused}
               />
             ),

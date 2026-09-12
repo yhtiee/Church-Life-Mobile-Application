@@ -52,12 +52,12 @@ export default function ParishHistoryScreen() {
         >
           <Image
             source={coverImage ? { uri: coverImage } : require('@/assets/images/church_exterior_hero.png')}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
           />
           <LinearGradient
             colors={['rgba(7,21,36,0.3)', 'rgba(7,21,36,0.92)']}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
 
           <View style={styles.heroContent}>

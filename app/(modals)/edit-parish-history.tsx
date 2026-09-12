@@ -108,12 +108,12 @@ export default function EditParishHistoryModal() {
             <View style={[styles.imageCard, { borderRadius: radius.lg, overflow: 'hidden' }]}>
               <Image
                 source={imageUrl ? { uri: imageUrl } : require('@/assets/images/church_exterior_hero.png')}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
                 contentFit="cover"
               />
               <LinearGradient
                 colors={['rgba(7,21,36,0.2)', 'rgba(7,21,36,0.6)']}
-                style={StyleSheet.absoluteFillObject}
+                style={StyleSheet.absoluteFill}
               />
               <View style={styles.imageOverlayBtn}>
                 <View style={[styles.cameraCircle, { backgroundColor: colors.surface }]}>

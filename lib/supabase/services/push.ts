@@ -1,13 +1,26 @@
-import * as Notifications from 'expo-notifications';
+import { isRunningInExpoGo } from 'expo';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { supaBaseClient } from '../client';
 
 export async function registerForPushNotifications(userId: string) {
+  // Expo Go dropped remote notifications in SDK 53. On Android, expo-notifications
+  // throws while its module body is still evaluating, so a static import at the top
+  // of this file would take down every screen that reaches AuthContext. Load it only
+  // once we know we are in a build that can actually register a token.
+  if (isRunningInExpoGo()) {
+    console.log(
+      'Skipping push notification registration: Expo Go does not support remote notifications. Use a development build.'
+    );
+    return;
+  }
+
   try {
+    const Notifications = await import('expo-notifications');
+
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
@@ -33,7 +46,7 @@ export async function registerForPushNotifications(userId: string) {
         .from('profiles')
         .update({ push_token: token })
         .eq('id', userId);
-      
+
       if (error) {
         console.error('Error saving push token to profiles:', error.message);
       }

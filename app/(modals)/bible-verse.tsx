@@ -44,13 +44,13 @@ export default function BibleVerseScreen() {
           {/* Hero background image */}
           <Image
             source={require('@/assets/images/bible_study_hero.png')}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
             contentFit="cover"
           />
           {/* Deep dark gradient overlay for text readability */}
           <LinearGradient
             colors={['rgba(7,21,36,0.5)', 'rgba(7,21,36,0.92)']}
-            style={StyleSheet.absoluteFillObject}
+            style={StyleSheet.absoluteFill}
           />
 
           <View style={styles.header}>

@@ -44,13 +44,13 @@ export default function WelcomeScreen() {
       <View style={[styles.heroSection, { height: HERO_H }]}>
         <Image
           source={require('@/assets/images/church_exterior_hero.png')}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFill}
           contentFit="cover"
         />
         {/* Top gradient: dark at top for status bar legibility */}
         <LinearGradient
           colors={['rgba(0,0,0,0.48)', 'rgba(0,0,0,0.10)', 'transparent']}
-          style={[StyleSheet.absoluteFillObject, { height: HERO_H * 0.5 }]}
+          style={[StyleSheet.absoluteFill, { height: HERO_H * 0.5 }]}
         />
         {/* Bottom gradient: smooth transition to white */}
         <LinearGradient
