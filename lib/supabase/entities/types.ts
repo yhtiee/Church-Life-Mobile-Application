@@ -7,6 +7,18 @@ export type UserRole = 'member' | 'group_admin' | 'parish_admin';
 export type Sex = 'Male' | 'Female';
 
 /**
+ * A duty role is a title only — it carries no permissions of its own.
+ * Access is decided entirely by `UserRole`.
+ */
+export type DutyRole = 'parish_priest' | 'assistant_priest' | 'parish_secretary';
+
+export const DUTY_ROLE_LABELS: Record<DutyRole, string> = {
+  parish_priest: 'Parish Priest',
+  assistant_priest: 'Assistant Priest',
+  parish_secretary: 'Parish Secretary',
+};
+
+/**
  * Maps to the public.parishes table.
  */
 export interface DatabaseParish {
@@ -52,6 +64,7 @@ export interface DatabaseProfile {
   groupId?: string | null;
   groupName?: string | null;
   role: UserRole;
+  duty_role?: DutyRole | null;
   hasParishAccess: boolean;
   createdAt: string; // timestamptz string
   push_token?: string | null;

@@ -8,7 +8,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "db:status": "node ./scripts/db.mjs status",
+    "db:push": "node ./scripts/db.mjs push",
+    "db:push:dry": "node ./scripts/db.mjs push --dry-run"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
