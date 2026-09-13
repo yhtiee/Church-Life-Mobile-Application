@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, Modal, FlatList } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/FeedbackContext';
 import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Dropdown } from '@/components/ui/Dropdown';
 import { usePlatformProfilesQuery } from '@/hooks/queries/usePlatform';
 import { useParishesQuery } from '@/hooks/queries/useParishes';
 import { usePlatformMutations } from '@/hooks/mutations/usePlatform';
+import {
+  PlatformListControls,
+  PlatformListEmpty,
+  PlatformListFooter,
+  type FilterOption,
+} from '@/components/platform/PlatformListControls';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import type { PeopleFilter } from '@/lib/supabase/services/platform';
 import type { AuthUser } from '@/context/AuthContext';
+
+const PEOPLE_FILTERS: FilterOption<PeopleFilter>[] = [
+  { value: 'all', label: 'Everyone' },
+  { value: 'parish_admin', label: 'Parish admins' },
+  { value: 'member', label: 'Members' },
+  { value: 'super_admin', label: 'Super admins' },
+  { value: 'no_parish', label: 'No parish' },
+];
 
 /**
  * Platform-wide member administration: appoint parish admins in any parish,
@@ -24,10 +38,14 @@ export function PlatformPeople() {
   const { showAlert } = useAlert();
 
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<PeopleFilter>('all');
   const [selected, setSelected] = useState<AuthUser | null>(null);
   const [moveTo, setMoveTo] = useState<string | null>(null);
 
-  const { data: people = [] } = usePlatformProfilesQuery(search);
+  const debouncedSearch = useDebouncedValue(search);
+  const peopleQuery = usePlatformProfilesQuery({ search: debouncedSearch, filter });
+  const people = useMemo(() => peopleQuery.data?.pages.flat() ?? [], [peopleQuery.data]);
+  const isFiltered = !!debouncedSearch.trim() || filter !== 'all';
   const { data: parishes = [] } = useParishesQuery();
   const { setParishAdmin, setMemberParish, setSuperAdmin } = usePlatformMutations();
 
@@ -52,73 +70,76 @@ export function PlatformPeople() {
     setMoveTo(null);
   };
 
-  return (
-    <>
-      <View style={styles.searchWrap}>
-        <Input
-          placeholder="Search by name or email"
-          value={search}
-          onChangeText={setSearch}
-          leftIcon="search-outline"
-        />
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        {people.map((person, index) => (
-          <Animated.View key={person.id} entering={FadeInDown.delay(index * 25).duration(300)}>
-            <Card
-              elevation="sm"
-              style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}
-              pressable
-              onPress={() => setSelected(person)}
-            >
-              <View style={styles.rowTop}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: colors.text,
-                      fontFamily: typography.fontFamily.bold,
-                    }}
-                  >
-                    {person.fullName}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: colors.textMuted,
-                      fontFamily: typography.fontFamily.regular,
-                      marginTop: 2,
-                    }}
-                  >
-                    {person.parishName || 'No parish'}
-                  </Text>
-                </View>
-                <View style={styles.badges}>
-                  {person.is_super_admin && <Badge label="Platform" variant="primary" size="sm" />}
-                  {person.role === 'parish_admin' && (
-                    <Badge label="Admin" variant="success" size="sm" />
-                  )}
-                </View>
-              </View>
-            </Card>
-          </Animated.View>
-        ))}
-
-        {people.length === 0 && (
+  const renderPerson = ({ item: person }: { item: AuthUser }) => (
+    <Card
+      elevation="sm"
+      style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}
+      pressable
+      onPress={() => setSelected(person)}
+    >
+      <View style={styles.rowTop}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 15, color: colors.text, fontFamily: typography.fontFamily.bold }}>
+            {person.fullName}
+          </Text>
           <Text
             style={{
-              fontSize: 14,
+              fontSize: 12,
               color: colors.textMuted,
               fontFamily: typography.fontFamily.regular,
-              textAlign: 'center',
-              marginTop: 40,
+              marginTop: 2,
             }}
           >
-            No one matches that search.
+            {person.parishName || 'No parish'}
           </Text>
-        )}
-      </ScrollView>
+        </View>
+        <View style={styles.badges}>
+          {person.is_super_admin && <Badge label="Super admin" variant="primary" size="sm" />}
+          {person.role === 'parish_admin' && <Badge label="Admin" variant="success" size="sm" />}
+        </View>
+      </View>
+    </Card>
+  );
+
+  return (
+    <View style={styles.fill}>
+      <PlatformListControls
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by name or email"
+        filters={PEOPLE_FILTERS}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+      />
+
+      {/* People register themselves, so this list has no add button. */}
+      <FlatList
+        data={people}
+        keyExtractor={(person) => person.id}
+        renderItem={renderPerson}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (peopleQuery.hasNextPage && !peopleQuery.isFetchingNextPage) peopleQuery.fetchNextPage();
+        }}
+        refreshing={peopleQuery.isRefetching && !peopleQuery.isFetchingNextPage}
+        onRefresh={() => peopleQuery.refetch()}
+        ListEmptyComponent={
+          <PlatformListEmpty
+            isLoading={peopleQuery.isLoading}
+            isFiltered={isFiltered}
+            emptyText="No one has registered yet."
+          />
+        }
+        ListFooterComponent={
+          <PlatformListFooter
+            isFetchingNextPage={peopleQuery.isFetchingNextPage}
+            hasNextPage={!!peopleQuery.hasNextPage}
+            shownCount={people.length}
+          />
+        }
+      />
 
       <Modal visible={!!selected} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.backdrop}>
@@ -283,13 +304,13 @@ export function PlatformPeople() {
           </ScrollView>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  searchWrap: { paddingHorizontal: 20, paddingTop: 8 },
-  scroll: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 60 },
+  fill: { flex: 1 },
+  list: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40, flexGrow: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   badges: { flexDirection: 'row', gap: 6 },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },

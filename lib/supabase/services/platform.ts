@@ -9,6 +9,33 @@ import type {
   ParishOverviewRow,
 } from '../entities/types';
 
+/** Rows per page for every platform list. */
+export const PLATFORM_PAGE_SIZE = 20;
+
+export type ParishStatusFilter = 'all' | 'no_admin' | 'unverified';
+export type PeopleFilter = 'all' | 'parish_admin' | 'member' | 'super_admin' | 'no_parish';
+export type GroupFilter = 'all' | 'secured' | 'open';
+export type AuditFilter = 'all' | 'parish' | 'admin' | 'member' | 'superadmin' | 'group';
+
+interface PageArgs {
+  search?: string;
+  page?: number;
+}
+
+/**
+ * Strips characters that carry meaning in a PostgREST `or` filter, so a search
+ * for "St. Jude, GRA" cannot break the query or smuggle in another condition.
+ */
+function cleanTerm(term?: string): string {
+  return (term ?? '').trim().replace(/[%,()*]/g, '');
+}
+
+/** Inclusive row range for a zero-based page. */
+function pageRange(page = 0): [number, number] {
+  const from = page * PLATFORM_PAGE_SIZE;
+  return [from, from + PLATFORM_PAGE_SIZE - 1];
+}
+
 /**
  * Platform administration, for holders of the `is_super_admin` flag.
  *
@@ -18,14 +45,44 @@ import type {
  * the authority and the audit trail instead of loosening ~55 policies.
  */
 export class PlatformService {
-  /** Parishes with member, admin and unverified-payment counts. No amounts. */
-  async fetchParishOverview() {
+  /**
+   * One page of parishes with member, admin and unverified-payment counts.
+   * Search, filter and paging all run in the database: the counts are
+   * aggregates, so filtering on them has to happen after they are computed.
+   */
+  async fetchParishOverview({
+    search,
+    page = 0,
+    diocese,
+    status = 'all',
+  }: PageArgs & { diocese?: string | null; status?: ParishStatusFilter }) {
     try {
-      const { data, error } = await supaBaseClient.rpc('sa_parish_overview');
+      const { data, error } = await supaBaseClient.rpc('sa_parish_overview', {
+        search_term: cleanTerm(search) || null,
+        diocese_filter: diocese || null,
+        status_filter: status === 'all' ? null : status,
+        page_limit: PLATFORM_PAGE_SIZE,
+        page_offset: page * PLATFORM_PAGE_SIZE,
+      });
       if (error) throw error;
       return { data: (data ?? []) as ParishOverviewRow[], error: null };
     } catch (error: any) {
       console.error('Error fetching parish overview:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /** Distinct dioceses, for the parish filter. Parishes are publicly readable. */
+  async fetchDioceses() {
+    try {
+      const { data, error } = await supaBaseClient.from('parishes').select('diocese');
+      if (error) throw error;
+      const dioceses = Array.from(
+        new Set((data ?? []).map((row: { diocese: string }) => row.diocese?.trim()).filter(Boolean))
+      ).sort() as string[];
+      return { data: dioceses, error: null };
+    } catch (error: any) {
+      console.error('Error fetching dioceses:', error.message || error);
       return { data: null, error };
     }
   }
@@ -132,15 +189,24 @@ export class PlatformService {
     }
   }
 
-  /** Recent administrative actions. Readable only by platform admins. */
-  async fetchAuditLog(limit = 100) {
+  /** One page of administrative actions, newest first. */
+  async fetchAuditLog({ search, page = 0, category = 'all' }: PageArgs & { category?: AuditFilter }) {
     try {
-      const { data, error } = await supaBaseClient
+      const [from, to] = pageRange(page);
+      let query = supaBaseClient
         .from('admin_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .range(from, to);
 
+      // Actions are namespaced ("parish.create", "admin.grant"), so a
+      // category is a prefix match.
+      if (category !== 'all') query = query.like('action', `${category}.%`);
+
+      const term = cleanTerm(search);
+      if (term) query = query.or(`actor_name.ilike.%${term}%,detail->>name.ilike.%${term}%`);
+
+      const { data, error } = await query;
       if (error) throw error;
       return { data: data as DatabaseAuditEntry[], error: null };
     } catch (error: any) {
@@ -149,25 +215,55 @@ export class PlatformService {
     }
   }
 
-  /** Every profile, for the platform-wide member search. */
-  async searchProfiles(term: string) {
+  /** One page of people across every parish, by name or email. */
+  async searchProfiles({ search, page = 0, filter = 'all' }: PageArgs & { filter?: PeopleFilter }) {
     try {
+      const [from, to] = pageRange(page);
       let query = supaBaseClient
         .from('profiles')
         .select('id, fullName, email, role, parishId, parishName, is_super_admin')
         .order('fullName', { ascending: true })
-        .limit(50);
+        .range(from, to);
 
-      if (term.trim()) {
-        const safe = term.trim().replace(/[%,()]/g, '');
-        query = query.or(`fullName.ilike.%${safe}%,email.ilike.%${safe}%`);
-      }
+      if (filter === 'parish_admin') query = query.eq('role', 'parish_admin');
+      if (filter === 'member') query = query.eq('role', 'member');
+      if (filter === 'super_admin') query = query.eq('is_super_admin', true);
+      if (filter === 'no_parish') query = query.is('parishId', null);
+
+      const term = cleanTerm(search);
+      if (term) query = query.or(`fullName.ilike.%${term}%,email.ilike.%${term}%`);
 
       const { data, error } = await query;
       if (error) throw error;
       return { data: data as AuthUser[], error: null };
     } catch (error: any) {
       console.error('Error searching profiles:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /** One page of the groups shared by every parish (no parish_id). */
+  async fetchGlobalGroups({ search, page = 0, filter = 'all' }: PageArgs & { filter?: GroupFilter }) {
+    try {
+      const [from, to] = pageRange(page);
+      let query = supaBaseClient
+        .from('groups')
+        .select('*')
+        .is('parish_id', null)
+        .order('name', { ascending: true })
+        .range(from, to);
+
+      if (filter === 'secured') query = query.eq('is_secure', true);
+      if (filter === 'open') query = query.eq('is_secure', false);
+
+      const term = cleanTerm(search);
+      if (term) query = query.ilike('name', `%${term}%`);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return { data: data as Group[], error: null };
+    } catch (error: any) {
+      console.error('Error fetching global groups:', error.message || error);
       return { data: null, error };
     }
   }

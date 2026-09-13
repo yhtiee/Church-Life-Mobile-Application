@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAlert } from '@/context/FeedbackContext';
 import { Card } from '@/components/ui/Card';
@@ -9,9 +8,24 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { FloatingActionButton } from '@/components/ui/FloatingActionButton';
+import {
+  PlatformListControls,
+  PlatformListEmpty,
+  PlatformListFooter,
+  type FilterOption,
+} from '@/components/platform/PlatformListControls';
+import { useGlobalGroupsQuery } from '@/hooks/queries/usePlatform';
 import { usePlatformMutations } from '@/hooks/mutations/usePlatform';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import type { GroupFilter } from '@/lib/supabase/services/platform';
 import type { Group } from '@/lib/supabase/entities/types';
+
+const GROUP_FILTERS: FilterOption<GroupFilter>[] = [
+  { value: 'all', label: 'All' },
+  { value: 'secured', label: 'Secured' },
+  { value: 'open', label: 'Open' },
+];
 
 interface Draft {
   id?: string;
@@ -30,11 +44,16 @@ export function PlatformGroups() {
   const { colors, typography, radius } = useTheme();
   const { showAlert } = useAlert();
 
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<GroupFilter>('all');
   const [draft, setDraft] = useState<Draft | null>(null);
-  const { data: groups = [] } = useGroupsQuery();
-  const { saveGlobalGroup } = usePlatformMutations();
 
-  const globalGroups = groups.filter((g: Group) => !g.parish_id);
+  const debouncedSearch = useDebouncedValue(search);
+  const groupsQuery = useGlobalGroupsQuery({ search: debouncedSearch, filter });
+  const groups = useMemo(() => groupsQuery.data?.pages.flat() ?? [], [groupsQuery.data]);
+  const isFiltered = !!debouncedSearch.trim() || filter !== 'all';
+
+  const { saveGlobalGroup } = usePlatformMutations();
 
   const handleSave = async () => {
     if (!draft) return;
@@ -59,88 +78,96 @@ export function PlatformGroups() {
     }
   };
 
-  return (
-    <>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text
-          style={{
-            fontSize: 13,
-            color: colors.textMuted,
-            fontFamily: typography.fontFamily.regular,
-            lineHeight: 20,
-            marginBottom: 14,
-          }}
+  const renderGroup = ({ item: group }: { item: Group }) => (
+    <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}>
+      <View style={styles.rowTop}>
+        <View style={{ flex: 1 }}>
+          <View style={styles.titleRow}>
+            <Text style={{ fontSize: 15, color: colors.text, fontFamily: typography.fontFamily.bold }}>
+              {group.name.trim()}
+            </Text>
+            {group.is_secure && <Badge label="Secured" variant="warning" size="sm" />}
+          </View>
+          <Text
+            numberOfLines={2}
+            style={{
+              fontSize: 12,
+              color: colors.textMuted,
+              fontFamily: typography.fontFamily.regular,
+              marginTop: 4,
+              lineHeight: 18,
+            }}
+          >
+            {group.description}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: colors.textSecondary,
+              fontFamily: typography.fontFamily.medium,
+              marginTop: 6,
+            }}
+          >
+            {(group.member_ids || []).length} members
+          </Text>
+        </View>
+        <TouchableOpacity
+          hitSlop={8}
+          onPress={() =>
+            setDraft({
+              id: group.id,
+              name: group.name.trim(),
+              description: group.description,
+              isSecure: group.is_secure,
+            })
+          }
         >
-          These groups are available in every parish. Secured groups need a parish admin to approve
-          each member who asks to join.
-        </Text>
+          <Ionicons name="create-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+    </Card>
+  );
 
-        {globalGroups.map((group: Group, index: number) => (
-          <Animated.View key={group.id} entering={FadeInDown.delay(index * 30).duration(320)}>
-            <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}>
-              <View style={styles.rowTop}>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.titleRow}>
-                    <Text
-                      style={{
-                        fontSize: 15,
-                        color: colors.text,
-                        fontFamily: typography.fontFamily.bold,
-                      }}
-                    >
-                      {group.name.trim()}
-                    </Text>
-                    {group.is_secure && <Badge label="Secured" variant="warning" size="sm" />}
-                  </View>
-                  <Text
-                    numberOfLines={2}
-                    style={{
-                      fontSize: 12,
-                      color: colors.textMuted,
-                      fontFamily: typography.fontFamily.regular,
-                      marginTop: 4,
-                      lineHeight: 18,
-                    }}
-                  >
-                    {group.description}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                      fontFamily: typography.fontFamily.medium,
-                      marginTop: 6,
-                    }}
-                  >
-                    {(group.member_ids || []).length} members
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  hitSlop={8}
-                  onPress={() =>
-                    setDraft({
-                      id: group.id,
-                      name: group.name.trim(),
-                      description: group.description,
-                      isSecure: group.is_secure,
-                    })
-                  }
-                >
-                  <Ionicons name="create-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </Card>
-          </Animated.View>
-        ))}
+  return (
+    <View style={styles.fill}>
+      <PlatformListControls
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search groups"
+        filters={GROUP_FILTERS}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+      />
 
-        <Button
-          label="Add a group"
-          onPress={() => setDraft({ ...EMPTY })}
-          variant="secondary"
-          fullWidth
-          style={{ marginTop: 12 }}
-        />
-      </ScrollView>
+      <FlatList
+        data={groups}
+        keyExtractor={(group) => group.id}
+        renderItem={renderGroup}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (groupsQuery.hasNextPage && !groupsQuery.isFetchingNextPage) groupsQuery.fetchNextPage();
+        }}
+        refreshing={groupsQuery.isRefetching && !groupsQuery.isFetchingNextPage}
+        onRefresh={() => groupsQuery.refetch()}
+        ListEmptyComponent={
+          <PlatformListEmpty
+            isLoading={groupsQuery.isLoading}
+            isFiltered={isFiltered}
+            emptyText="No shared groups yet. Tap + to add the first one."
+          />
+        }
+        ListFooterComponent={
+          <PlatformListFooter
+            isFetchingNextPage={groupsQuery.isFetchingNextPage}
+            hasNextPage={!!groupsQuery.hasNextPage}
+            shownCount={groups.length}
+          />
+        }
+      />
+
+      <FloatingActionButton accessibilityLabel="Add a group" onPress={() => setDraft({ ...EMPTY })} />
 
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.backdrop}>
@@ -192,11 +219,7 @@ export function PlatformGroups() {
                 />
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text
-                    style={{
-                      fontSize: 14,
-                      color: colors.text,
-                      fontFamily: typography.fontFamily.medium,
-                    }}
+                    style={{ fontSize: 14, color: colors.text, fontFamily: typography.fontFamily.medium }}
                   >
                     Needs approval to join
                   </Text>
@@ -231,12 +254,14 @@ export function PlatformGroups() {
           </ScrollView>
         </View>
       </Modal>
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 60 },
+  fill: { flex: 1 },
+  // Bottom padding lets the last card scroll clear of the floating button.
+  list: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 100, flexGrow: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },

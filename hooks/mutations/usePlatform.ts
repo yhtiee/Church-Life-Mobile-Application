@@ -13,10 +13,13 @@ const platformService = new PlatformService();
 export function usePlatformMutations() {
   const queryClient = useQueryClient();
 
+  // Prefix keys, so every filtered and paged variant of each list refreshes.
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.parishOverview() });
+    queryClient.invalidateQueries({ queryKey: ['parishOverview'] });
     queryClient.invalidateQueries({ queryKey: ['platformProfiles'] });
-    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.auditLog() });
+    queryClient.invalidateQueries({ queryKey: ['globalGroups'] });
+    queryClient.invalidateQueries({ queryKey: ['auditLog'] });
+    queryClient.invalidateQueries({ queryKey: QUERY_KEYS.dioceses() });
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.parishes() });
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.allProfiles() });
   };

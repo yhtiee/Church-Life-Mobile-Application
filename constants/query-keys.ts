@@ -16,9 +16,13 @@ export const QUERY_KEYS = {
   allProfiles: () => ['allProfiles'] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   groupRequests: () => ['groupRequests'] as const,
-  parishOverview: () => ['parishOverview'] as const,
-  platformProfiles: (term: string) => ['platformProfiles', term] as const,
-  auditLog: () => ['auditLog'] as const,
+  // Platform lists take their filters as the second key part, so invalidating
+  // the first part alone refreshes every filtered and paged variant at once.
+  parishOverview: (filters?: object) => ['parishOverview', filters ?? {}] as const,
+  dioceses: () => ['dioceses'] as const,
+  platformProfiles: (filters?: object) => ['platformProfiles', filters ?? {}] as const,
+  globalGroups: (filters?: object) => ['globalGroups', filters ?? {}] as const,
+  auditLog: (filters?: object) => ['auditLog', filters ?? {}] as const,
   bankAccounts: (parishId: string, activeOnly: boolean) =>
     ['bankAccounts', parishId, activeOnly] as const,
   celebrations: (parishId: string, scope: string) =>

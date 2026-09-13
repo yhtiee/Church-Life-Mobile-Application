@@ -1,10 +1,28 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { Card } from '@/components/ui/Card';
+import {
+  PlatformListControls,
+  PlatformListEmpty,
+  PlatformListFooter,
+  type FilterOption,
+} from '@/components/platform/PlatformListControls';
 import { useAuditLogQuery } from '@/hooks/queries/usePlatform';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import type { AuditFilter } from '@/lib/supabase/services/platform';
+import type { DatabaseAuditEntry } from '@/lib/supabase/entities/types';
+
+// Each value is the action's namespace, matched as a prefix in the query.
+const AUDIT_FILTERS: FilterOption<AuditFilter>[] = [
+  { value: 'all', label: 'All' },
+  { value: 'parish', label: 'Parishes' },
+  { value: 'admin', label: 'Admin changes' },
+  { value: 'member', label: 'Member moves' },
+  { value: 'superadmin', label: 'Super admin access' },
+  { value: 'group', label: 'Groups' },
+];
 
 const ACTION_LABELS: Record<string, string> = {
   'parish.create': 'created a parish',
@@ -12,8 +30,8 @@ const ACTION_LABELS: Record<string, string> = {
   'admin.grant': 'made someone a parish admin',
   'admin.revoke': 'removed parish admin access',
   'member.move': 'moved a member to another parish',
-  'superadmin.grant': 'granted platform access',
-  'superadmin.revoke': 'revoked platform access',
+  'superadmin.grant': 'granted super admin access',
+  'superadmin.revoke': 'revoked super admin access',
   'group.create': 'created a group',
   'group.update': 'updated a group',
 };
@@ -24,84 +42,100 @@ const ACTION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   group: 'albums-outline',
 };
 
-/** A record of who changed what across the platform. */
+/** A record of who changed what across the platform. Read-only, so no add button. */
 export function PlatformAudit() {
   const { colors, typography, radius } = useTheme();
-  const { data: entries = [], isLoading } = useAuditLogQuery();
+
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState<AuditFilter>('all');
+
+  const debouncedSearch = useDebouncedValue(search);
+  const auditQuery = useAuditLogQuery({ search: debouncedSearch, category });
+  const entries = useMemo(() => auditQuery.data?.pages.flat() ?? [], [auditQuery.data]);
+  const isFiltered = !!debouncedSearch.trim() || category !== 'all';
+
+  const renderEntry = ({ item: entry }: { item: DatabaseAuditEntry }) => (
+    <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 8 }}>
+      <View style={styles.row}>
+        <Ionicons
+          name={ACTION_ICONS[entry.target_type ?? ''] ?? 'ellipse-outline'}
+          size={18}
+          color={colors.primary}
+        />
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text
+            style={{
+              fontSize: 14,
+              color: colors.text,
+              fontFamily: typography.fontFamily.medium,
+              lineHeight: 20,
+            }}
+          >
+            <Text style={{ fontFamily: typography.fontFamily.bold }}>
+              {entry.actor_name?.trim() || 'Someone'}
+            </Text>{' '}
+            {ACTION_LABELS[entry.action] ?? entry.action}
+            {entry.detail?.name ? ` — ${entry.detail.name}` : ''}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: colors.textMuted,
+              fontFamily: typography.fontFamily.regular,
+              marginTop: 3,
+            }}
+          >
+            {new Date(entry.created_at).toLocaleString()}
+          </Text>
+        </View>
+      </View>
+    </Card>
+  );
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-      <Text
-        style={{
-          fontSize: 13,
-          color: colors.textMuted,
-          fontFamily: typography.fontFamily.regular,
-          lineHeight: 20,
-          marginBottom: 14,
+    <View style={styles.fill}>
+      <PlatformListControls
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search by who acted or what changed"
+        filters={AUDIT_FILTERS}
+        activeFilter={category}
+        onFilterChange={setCategory}
+      />
+
+      <FlatList
+        data={entries}
+        keyExtractor={(entry) => entry.id}
+        renderItem={renderEntry}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (auditQuery.hasNextPage && !auditQuery.isFetchingNextPage) auditQuery.fetchNextPage();
         }}
-      >
-        Every platform action is recorded here. Entries are written by the database itself, so they
-        cannot be forged or edited from the app.
-      </Text>
-
-      {entries.map((entry, index) => (
-        <Animated.View key={entry.id} entering={FadeInDown.delay(index * 20).duration(300)}>
-          <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 8 }}>
-            <View style={styles.row}>
-              <Ionicons
-                name={ACTION_ICONS[entry.target_type ?? ''] ?? 'ellipse-outline'}
-                size={18}
-                color={colors.primary}
-              />
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    color: colors.text,
-                    fontFamily: typography.fontFamily.medium,
-                    lineHeight: 20,
-                  }}
-                >
-                  <Text style={{ fontFamily: typography.fontFamily.bold }}>
-                    {entry.actor_name?.trim() || 'Someone'}
-                  </Text>{' '}
-                  {ACTION_LABELS[entry.action] ?? entry.action}
-                  {entry.detail?.name ? ` — ${entry.detail.name}` : ''}
-                </Text>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.textMuted,
-                    fontFamily: typography.fontFamily.regular,
-                    marginTop: 3,
-                  }}
-                >
-                  {new Date(entry.created_at).toLocaleString()}
-                </Text>
-              </View>
-            </View>
-          </Card>
-        </Animated.View>
-      ))}
-
-      {!isLoading && entries.length === 0 && (
-        <Text
-          style={{
-            fontSize: 14,
-            color: colors.textMuted,
-            fontFamily: typography.fontFamily.regular,
-            textAlign: 'center',
-            marginTop: 40,
-          }}
-        >
-          Nothing recorded yet.
-        </Text>
-      )}
-    </ScrollView>
+        refreshing={auditQuery.isRefetching && !auditQuery.isFetchingNextPage}
+        onRefresh={() => auditQuery.refetch()}
+        ListEmptyComponent={
+          <PlatformListEmpty
+            isLoading={auditQuery.isLoading}
+            isFiltered={isFiltered}
+            emptyText="Nothing recorded yet."
+          />
+        }
+        ListFooterComponent={
+          <PlatformListFooter
+            isFetchingNextPage={auditQuery.isFetchingNextPage}
+            hasNextPage={!!auditQuery.hasNextPage}
+            shownCount={entries.length}
+          />
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 60 },
+  fill: { flex: 1 },
+  list: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40, flexGrow: 1 },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
 });

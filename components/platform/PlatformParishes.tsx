@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAlert } from '@/context/FeedbackContext';
 import { Card } from '@/components/ui/Card';
@@ -9,10 +8,25 @@ import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import GlobalLoader from '@/components/ui/GlobalLoader';
-import { useParishOverviewQuery } from '@/hooks/queries/usePlatform';
+import { FloatingActionButton } from '@/components/ui/FloatingActionButton';
+import {
+  PlatformListControls,
+  PlatformListEmpty,
+  PlatformListFooter,
+  type FilterOption,
+} from '@/components/platform/PlatformListControls';
+import { useDiocesesQuery, useParishOverviewQuery } from '@/hooks/queries/usePlatform';
+import { useParishesQuery } from '@/hooks/queries/useParishes';
 import { usePlatformMutations } from '@/hooks/mutations/usePlatform';
+import { useDebouncedValue } from '@/hooks/use-debounced-value';
+import type { ParishStatusFilter } from '@/lib/supabase/services/platform';
 import type { ParishOverviewRow } from '@/lib/supabase/entities/types';
+
+const STATUS_FILTERS: FilterOption<ParishStatusFilter>[] = [
+  { value: 'all', label: 'All' },
+  { value: 'no_admin', label: 'No admin' },
+  { value: 'unverified', label: 'Unverified payments' },
+];
 
 interface Draft {
   id?: string;
@@ -29,25 +43,45 @@ export function PlatformParishes() {
   const { colors, typography, radius } = useTheme();
   const { showAlert } = useAlert();
 
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState<ParishStatusFilter>('all');
+  const [diocese, setDiocese] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
-  const { data: parishes = [], isLoading } = useParishOverviewQuery();
+
+  const debouncedSearch = useDebouncedValue(search);
+  const overview = useParishOverviewQuery({ search: debouncedSearch, diocese, status });
+  const rows = useMemo(() => overview.data?.pages.flat() ?? [], [overview.data]);
+
+  const { data: dioceses = [] } = useDiocesesQuery();
+  // The overview carries counts, not the full row. Editing needs the real
+  // state and country, or saving would overwrite them with blanks.
+  const { data: allParishes = [] } = useParishesQuery();
   const { saveParish } = usePlatformMutations();
 
-  const openEdit = (row: ParishOverviewRow) =>
+  const isFiltered = !!debouncedSearch.trim() || status !== 'all' || !!diocese;
+
+  const openEdit = (row: ParishOverviewRow) => {
+    const full = allParishes.find((p) => p.id === row.parish_id);
     setDraft({
       id: row.parish_id,
-      name: row.parish_name,
-      diocese: row.diocese,
-      // The overview returns counts, not the full row, so these are filled in
-      // by the admin when editing rather than pre-populated with a guess.
-      state: '',
-      country: '',
+      name: full?.name ?? row.parish_name,
+      diocese: full?.diocese ?? row.diocese,
+      state: full?.state ?? '',
+      country: full?.country ?? '',
     });
+  };
 
   const handleSave = async () => {
     if (!draft) return;
-    if (!draft.name.trim()) {
-      showAlert({ title: 'Name required', message: 'Give the parish a name.', type: 'error' });
+    const missing = (['name', 'diocese', 'state', 'country'] as const).find(
+      (key) => !draft[key].trim()
+    );
+    if (missing) {
+      showAlert({
+        title: 'Missing detail',
+        message: `Please fill in the parish ${missing}.`,
+        type: 'error',
+      });
       return;
     }
 
@@ -69,95 +103,101 @@ export function PlatformParishes() {
     }
   };
 
-  return (
-    <>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+  const renderRow = ({ item: row }: { item: ParishOverviewRow }) => (
+    <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}>
+      <View style={styles.rowTop}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 15, color: colors.text, fontFamily: typography.fontFamily.bold }}>
+            {row.parish_name}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              color: colors.textMuted,
+              fontFamily: typography.fontFamily.regular,
+              marginTop: 2,
+            }}
+          >
+            {row.diocese}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={() => openEdit(row)} hitSlop={8}>
+          <Ionicons name="create-outline" size={20} color={colors.primary} />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.statRow}>
         <Text
-          style={{
-            fontSize: 13,
-            color: colors.textMuted,
-            fontFamily: typography.fontFamily.regular,
-            lineHeight: 20,
-            marginBottom: 14,
-          }}
+          style={{ fontSize: 12, color: colors.textSecondary, fontFamily: typography.fontFamily.medium }}
         >
-          A new parish starts with the standard mass, confession and devotion schedule, and needs an
-          admin appointed under People before anyone can manage it.
+          {row.member_count} {Number(row.member_count) === 1 ? 'member' : 'members'}
         </Text>
+        {Number(row.admin_count) === 0 ? (
+          <Badge label="No admin" variant="warning" size="sm" />
+        ) : (
+          <Text
+            style={{
+              fontSize: 12,
+              color: colors.textSecondary,
+              fontFamily: typography.fontFamily.medium,
+            }}
+          >
+            {row.admin_count} {Number(row.admin_count) === 1 ? 'admin' : 'admins'}
+          </Text>
+        )}
+        {Number(row.unverified_payments) > 0 && (
+          <Badge label={`${row.unverified_payments} unverified`} variant="warning" size="sm" />
+        )}
+      </View>
+    </Card>
+  );
 
-        {parishes.map((row, index) => (
-          <Animated.View key={row.parish_id} entering={FadeInDown.delay(index * 30).duration(320)}>
-            <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 10 }}>
-              <View style={styles.rowTop}>
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontSize: 15,
-                      color: colors.text,
-                      fontFamily: typography.fontFamily.bold,
-                    }}
-                  >
-                    {row.parish_name}
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: colors.textMuted,
-                      fontFamily: typography.fontFamily.regular,
-                      marginTop: 2,
-                    }}
-                  >
-                    {row.diocese}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => openEdit(row)} hitSlop={8}>
-                  <Ionicons name="create-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
+  return (
+    <View style={styles.fill}>
+      <PlatformListControls
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search parishes or dioceses"
+        filters={STATUS_FILTERS}
+        activeFilter={status}
+        onFilterChange={setStatus}
+        secondaryFilters={dioceses.map((d) => ({ value: d, label: d }))}
+        activeSecondary={diocese}
+        onSecondaryChange={setDiocese}
+      />
 
-              <View style={styles.statRow}>
-                <Text
-                  style={{
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                    fontFamily: typography.fontFamily.medium,
-                  }}
-                >
-                  {row.member_count} {row.member_count === 1 ? 'member' : 'members'}
-                </Text>
-                {Number(row.admin_count) === 0 ? (
-                  <Badge label="No admin" variant="warning" size="sm" />
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                      fontFamily: typography.fontFamily.medium,
-                    }}
-                  >
-                    {row.admin_count} {Number(row.admin_count) === 1 ? 'admin' : 'admins'}
-                  </Text>
-                )}
-                {Number(row.unverified_payments) > 0 && (
-                  <Badge
-                    label={`${row.unverified_payments} unverified`}
-                    variant="warning"
-                    size="sm"
-                  />
-                )}
-              </View>
-            </Card>
-          </Animated.View>
-        ))}
+      <FlatList
+        data={rows}
+        keyExtractor={(row) => row.parish_id}
+        renderItem={renderRow}
+        contentContainerStyle={styles.list}
+        keyboardShouldPersistTaps="handled"
+        onEndReachedThreshold={0.4}
+        onEndReached={() => {
+          if (overview.hasNextPage && !overview.isFetchingNextPage) overview.fetchNextPage();
+        }}
+        refreshing={overview.isRefetching && !overview.isFetchingNextPage}
+        onRefresh={() => overview.refetch()}
+        ListEmptyComponent={
+          <PlatformListEmpty
+            isLoading={overview.isLoading}
+            isFiltered={isFiltered}
+            emptyText="No parishes yet. Tap + to add the first one."
+          />
+        }
+        ListFooterComponent={
+          <PlatformListFooter
+            isFetchingNextPage={overview.isFetchingNextPage}
+            hasNextPage={!!overview.hasNextPage}
+            shownCount={rows.length}
+          />
+        }
+      />
 
-        <Button
-          label="Add a parish"
-          onPress={() => setDraft({ ...EMPTY })}
-          variant="secondary"
-          fullWidth
-          style={{ marginTop: 12 }}
-        />
-      </ScrollView>
+      <FloatingActionButton
+        accessibilityLabel="Add a parish"
+        onPress={() => setDraft({ ...EMPTY })}
+      />
 
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.backdrop}>
@@ -231,14 +271,14 @@ export function PlatformParishes() {
           </ScrollView>
         </View>
       </Modal>
-
-      <GlobalLoader visible={isLoading} />
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { paddingHorizontal: 20, paddingTop: 14, paddingBottom: 60 },
+  fill: { flex: 1 },
+  // Bottom padding lets the last card scroll clear of the floating button.
+  list: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 100, flexGrow: 1 },
   rowTop: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   statRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, flexWrap: 'wrap' },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
