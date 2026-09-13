@@ -1,6 +1,5 @@
-import React, { createContext, useCallback, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { AuthService } from '@/lib/supabase/services/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supaBaseClient } from '@/lib/supabase/client';
 import { registerForPushNotifications } from '@/lib/supabase/services/push';
 import type { DutyRole } from '@/lib/supabase/entities/types';
@@ -46,17 +45,6 @@ export interface RegisterPayload {
   groupId?: string | null;
 }
 
-/**
- * Which experience a platform admin is looking at.
- *
- * This is a view switch, not an identity switch: the signed-in user never
- * changes, so every database policy still applies to their real account. It
- * only decides which part of the app they are routed into.
- */
-export type ViewAs = 'admin' | 'member';
-
-const VIEW_AS_KEY = '@churchlife_view_as';
-
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
@@ -65,14 +53,6 @@ interface AuthContextType {
   register: (payload: RegisterPayload) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<AuthUser>) => Promise<void>;
-  /** Null when the platform admin is in their own view. */
-  viewAs: ViewAs | null;
-  setViewAs: (view: ViewAs | null) => void;
-  /**
-   * The role the app should route and render by. Equals the real role unless
-   * a platform admin has switched view.
-   */
-  effectiveRole: UserRole;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -82,7 +62,6 @@ const authService = new AuthService();
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewAs, setViewAsState] = useState<ViewAs | null>(null);
 
   // Restore session and subscribe to auth state changes on start
   useEffect(() => {
@@ -188,7 +167,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await authService.signOut();
     setUser(null);
-    setViewAs(null);
   };
 
   const updateUser = async (updates: Partial<AuthUser>) => {
@@ -206,33 +184,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id]);
 
-  // Restore the switch across restarts, so an admin who was looking at the
-  // member experience is not silently moved back on the next launch.
-  useEffect(() => {
-    AsyncStorage.getItem(VIEW_AS_KEY)
-      .then((stored) => {
-        if (stored === 'admin' || stored === 'member') setViewAsState(stored);
-      })
-      .catch(() => {});
-  }, []);
-
-  const setViewAs = useCallback((view: ViewAs | null) => {
-    setViewAsState(view);
-    const write = view
-      ? AsyncStorage.setItem(VIEW_AS_KEY, view)
-      : AsyncStorage.removeItem(VIEW_AS_KEY);
-    write.catch(() => {});
-  }, []);
-
-  // Only a platform admin can switch, so an ordinary member cannot elevate
-  // themselves by writing to storage. The database would refuse them anyway.
-  const effectiveRole: UserRole =
-    user?.is_super_admin && viewAs
-      ? viewAs === 'admin'
-        ? 'parish_admin'
-        : 'member'
-      : user?.role ?? 'member';
-
   return (
     <AuthContext.Provider
       value={{
@@ -243,9 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         updateUser,
-        viewAs: user?.is_super_admin ? viewAs : null,
-        setViewAs,
-        effectiveRole,
       }}
     >
       {children}

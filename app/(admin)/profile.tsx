@@ -6,7 +6,6 @@ import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { ScreenWrapper } from '@/components/ui/ScreenWrapper';
-import { ViewAsSwitcher } from '@/components/ui/ViewAsSwitcher';
 import { Avatar } from '@/components/ui/Avatar';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 
@@ -44,7 +43,7 @@ function SettingRow({
 
 export default function AdminProfileScreen() {
   const { colors, typography, radius, isDark, setColorMode, colorMode } = useTheme();
-  const { user, logout, viewAs } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
 
 
@@ -130,24 +129,6 @@ export default function AdminProfileScreen() {
             </View>
           </Animated.View>
 
-          <ViewAsSwitcher />
-
-          {/* ── Platform (super admins only) ── */}
-          {user?.is_super_admin && !viewAs && (
-            <Animated.View entering={FadeInDown.delay(170).duration(400)}>
-              <Text style={[styles.sectionLabel, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
-                Platform
-              </Text>
-              <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                <SettingRow
-                  icon="globe-outline"
-                  label="Manage Platform"
-                  onPress={() => router.push('/(modals)/platform')}
-                />
-              </View>
-            </Animated.View>
-          )}
-
           {/* ── Parish Management ── */}
           {user?.role === 'parish_admin' && (
             <Animated.View entering={FadeInDown.delay(190).duration(400)}>
@@ -192,6 +173,13 @@ export default function AdminProfileScreen() {
                 label="Switch to Parishioner View"
                 onPress={() => router.replace('/(tabs)')}
               />
+              {user?.is_super_admin && (
+                <SettingRow
+                  icon="globe-outline"
+                  label="Switch to Super Admin"
+                  onPress={() => router.push('/(modals)/platform')}
+                />
+              )}
             </View>
           </Animated.View>
 

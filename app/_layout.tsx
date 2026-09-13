@@ -23,7 +23,7 @@ export const unstable_settings = { anchor: '(tabs)' };
 const queryClient = new QueryClient();
 
 function RootLayoutNav() {
-  const { isAuthenticated, isLoading, effectiveRole } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const { resolvedMode } = useTheme();
   const segments = useSegments();
   const router = useRouter();
@@ -39,19 +39,18 @@ function RootLayoutNav() {
     } else if (isAuthenticated) {
       const atRoot = routeSegments.length === 0 || !routeSegments[0] || routeSegments[0] === '';
       if (inAuth || atRoot) {
-        // Routed by effective role, so a platform admin viewing the member
-        // experience lands in the tabs rather than the admin area.
-        if (effectiveRole === 'member') {
+        // Check user role for redirection
+        if (user?.role === 'member') {
           router.replace('/(tabs)');
         } else {
           router.replace('/(admin)');
         }
-      } else if (effectiveRole === 'member' && inAdmin) {
+      } else if (user?.role === 'member' && inAdmin) {
         // Security guard: prevent members from accessing admin pages
         router.replace('/(tabs)');
       }
     }
-  }, [isAuthenticated, isLoading, segments, effectiveRole, router]);
+  }, [isAuthenticated, isLoading, segments, user?.role, router]);
 
   if (isLoading) {
     return (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -31,6 +32,7 @@ const SECTIONS: { key: Section; label: string; icon: keyof typeof Ionicons.glyph
 export default function PlatformScreen() {
   const { colors, typography, radius } = useTheme();
   const { user } = useAuth();
+  const router = useRouter();
   const [section, setSection] = useState<Section>('parishes');
 
   if (!user?.is_super_admin) {
@@ -110,6 +112,45 @@ export default function PlatformScreen() {
         {section === 'groups' && <PlatformGroups />}
         {section === 'activity' && <PlatformAudit />}
       </Animated.View>
+
+      {/* Same switches the profile screens offer, so a super admin can move
+          straight to either of the other views from here. */}
+      <View style={[styles.switchBar, { borderTopColor: colors.border }]}>
+        {user.role === 'parish_admin' && (
+          <TouchableOpacity
+            style={[styles.switchBtn, { borderColor: colors.border, borderRadius: radius.md }]}
+            onPress={() => router.replace('/(admin)')}
+          >
+            <Ionicons name="settings-outline" size={16} color={colors.primary} />
+            <Text
+              style={{
+                fontSize: 13,
+                marginLeft: 6,
+                color: colors.text,
+                fontFamily: typography.fontFamily.semiBold,
+              }}
+            >
+              Switch to Admin
+            </Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity
+          style={[styles.switchBtn, { borderColor: colors.border, borderRadius: radius.md }]}
+          onPress={() => router.replace('/(tabs)')}
+        >
+          <Ionicons name="apps-outline" size={16} color={colors.primary} />
+          <Text
+            style={{
+              fontSize: 13,
+              marginLeft: 6,
+              color: colors.text,
+              fontFamily: typography.fontFamily.semiBold,
+            }}
+          >
+            Switch to Parishioner
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ScreenWrapper>
   );
 }
@@ -125,4 +166,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   denied: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
+  switchBar: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  switchBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 11,
+    borderWidth: 1,
+  },
 });

@@ -58,7 +58,7 @@ function AnimatedTabIcon({
 export default function AdminLayout() {
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
-  const { isAuthenticated, isLoading, effectiveRole } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   if (isLoading) {
     return null;
@@ -68,9 +68,7 @@ export default function AdminLayout() {
     return <Redirect href="/(auth)/welcome" />;
   }
 
-  // Effective role, so a platform administrator reaches this area even with
-  // no parish role, and leaves it while viewing the member experience.
-  if (effectiveRole === 'member') {
+  if (user?.role === 'member') {
     return <Redirect href="/(tabs)" />;
   }
 
