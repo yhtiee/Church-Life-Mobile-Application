@@ -12,15 +12,19 @@
  * `VAR=1 cmd` does not work in the Windows shell npm uses.
  */
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 
-const isWindows = process.platform === 'win32';
+const require = createRequire(import.meta.url);
 
-const child = spawn(isWindows ? 'npx.cmd' : 'npx', ['expo', 'start', ...process.argv.slice(2)], {
+// Run the project's own Expo CLI with this Node binary rather than through
+// `npx`. `npx` is a .cmd on Windows, which Node only launches via a shell,
+// and passing arguments through a shell is what Node's DEP0190 warns about.
+const expoCli = require.resolve('expo/bin/cli');
+
+const child = spawn(process.execPath, [expoCli, 'start', ...process.argv.slice(2)], {
   // Inherited so the QR code and the interactive key commands reach the
   // terminal you ran this from.
   stdio: 'inherit',
-  // Node will not launch a .cmd on Windows without a shell.
-  shell: isWindows,
   env: { ...process.env, EXPO_GO_PREVIEW: '1' },
 });
 
