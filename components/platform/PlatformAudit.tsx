@@ -7,21 +7,26 @@ import {
   PlatformListControls,
   PlatformListEmpty,
   PlatformListFooter,
-  type FilterOption,
 } from '@/components/platform/PlatformListControls';
+import { countSelected, type FilterSection, type FilterSelection } from '@/components/ui/FilterModal';
 import { useAuditLogQuery } from '@/hooks/queries/usePlatform';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import type { AuditFilter } from '@/lib/supabase/services/platform';
+import type { AuditCategory } from '@/lib/supabase/services/platform';
 import type { DatabaseAuditEntry } from '@/lib/supabase/entities/types';
 
 // Each value is the action's namespace, matched as a prefix in the query.
-const AUDIT_FILTERS: FilterOption<AuditFilter>[] = [
-  { value: 'all', label: 'All' },
-  { value: 'parish', label: 'Parishes' },
-  { value: 'admin', label: 'Admin changes' },
-  { value: 'member', label: 'Member moves' },
-  { value: 'superadmin', label: 'Super admin access' },
-  { value: 'group', label: 'Groups' },
+const FILTER_SECTIONS: FilterSection[] = [
+  {
+    key: 'category',
+    title: 'Action type',
+    options: [
+      { value: 'parish', label: 'Parishes' },
+      { value: 'admin', label: 'Admin changes' },
+      { value: 'member', label: 'Member moves' },
+      { value: 'superadmin', label: 'Super admin access' },
+      { value: 'group', label: 'Groups' },
+    ],
+  },
 ];
 
 const ACTION_LABELS: Record<string, string> = {
@@ -47,12 +52,15 @@ export function PlatformAudit() {
   const { colors, typography, radius } = useTheme();
 
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState<AuditFilter>('all');
+  const [filters, setFilters] = useState<FilterSelection>({});
 
   const debouncedSearch = useDebouncedValue(search);
-  const auditQuery = useAuditLogQuery({ search: debouncedSearch, category });
+  const auditQuery = useAuditLogQuery({
+    search: debouncedSearch,
+    categories: (filters.category ?? []) as AuditCategory[],
+  });
   const entries = useMemo(() => auditQuery.data?.pages.flat() ?? [], [auditQuery.data]);
-  const isFiltered = !!debouncedSearch.trim() || category !== 'all';
+  const isFiltered = !!debouncedSearch.trim() || countSelected(filters) > 0;
 
   const renderEntry = ({ item: entry }: { item: DatabaseAuditEntry }) => (
     <Card elevation="sm" style={{ padding: 14, borderRadius: radius.lg, marginBottom: 8 }}>
@@ -98,9 +106,9 @@ export function PlatformAudit() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by who acted or what changed"
-        filters={AUDIT_FILTERS}
-        activeFilter={category}
-        onFilterChange={setCategory}
+        filterSections={FILTER_SECTIONS}
+        appliedFilters={filters}
+        onApplyFilters={setFilters}
       />
 
       <FlatList

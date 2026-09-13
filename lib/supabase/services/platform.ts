@@ -12,10 +12,20 @@ import type {
 /** Rows per page for every platform list. */
 export const PLATFORM_PAGE_SIZE = 20;
 
-export type ParishStatusFilter = 'all' | 'no_admin' | 'unverified';
-export type PeopleFilter = 'all' | 'parish_admin' | 'member' | 'super_admin' | 'no_parish';
-export type GroupFilter = 'all' | 'secured' | 'open';
-export type AuditFilter = 'all' | 'parish' | 'admin' | 'member' | 'superadmin' | 'group';
+// Filters are lists of ticked values. An empty list means no filter; within
+// a list the values are alternatives, and separate lists narrow together.
+export type ParishStatus = 'no_admin' | 'unverified';
+export type PeopleCategory = 'parish_admin' | 'member' | 'super_admin' | 'no_parish';
+export type GroupAccess = 'secured' | 'open';
+export type AuditCategory = 'parish' | 'admin' | 'member' | 'superadmin' | 'group';
+
+/** PostgREST condition for each people category, OR-ed together when several are ticked. */
+const PEOPLE_CONDITIONS: Record<PeopleCategory, string> = {
+  parish_admin: 'role.eq.parish_admin',
+  member: 'role.eq.member',
+  super_admin: 'is_super_admin.eq.true',
+  no_parish: 'parishId.is.null',
+};
 
 interface PageArgs {
   search?: string;
@@ -53,14 +63,14 @@ export class PlatformService {
   async fetchParishOverview({
     search,
     page = 0,
-    diocese,
-    status = 'all',
-  }: PageArgs & { diocese?: string | null; status?: ParishStatusFilter }) {
+    dioceses = [],
+    statuses = [],
+  }: PageArgs & { dioceses?: string[]; statuses?: ParishStatus[] }) {
     try {
       const { data, error } = await supaBaseClient.rpc('sa_parish_overview', {
         search_term: cleanTerm(search) || null,
-        diocese_filter: diocese || null,
-        status_filter: status === 'all' ? null : status,
+        diocese_filters: dioceses.length ? dioceses : null,
+        status_filters: statuses.length ? statuses : null,
         page_limit: PLATFORM_PAGE_SIZE,
         page_offset: page * PLATFORM_PAGE_SIZE,
       });
@@ -190,7 +200,11 @@ export class PlatformService {
   }
 
   /** One page of administrative actions, newest first. */
-  async fetchAuditLog({ search, page = 0, category = 'all' }: PageArgs & { category?: AuditFilter }) {
+  async fetchAuditLog({
+    search,
+    page = 0,
+    categories = [],
+  }: PageArgs & { categories?: AuditCategory[] }) {
     try {
       const [from, to] = pageRange(page);
       let query = supaBaseClient
@@ -201,7 +215,9 @@ export class PlatformService {
 
       // Actions are namespaced ("parish.create", "admin.grant"), so a
       // category is a prefix match.
-      if (category !== 'all') query = query.like('action', `${category}.%`);
+      if (categories.length) {
+        query = query.or(categories.map((c) => `action.like.${c}.%`).join(','));
+      }
 
       const term = cleanTerm(search);
       if (term) query = query.or(`actor_name.ilike.%${term}%,detail->>name.ilike.%${term}%`);
@@ -216,7 +232,11 @@ export class PlatformService {
   }
 
   /** One page of people across every parish, by name or email. */
-  async searchProfiles({ search, page = 0, filter = 'all' }: PageArgs & { filter?: PeopleFilter }) {
+  async searchProfiles({
+    search,
+    page = 0,
+    categories = [],
+  }: PageArgs & { categories?: PeopleCategory[] }) {
     try {
       const [from, to] = pageRange(page);
       let query = supaBaseClient
@@ -225,10 +245,11 @@ export class PlatformService {
         .order('fullName', { ascending: true })
         .range(from, to);
 
-      if (filter === 'parish_admin') query = query.eq('role', 'parish_admin');
-      if (filter === 'member') query = query.eq('role', 'member');
-      if (filter === 'super_admin') query = query.eq('is_super_admin', true);
-      if (filter === 'no_parish') query = query.is('parishId', null);
+      // A second `or` alongside the search one: PostgREST ANDs separate `or`
+      // groups, so this reads as (any ticked category) AND (search match).
+      if (categories.length) {
+        query = query.or(categories.map((c) => PEOPLE_CONDITIONS[c]).join(','));
+      }
 
       const term = cleanTerm(search);
       if (term) query = query.or(`fullName.ilike.%${term}%,email.ilike.%${term}%`);
@@ -243,7 +264,11 @@ export class PlatformService {
   }
 
   /** One page of the groups shared by every parish (no parish_id). */
-  async fetchGlobalGroups({ search, page = 0, filter = 'all' }: PageArgs & { filter?: GroupFilter }) {
+  async fetchGlobalGroups({
+    search,
+    page = 0,
+    access = [],
+  }: PageArgs & { access?: GroupAccess[] }) {
     try {
       const [from, to] = pageRange(page);
       let query = supaBaseClient
@@ -253,8 +278,8 @@ export class PlatformService {
         .order('name', { ascending: true })
         .range(from, to);
 
-      if (filter === 'secured') query = query.eq('is_secure', true);
-      if (filter === 'open') query = query.eq('is_secure', false);
+      // Ticking both is the same as ticking neither, so only one narrows.
+      if (access.length === 1) query = query.eq('is_secure', access[0] === 'secured');
 
       const term = cleanTerm(search);
       if (term) query = query.ilike('name', `%${term}%`);

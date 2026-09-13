@@ -14,18 +14,23 @@ import {
   PlatformListControls,
   PlatformListEmpty,
   PlatformListFooter,
-  type FilterOption,
 } from '@/components/platform/PlatformListControls';
+import { countSelected, type FilterSection, type FilterSelection } from '@/components/ui/FilterModal';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import type { PeopleFilter } from '@/lib/supabase/services/platform';
+import type { PeopleCategory } from '@/lib/supabase/services/platform';
 import type { AuthUser } from '@/context/AuthContext';
 
-const PEOPLE_FILTERS: FilterOption<PeopleFilter>[] = [
-  { value: 'all', label: 'Everyone' },
-  { value: 'parish_admin', label: 'Parish admins' },
-  { value: 'member', label: 'Members' },
-  { value: 'super_admin', label: 'Super admins' },
-  { value: 'no_parish', label: 'No parish' },
+const FILTER_SECTIONS: FilterSection[] = [
+  {
+    key: 'category',
+    title: 'Show',
+    options: [
+      { value: 'parish_admin', label: 'Parish admins' },
+      { value: 'member', label: 'Members' },
+      { value: 'super_admin', label: 'Super admins' },
+      { value: 'no_parish', label: 'No parish' },
+    ],
+  },
 ];
 
 /**
@@ -38,14 +43,17 @@ export function PlatformPeople() {
   const { showAlert } = useAlert();
 
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<PeopleFilter>('all');
+  const [filters, setFilters] = useState<FilterSelection>({});
   const [selected, setSelected] = useState<AuthUser | null>(null);
   const [moveTo, setMoveTo] = useState<string | null>(null);
 
   const debouncedSearch = useDebouncedValue(search);
-  const peopleQuery = usePlatformProfilesQuery({ search: debouncedSearch, filter });
+  const peopleQuery = usePlatformProfilesQuery({
+    search: debouncedSearch,
+    categories: (filters.category ?? []) as PeopleCategory[],
+  });
   const people = useMemo(() => peopleQuery.data?.pages.flat() ?? [], [peopleQuery.data]);
-  const isFiltered = !!debouncedSearch.trim() || filter !== 'all';
+  const isFiltered = !!debouncedSearch.trim() || countSelected(filters) > 0;
   const { data: parishes = [] } = useParishesQuery();
   const { setParishAdmin, setMemberParish, setSuperAdmin } = usePlatformMutations();
 
@@ -107,9 +115,9 @@ export function PlatformPeople() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search by name or email"
-        filters={PEOPLE_FILTERS}
-        activeFilter={filter}
-        onFilterChange={setFilter}
+        filterSections={FILTER_SECTIONS}
+        appliedFilters={filters}
+        onApplyFilters={setFilters}
       />
 
       {/* People register themselves, so this list has no add button. */}

@@ -2,10 +2,10 @@ import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import {
   PLATFORM_PAGE_SIZE,
   PlatformService,
-  type AuditFilter,
-  type GroupFilter,
-  type ParishStatusFilter,
-  type PeopleFilter,
+  type AuditCategory,
+  type GroupAccess,
+  type ParishStatus,
+  type PeopleCategory,
 } from '@/lib/supabase/services/platform';
 import { QUERY_KEYS } from '@/constants/query-keys';
 
@@ -22,8 +22,8 @@ function nextPage<T>(lastPage: T[], allPages: T[][]): number | undefined {
 /** Paged parishes with member, admin and unverified-payment counts. */
 export function useParishOverviewQuery(filters: {
   search: string;
-  diocese: string | null;
-  status: ParishStatusFilter;
+  dioceses: string[];
+  statuses: ParishStatus[];
 }) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.parishOverview(filters),
@@ -50,7 +50,7 @@ export function useDiocesesQuery() {
 }
 
 /** Paged people across every parish. */
-export function usePlatformProfilesQuery(filters: { search: string; filter: PeopleFilter }) {
+export function usePlatformProfilesQuery(filters: { search: string; categories: PeopleCategory[] }) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.platformProfiles(filters),
     initialPageParam: 0,
@@ -64,7 +64,7 @@ export function usePlatformProfilesQuery(filters: { search: string; filter: Peop
 }
 
 /** Paged groups shared by every parish. */
-export function useGlobalGroupsQuery(filters: { search: string; filter: GroupFilter }) {
+export function useGlobalGroupsQuery(filters: { search: string; access: GroupAccess[] }) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.globalGroups(filters),
     initialPageParam: 0,
@@ -78,7 +78,7 @@ export function useGlobalGroupsQuery(filters: { search: string; filter: GroupFil
 }
 
 /** Paged administrative actions, newest first. */
-export function useAuditLogQuery(filters: { search: string; category: AuditFilter }) {
+export function useAuditLogQuery(filters: { search: string; categories: AuditCategory[] }) {
   return useInfiniteQuery({
     queryKey: QUERY_KEYS.auditLog(filters),
     initialPageParam: 0,

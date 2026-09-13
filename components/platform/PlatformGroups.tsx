@@ -13,18 +13,23 @@ import {
   PlatformListControls,
   PlatformListEmpty,
   PlatformListFooter,
-  type FilterOption,
 } from '@/components/platform/PlatformListControls';
+import { countSelected, type FilterSection, type FilterSelection } from '@/components/ui/FilterModal';
 import { useGlobalGroupsQuery } from '@/hooks/queries/usePlatform';
 import { usePlatformMutations } from '@/hooks/mutations/usePlatform';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import type { GroupFilter } from '@/lib/supabase/services/platform';
+import type { GroupAccess } from '@/lib/supabase/services/platform';
 import type { Group } from '@/lib/supabase/entities/types';
 
-const GROUP_FILTERS: FilterOption<GroupFilter>[] = [
-  { value: 'all', label: 'All' },
-  { value: 'secured', label: 'Secured' },
-  { value: 'open', label: 'Open' },
+const FILTER_SECTIONS: FilterSection[] = [
+  {
+    key: 'access',
+    title: 'Joining',
+    options: [
+      { value: 'secured', label: 'Secured (needs approval)' },
+      { value: 'open', label: 'Open' },
+    ],
+  },
 ];
 
 interface Draft {
@@ -45,13 +50,16 @@ export function PlatformGroups() {
   const { showAlert } = useAlert();
 
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<GroupFilter>('all');
+  const [filters, setFilters] = useState<FilterSelection>({});
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const debouncedSearch = useDebouncedValue(search);
-  const groupsQuery = useGlobalGroupsQuery({ search: debouncedSearch, filter });
+  const groupsQuery = useGlobalGroupsQuery({
+    search: debouncedSearch,
+    access: (filters.access ?? []) as GroupAccess[],
+  });
   const groups = useMemo(() => groupsQuery.data?.pages.flat() ?? [], [groupsQuery.data]);
-  const isFiltered = !!debouncedSearch.trim() || filter !== 'all';
+  const isFiltered = !!debouncedSearch.trim() || countSelected(filters) > 0;
 
   const { saveGlobalGroup } = usePlatformMutations();
 
@@ -134,9 +142,9 @@ export function PlatformGroups() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search groups"
-        filters={GROUP_FILTERS}
-        activeFilter={filter}
-        onFilterChange={setFilter}
+        filterSections={FILTER_SECTIONS}
+        appliedFilters={filters}
+        onApplyFilters={setFilters}
       />
 
       <FlatList

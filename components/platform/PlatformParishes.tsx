@@ -13,17 +13,16 @@ import {
   PlatformListControls,
   PlatformListEmpty,
   PlatformListFooter,
-  type FilterOption,
 } from '@/components/platform/PlatformListControls';
+import { countSelected, type FilterSection, type FilterSelection } from '@/components/ui/FilterModal';
 import { useDiocesesQuery, useParishOverviewQuery } from '@/hooks/queries/usePlatform';
 import { useParishesQuery } from '@/hooks/queries/useParishes';
 import { usePlatformMutations } from '@/hooks/mutations/usePlatform';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
-import type { ParishStatusFilter } from '@/lib/supabase/services/platform';
+import type { ParishStatus } from '@/lib/supabase/services/platform';
 import type { ParishOverviewRow } from '@/lib/supabase/entities/types';
 
-const STATUS_FILTERS: FilterOption<ParishStatusFilter>[] = [
-  { value: 'all', label: 'All' },
+const STATUS_OPTIONS = [
   { value: 'no_admin', label: 'No admin' },
   { value: 'unverified', label: 'Unverified payments' },
 ];
@@ -44,12 +43,15 @@ export function PlatformParishes() {
   const { showAlert } = useAlert();
 
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<ParishStatusFilter>('all');
-  const [diocese, setDiocese] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterSelection>({});
   const [draft, setDraft] = useState<Draft | null>(null);
 
   const debouncedSearch = useDebouncedValue(search);
-  const overview = useParishOverviewQuery({ search: debouncedSearch, diocese, status });
+  const overview = useParishOverviewQuery({
+    search: debouncedSearch,
+    statuses: (filters.status ?? []) as ParishStatus[],
+    dioceses: filters.diocese ?? [],
+  });
   const rows = useMemo(() => overview.data?.pages.flat() ?? [], [overview.data]);
 
   const { data: dioceses = [] } = useDiocesesQuery();
@@ -58,7 +60,14 @@ export function PlatformParishes() {
   const { data: allParishes = [] } = useParishesQuery();
   const { saveParish } = usePlatformMutations();
 
-  const isFiltered = !!debouncedSearch.trim() || status !== 'all' || !!diocese;
+  const isFiltered = !!debouncedSearch.trim() || countSelected(filters) > 0;
+
+  const filterSections: FilterSection[] = [
+    { key: 'status', title: 'Status', options: STATUS_OPTIONS },
+    ...(dioceses.length
+      ? [{ key: 'diocese', title: 'Diocese', options: dioceses.map((d) => ({ value: d, label: d })) }]
+      : []),
+  ];
 
   const openEdit = (row: ParishOverviewRow) => {
     const full = allParishes.find((p) => p.id === row.parish_id);
@@ -158,12 +167,9 @@ export function PlatformParishes() {
         search={search}
         onSearchChange={setSearch}
         searchPlaceholder="Search parishes or dioceses"
-        filters={STATUS_FILTERS}
-        activeFilter={status}
-        onFilterChange={setStatus}
-        secondaryFilters={dioceses.map((d) => ({ value: d, label: d }))}
-        activeSecondary={diocese}
-        onSecondaryChange={setDiocese}
+        filterSections={filterSections}
+        appliedFilters={filters}
+        onApplyFilters={setFilters}
       />
 
       <FlatList
