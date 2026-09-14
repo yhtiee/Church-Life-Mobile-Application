@@ -12,6 +12,7 @@ import GlobalLoader from '@/components/ui/GlobalLoader';
 import { useProfilesByParishQuery } from '@/hooks/queries/useProfiles';
 import { useGroupsByParishQuery } from '@/hooks/queries/useGroups';
 import { getGroupMetadata } from '@/constants/groups';
+import { ParishTransferQueue } from '@/components/admin/ParishTransferQueue';
 
 type StatusTab = 'Active' | 'Pending' | 'Suspended';
 
@@ -109,6 +110,7 @@ export default function MembersScreen() {
       <FlatList
         data={filteredMembers}
         keyExtractor={(item) => item.id}
+        ListHeaderComponent={<ParishTransferQueue />}
         renderItem={({ item, index }) => (
           <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40 + 160).duration(350)}>
             <MemberListItem

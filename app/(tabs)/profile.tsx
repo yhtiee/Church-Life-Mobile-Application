@@ -13,6 +13,62 @@ import { Avatar } from '@/components/ui/Avatar';
 import { getGroupMetadata } from '@/constants/groups';
 import { useGroupsQuery } from '@/hooks/queries/useGroups';
 
+// ── Setting Row component ──────────────────────────────────────────────────
+function SettingRow({
+  icon,
+  label,
+  value,
+  onPress,
+  rightEl,
+  showEditIcon,
+  isDestructive,
+  iconBgColor,
+  iconColor: customIconColor,
+}: {
+  icon: any;
+  label: string;
+  value?: string;
+  onPress?: () => void;
+  rightEl?: React.ReactNode;
+  showEditIcon?: boolean;
+  isDestructive?: boolean;
+  iconBgColor?: string;
+  iconColor?: string;
+}) {
+  const { colors, typography } = useTheme();
+  const textColor = isDestructive ? colors.danger : colors.text;
+  const resolvedIconColor = customIconColor ?? (isDestructive ? colors.danger : colors.primary);
+  const resolvedIconBg = iconBgColor ?? (isDestructive ? colors.dangerBg : colors.primaryLight);
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      disabled={!onPress && !rightEl && !showEditIcon}
+      style={[styles.settingRow, { borderBottomColor: colors.divider }]}
+      activeOpacity={onPress || showEditIcon ? 0.7 : 1}
+    >
+      <View style={[styles.settingIcon, { backgroundColor: resolvedIconBg, borderRadius: 10 }]}>
+        <Ionicons name={icon} size={16} color={resolvedIconColor} />
+      </View>
+      <Text style={{ flex: 1, fontSize: 14, fontFamily: typography.fontFamily.medium, color: textColor, marginLeft: 13 }}>
+        {label}
+      </Text>
+      {value && (
+        <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>
+          {value}
+        </Text>
+      )}
+      {rightEl}
+      {showEditIcon && (
+        <Ionicons name="pencil-outline" size={14} color={colors.primary} style={{ marginLeft: 8 }} />
+      )}
+      {onPress && !showEditIcon && !isDestructive && (
+        <Ionicons name="chevron-forward" size={16} color={colors.border} style={{ marginLeft: 8 }} />
+      )}
+    </TouchableOpacity>
+  );
+}
+
 export default function ProfileScreen() {
   const { colors, typography, radius, isDark, setColorMode, colorMode } = useTheme();
   const { user, logout } = useAuth();
@@ -22,60 +78,6 @@ export default function ProfileScreen() {
   const joinedGroups = user?.id ? groups.filter((g) => g.member_ids?.includes(user.id)) : [];
   const primaryGroupColor = joinedGroups.length > 0 ? getGroupMetadata(joinedGroups[0].name).color : colors.primary;
 
-  // ── Setting Row component ──────────────────────────────────────────────────
-  const SettingRow = ({
-    icon,
-    label,
-    value,
-    onPress,
-    rightEl,
-    showEditIcon,
-    isDestructive,
-    iconBgColor,
-    iconColor: customIconColor,
-  }: {
-    icon: any;
-    label: string;
-    value?: string;
-    onPress?: () => void;
-    rightEl?: React.ReactNode;
-    showEditIcon?: boolean;
-    isDestructive?: boolean;
-    iconBgColor?: string;
-    iconColor?: string;
-  }) => {
-    const textColor = isDestructive ? colors.danger : colors.text;
-    const resolvedIconColor = customIconColor ?? (isDestructive ? colors.danger : colors.primary);
-    const resolvedIconBg = iconBgColor ?? (isDestructive ? colors.dangerBg : colors.primaryLight);
-
-    return (
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={!onPress && !rightEl && !showEditIcon}
-        style={[styles.settingRow, { borderBottomColor: colors.divider }]}
-        activeOpacity={onPress || showEditIcon ? 0.7 : 1}
-      >
-        <View style={[styles.settingIcon, { backgroundColor: resolvedIconBg, borderRadius: 10 }]}>
-          <Ionicons name={icon} size={16} color={resolvedIconColor} />
-        </View>
-        <Text style={{ flex: 1, fontSize: 14, fontFamily: typography.fontFamily.medium, color: textColor, marginLeft: 13 }}>
-          {label}
-        </Text>
-        {value && (
-          <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.regular, color: colors.textMuted }}>
-            {value}
-          </Text>
-        )}
-        {rightEl}
-        {showEditIcon && (
-          <Ionicons name="pencil-outline" size={14} color={colors.primary} style={{ marginLeft: 8 }} />
-        )}
-        {onPress && !showEditIcon && !isDestructive && (
-          <Ionicons name="chevron-forward" size={16} color={colors.border} style={{ marginLeft: 8 }} />
-        )}
-      </TouchableOpacity>
-    );
-  };
 
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
@@ -241,11 +243,23 @@ export default function ProfileScreen() {
                 label="Request Group Transition"
                 onPress={() => router.push('/(modals)/group-transition-request')}
               />
+              <SettingRow
+                icon="business-outline"
+                label="Request Parish Transfer"
+                onPress={() => router.push('/(modals)/parish-transfer-request')}
+              />
               {user?.role === 'parish_admin' && (
                 <SettingRow
                   icon="settings-outline"
                   label="Admin Dashboard"
                   onPress={() => router.push('/(admin)')}
+                />
+              )}
+              {user?.is_super_admin && (
+                <SettingRow
+                  icon="globe-outline"
+                  label="Switch to Super Admin"
+                  onPress={() => router.push('/(modals)/platform')}
                 />
               )}
             </View>

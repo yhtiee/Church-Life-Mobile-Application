@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView, View, Text, StyleSheet, TouchableOpacity,
   FlatList, Dimensions, NativeSyntheticEvent, NativeScrollEvent,
@@ -16,6 +16,8 @@ import { PARISH_HISTORY, MASS_TIMES } from '@/constants/mockData';
 import { useParishQuery } from '@/hooks/queries/useParishes';
 import { AnnoucementService } from '@/lib/supabase/services/announcements';
 import { AdsService } from '@/lib/supabase/services/ads';
+import { useActiveCelebrationsQuery } from '@/hooks/queries/useSupport';
+import { CELEBRATION_KIND_LABELS } from '@/lib/supabase/entities/types';
 import { BibleService } from '@/lib/supabase/services/bible';
 import { Gradients } from '@/constants/theme';
 import GlobalLoader from '@/components/ui/GlobalLoader';
@@ -126,6 +128,31 @@ export default function HomeScreen() {
 
   const hasAnnouncements = announcements && announcements.length > 0;
   const carouselData = hasAnnouncements ? announcements : FEATURE_SLIDES;
+
+  // Celebrations ride in the same carousel as ads. They are posted by a parish
+  // admin naming the member, so nothing here is derived from profile birth
+  // dates, which only record a month anyway.
+  const { data: celebrations = [] } = useActiveCelebrationsQuery(user?.parishId ?? undefined);
+
+  const slides = useMemo(
+    () => [
+      ...celebrations.map((c) => ({
+        id: `celebration-${c.id}`,
+        title: c.title,
+        body: c.body || `Join us in celebrating ${c.celebrant_name}.`,
+        image_url: c.image_url || '',
+        category: CELEBRATION_KIND_LABELS[c.kind],
+        // Your own celebration opens the wishes people left you; everyone
+        // else's opens the screen to send support.
+        cta_url:
+          c.member_id && c.member_id === user?.id
+            ? `/(modals)/celebration-wishes?id=${c.id}`
+            : `/(modals)/support-celebration?id=${c.id}`,
+      })),
+      ...ads,
+    ],
+    [celebrations, ads, user?.id]
+  );
 
   useEffect(() => {
     let active = true;
@@ -283,9 +310,9 @@ export default function HomeScreen() {
           </ScrollView>
         </Animated.View>
 
-        {/* ── Ads Carousel ── */}
+        {/* ── Ads & Celebrations Carousel ── */}
         <AdsCarousel
-          data={ads}
+          data={slides}
           onSelect={(item) => {
             if (item.cta_url) {
               router.push(item.cta_url as any);
@@ -302,7 +329,7 @@ export default function HomeScreen() {
         >
           <TouchableOpacity
             activeOpacity={0.9}
-            onPress={() => router.push('/(modals)/advertise' as any)}
+            onPress={() => router.push('/(modals)/advertise?topic=ad' as any)}
           >
             <LinearGradient
               colors={['#0A1929', '#1D3557']}
@@ -319,6 +346,37 @@ export default function HomeScreen() {
                 </Text>
                 <Text style={[styles.advertiseBody, { fontFamily: typography.fontFamily.regular }]}>
                   Feature your business here — tap to enquire.
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+
+        {/* ── Celebrate With Us CTA ── */}
+        <Animated.View
+          entering={FadeInDown.delay(280).duration(450)}
+          style={styles.advertiseSection}
+        >
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={() => router.push('/(modals)/advertise?topic=celebration' as any)}
+          >
+            <LinearGradient
+              colors={['#1D3557', '#6B21A8']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.advertiseCard}
+            >
+              <View style={styles.advertiseIcon}>
+                <Ionicons name="gift" size={22} color="#D4AF37" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.advertiseTitle, { fontFamily: typography.fontFamily.bold }]}>
+                  Celebrate With Us
+                </Text>
+                <Text style={[styles.advertiseBody, { fontFamily: typography.fontFamily.regular }]}>
+                  Birthday or anniversary coming up? Tap to have it announced.
                 </Text>
               </View>
               <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.6)" />

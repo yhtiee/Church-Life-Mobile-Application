@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { AdminPledge, Donation, Pledge } from '@/constants/mockData';
+import { PaymentVerificationQueue } from '@/components/admin/PaymentVerificationQueue';
 import { useDonationsByParishQuery, usePledgesByParishQuery, usePendingDonationsQuery, usePendingPledgesQuery, useFulfillDonationMutation, useRejectDonationMutation, useFulfillPledgeMutation, useRejectPledgeMutation } from '@/hooks/queries/useFinance';
 import GlobalLoader from '@/components/ui/GlobalLoader';
 
@@ -413,18 +414,9 @@ export default function FinancesScreen() {
     <View style={styles.tabContent}>
       {activeTab === 'Pending Approvals' && (
         <>
-          <View style={styles.listContainer}>
-            <Text style={[styles.sectionTitle, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>
-              Pending Donations ({pendingDonations.length})
-            </Text>
-            {pendingDonations.length === 0 ? (
-              <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.medium, fontSize: 13, textAlign: 'center', paddingVertical: 32 }}>
-                No pending donations
-              </Text>
-            ) : (
-              pendingDonations.map((donation, idx) => renderPendingDonationItem(donation as any, idx))
-            )}
-          </View>
+          {/* Offerings, parish support and celebration gifts are all donation
+              rows, so one queue covers every payment a member reports. */}
+          <PaymentVerificationQueue />
 
           <View style={styles.listContainer}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted, fontFamily: typography.fontFamily.semiBold }]}>

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { AuthService } from '@/lib/supabase/services/auth';
 import { supaBaseClient } from '@/lib/supabase/client';
 import { registerForPushNotifications } from '@/lib/supabase/services/push';
+import type { DutyRole } from '@/lib/supabase/entities/types';
 
 export type UserRole = 'member' | 'group_admin' | 'parish_admin';
 export type Sex = 'Male' | 'Female';
@@ -22,6 +23,10 @@ export interface AuthUser {
   groupId?: string | null;
   groupName?: string | null;
   role: UserRole;
+  /** Title only — confers no permissions. Access is decided by `role`. */
+  duty_role?: DutyRole | null;
+  /** Platform administrator. Orthogonal to `role`, not a replacement. */
+  is_super_admin?: boolean;
   hasParishAccess: boolean;
   createdAt: string;
   push_token?: string | null;

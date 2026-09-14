@@ -12,9 +12,10 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { ALL_GROUPS } from '@/constants/groups';
+import { getGroupMetadata } from '@/constants/groups';
 import { Gradients } from '@/constants/theme';
-import { ActivityService } from '@/lib/supabase/services/activity';
+import { useGroupsQuery } from '@/hooks/queries/useGroups';
+import { useRequestGroupChangeMutation } from '@/hooks/mutations/useGroups';
 import { useAlert } from '@/context/FeedbackContext';
 
 export default function GroupAccessRequestScreen() {
@@ -26,39 +27,38 @@ export default function GroupAccessRequestScreen() {
 
   const [reason, setReason] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const group = ALL_GROUPS.find((g) => g.id === groupId) ?? ALL_GROUPS[0];
+  // `groupId` is a database id, so the group has to be resolved from the live
+  // list. Looking it up in the ALL_GROUPS constant never matched, which is why
+  // this screen used to fall back to showing the first group every time.
+  const { data: groups = [] } = useGroupsQuery();
+  const dbGroup = groups.find((g) => g.id === groupId);
+  const meta = getGroupMetadata(dbGroup?.name ?? '');
+  const group = {
+    name: dbGroup?.name?.trim() ?? 'This group',
+    description: dbGroup?.description ?? '',
+    color: meta.color,
+    icon: meta.icon,
+  };
+
+  const { mutateAsync: requestGroupChange, isPending: loading } = useRequestGroupChangeMutation();
 
   const handleSubmitRequest = async () => {
-    if (!user?.id) {
+    if (!user?.id || !groupId) {
       showAlert({ title: 'Error', message: 'User not authenticated', type: 'error' });
       return;
     }
 
-    setLoading(true);
     try {
-      const activityService = new ActivityService();
-      const { error } = await activityService.logGroupJoinRequest(
-        user.id,
-        groupId || '',
-        group.name
-      );
-
-      if (error) {
-        showAlert({ title: 'Failed', message: 'Failed to submit request. Please try again.', type: 'error' });
-        console.error('Activity logging error:', error);
-        setLoading(false);
-        return;
-      }
-
+      await requestGroupChange({ targetGroupId: groupId, reason: reason.trim() || undefined });
       showAlert({ title: 'Success', message: 'Request sent successfully!', type: 'success' });
       setSubmitted(true);
-    } catch (err) {
-      showAlert({ title: 'Error', message: 'An error occurred. Please try again.', type: 'error' });
-      console.error('Submit request error:', err);
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      showAlert({
+        title: 'Failed',
+        message: err?.message || 'Failed to submit request. Please try again.',
+        type: 'error',
+      });
     }
   };
 

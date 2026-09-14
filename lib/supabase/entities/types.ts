@@ -7,6 +7,18 @@ export type UserRole = 'member' | 'group_admin' | 'parish_admin';
 export type Sex = 'Male' | 'Female';
 
 /**
+ * A duty role is a title only — it carries no permissions of its own.
+ * Access is decided entirely by `UserRole`.
+ */
+export type DutyRole = 'parish_priest' | 'assistant_priest' | 'parish_secretary';
+
+export const DUTY_ROLE_LABELS: Record<DutyRole, string> = {
+  parish_priest: 'Parish Priest',
+  assistant_priest: 'Assistant Priest',
+  parish_secretary: 'Parish Secretary',
+};
+
+/**
  * Maps to the public.parishes table.
  */
 export interface DatabaseParish {
@@ -52,6 +64,9 @@ export interface DatabaseProfile {
   groupId?: string | null;
   groupName?: string | null;
   role: UserRole;
+  duty_role?: DutyRole | null;
+  /** Platform administrator. Orthogonal to `role`, not a replacement. */
+  is_super_admin?: boolean;
   hasParishAccess: boolean;
   createdAt: string; // timestamptz string
   push_token?: string | null;
@@ -102,6 +117,30 @@ export interface DatabaseDonation {
   approved_at?: string;
   approved_by?: string;
   admin_notes?: string;
+  /** What this payment is for. Defaults to 'offering' for older rows. */
+  kind?: PaymentKind;
+  celebration_id?: string | null;
+  /** The member being celebrated, kept even if the celebration is removed. */
+  beneficiary_id?: string | null;
+  prayer_note?: string | null;
+  bank_account_id?: string | null;
+  /** Hides the sender's name from the celebrant. Never hides it from admins. */
+  is_anonymous?: boolean;
+}
+
+/**
+ * One celebration wish as the celebrant sees it.
+ *
+ * Amounts are absent by design: the money goes to the parish account rather
+ * than to the celebrant, so showing figures would promise something the app
+ * does not deliver.
+ */
+export interface CelebrationWish {
+  wish_id: string;
+  sender_name: string;
+  message: string;
+  wished_on: string; // YYYY-MM-DD
+  sent_anonymously: boolean;
 }
 
 /**
@@ -141,6 +180,8 @@ export interface DatabaseGroupUpdate {
 /**
  * Maps to the public.group_requests table.
  */
+export type RequestStatus = 'pending' | 'approved' | 'rejected';
+
 export interface DatabaseGroupRequest {
   id: string; // PK - uuid
   user_id?: string | null; // FK to profiles.id
@@ -149,6 +190,36 @@ export interface DatabaseGroupRequest {
   targetGroupId: string;
   currentGroupId?: string | null;
   requestDate: string; // timestamptz string
+  reason?: string | null;
+  status: RequestStatus;
+  decided_at?: string | null;
+  decided_by?: string | null;
+  /** Joined in by the admin queries, not a column. */
+  targetGroup?: { name: string } | null;
+  currentGroup?: { name: string } | null;
+}
+
+/**
+ * Maps to the public.parish_transfer_requests table.
+ *
+ * `from_parish_id` is the parish being left, and its admins are the ones who
+ * decide the request.
+ */
+export interface DatabaseParishTransferRequest {
+  id: string; // PK - uuid
+  user_id: string; // FK to profiles.id
+  userName: string;
+  from_parish_id?: string | null;
+  to_parish_id: string;
+  reason?: string | null;
+  status: RequestStatus;
+  requested_at: string; // timestamptz string
+  decided_at?: string | null;
+  decided_by?: string | null;
+  decision_note?: string | null;
+  /** Joined in by the queries, not columns. */
+  fromParish?: { name: string } | null;
+  toParish?: { name: string } | null;
 }
 
 /**
@@ -182,4 +253,130 @@ export interface DatabaseMassBooking {
   parishName: string;
   createdAt: string; // timestamptz string
   refId: string; // unique booking ref
+}
+
+/** What a row in public.parish_schedule_items describes. */
+export type ScheduleKind = 'mass' | 'devotion' | 'sacrament';
+
+/**
+ * Maps to the public.parish_schedule_items table.
+ *
+ * For `mass` rows, `label` is a day name and `times` holds that day's mass
+ * times. For `devotion` and `sacrament` rows, `label` names it and `details`
+ * carries the description.
+ */
+export interface DatabaseScheduleItem {
+  id: string; // PK - uuid
+  parish_id: string;
+  kind: ScheduleKind;
+  label: string;
+  times: string[];
+  details?: string | null;
+  /** Ionicons name. Null means the app picks a default for the kind. */
+  icon?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Maps to the public.parish_daily_readings table. One row per parish per day;
+ * when a parish has not posted, the app falls back to the scripture API.
+ */
+export interface DatabaseDailyReading {
+  id: string; // PK - uuid
+  parish_id: string;
+  reading_date: string; // YYYY-MM-DD
+  first_reading?: string | null;
+  psalm?: string | null;
+  second_reading?: string | null;
+  gospel?: string | null;
+  reflection?: string | null;
+  author?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * What a payment record is for. All three land in the same admin
+ * verification queue; no money moves through the app.
+ */
+export type PaymentKind = 'offering' | 'support' | 'celebration';
+
+export type CelebrationKind =
+  | 'birthday'
+  | 'wedding_anniversary'
+  | 'ordination'
+  | 'profession'
+  | 'other';
+
+export const CELEBRATION_KIND_LABELS: Record<CelebrationKind, string> = {
+  birthday: 'Birthday',
+  wedding_anniversary: 'Wedding Anniversary',
+  ordination: 'Ordination',
+  profession: 'Religious Profession',
+  other: 'Celebration',
+};
+
+/** Maps to the public.parish_bank_accounts table. */
+export interface DatabaseBankAccount {
+  id: string; // PK - uuid
+  parish_id: string;
+  label: string;
+  bank_name: string;
+  account_name: string;
+  /** Text, not a number: account numbers carry leading zeros. */
+  account_number: string;
+  instructions?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Maps to the public.celebrations table. Posted by a parish admin the way
+ * ads are, naming the member being celebrated.
+ */
+export interface DatabaseCelebration {
+  id: string; // PK - uuid
+  parish_id: string;
+  member_id?: string | null;
+  celebrant_name: string;
+  kind: CelebrationKind;
+  title: string;
+  body?: string | null;
+  image_url?: string | null;
+  celebration_date?: string | null; // YYYY-MM-DD
+  starts_on: string; // YYYY-MM-DD
+  ends_on?: string | null; // YYYY-MM-DD
+  is_active: boolean;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+
+/** A row in public.admin_audit_log. */
+export interface DatabaseAuditEntry {
+  id: string;
+  actor_id?: string | null;
+  actor_name?: string | null;
+  action: string;
+  target_type?: string | null;
+  target_id?: string | null;
+  detail?: Record<string, any> | null;
+  created_at: string;
+}
+
+/** One row of sa_parish_overview. Counts only — never amounts. */
+export interface ParishOverviewRow {
+  parish_id: string;
+  parish_name: string;
+  diocese: string;
+  member_count: number;
+  admin_count: number;
+  unverified_payments: number;
 }

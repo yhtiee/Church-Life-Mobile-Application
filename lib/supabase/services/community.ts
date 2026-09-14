@@ -231,61 +231,24 @@ export class ComunityService {
    * group's membership, removes them from their previous group (if any),
    * updates their profile, and clears the request (raw implementation).
    */
+  /**
+   * Approves a pending group join or transition request.
+   *
+   * `decide_group_request` performs the membership move atomically and checks
+   * that the caller is a parish admin for the requesting member's parish.
+   */
   async approveGroupRequestRaw(request: DatabaseGroupRequest) {
     try {
-      const { data: targetGroup, error: targetError } = await supaBaseClient
-        .from('groups')
-        .select('name, member_ids')
-        .eq('id', request.targetGroupId)
-        .single();
+      const { error } = await supaBaseClient.rpc('decide_group_request', {
+        request_id: request.id,
+        approve: true,
+      });
 
-      if (targetError) throw targetError;
-
-      if (request.user_id) {
-        const targetMembers: string[] = targetGroup.member_ids || [];
-        if (!targetMembers.includes(request.user_id)) {
-          const { error: addError } = await supaBaseClient
-            .from('groups')
-            .update({ member_ids: [...targetMembers, request.user_id] })
-            .eq('id', request.targetGroupId);
-          if (addError) throw addError;
-        }
-
-        if (request.currentGroupId) {
-          const { data: currentGroup, error: currentError } = await supaBaseClient
-            .from('groups')
-            .select('member_ids')
-            .eq('id', request.currentGroupId)
-            .single();
-
-          if (!currentError && currentGroup) {
-            const currentMembers: string[] = currentGroup.member_ids || [];
-            const updatedMembers = currentMembers.filter((id) => id !== request.user_id);
-            if (updatedMembers.length !== currentMembers.length) {
-              await supaBaseClient
-                .from('groups')
-                .update({ member_ids: updatedMembers })
-                .eq('id', request.currentGroupId);
-            }
-          }
-        }
-
-        const { error: profileError } = await supaBaseClient
-          .from('profiles')
-          .update({ groupId: request.targetGroupId, groupName: targetGroup.name })
-          .eq('id', request.user_id);
-
-        if (profileError) throw profileError;
-      }
-
-      const { error: deleteError } = await supaBaseClient
-        .from('group_requests')
-        .delete()
-        .eq('id', request.id);
-
-      if (deleteError) throw deleteError;
-
-      return { data: { groupName: targetGroup.name, userName: request.userName }, error: null };
+      if (error) throw error;
+      return {
+        data: { groupName: request.targetGroup?.name, userName: request.userName },
+        error: null,
+      };
     } catch (error: any) {
       console.error(`Error approving group request (${request.id}):`, error.message || error);
       return { data: null, error };
@@ -304,12 +267,16 @@ export class ComunityService {
   /**
    * Rejects (deletes) a pending group transition/join request.
    */
+  /**
+   * Rejects a pending request. The row is kept and marked rejected so the
+   * decision stays on record, rather than being deleted as it was before.
+   */
   async rejectGroupRequest(requestId: string) {
     try {
-      const { error } = await supaBaseClient
-        .from('group_requests')
-        .delete()
-        .eq('id', requestId);
+      const { error } = await supaBaseClient.rpc('decide_group_request', {
+        request_id: requestId,
+        approve: false,
+      });
 
       if (error) throw error;
       return { data: { id: requestId }, error: null };
@@ -318,6 +285,34 @@ export class ComunityService {
       return { data: null, error };
     }
   }
+
+  /**
+   * Submits a request to join a secured group, or to move between groups.
+   * Writes to `group_requests`, which is what the admin queue reads.
+   */
+  async requestGroupChangeRaw(targetGroupId: string, reason?: string) {
+    try {
+      const { data, error } = await supaBaseClient.rpc('request_group_change', {
+        target_group_id: targetGroupId,
+        reason: reason ?? null,
+      });
+
+      if (error) throw error;
+      return { data: data as DatabaseGroupRequest, error: null };
+    } catch (error: any) {
+      console.error('Error submitting group request:', error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  requestGroupChange = notifyOnSuccess(
+    this.requestGroupChangeRaw.bind(this),
+    (_result) => ({
+      title: 'Request Submitted',
+      body: 'Your group request has been sent to the parish admin for approval.',
+      type: 'group',
+    })
+  );
 
   /**
    * Fetches chat messages for a specific group channel.
@@ -597,24 +592,22 @@ export class ComunityService {
     }
   }
 
-  async joinOpenGroupRaw(userId: string, groupId: string) {
+  /**
+   * Joins an open group.
+   *
+   * Delegates to the `join_open_group` function so the member is added to
+   * groups.member_ids and the profile is updated in one transaction. The
+   * previous implementation wrote only the profile, which left members
+   * invisible to every screen that filters on member_ids.
+   */
+  async joinOpenGroupRaw(_userId: string, groupId: string) {
     try {
-      const { data: group, error: fetchError } = await supaBaseClient
-        .from('groups')
-        .select('name')
-        .eq('id', groupId)
-        .single();
+      const { data, error } = await supaBaseClient.rpc('join_open_group', {
+        target_group_id: groupId,
+      });
 
-      if (fetchError) throw fetchError;
-
-      const { error: profileError } = await supaBaseClient
-        .from('profiles')
-        .update({ groupId: groupId, groupName: group.name })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
-
-      return { data: { groupId, groupName: group.name }, error: null };
+      if (error) throw error;
+      return { data: { groupId, groupName: (data as Group)?.name }, error: null };
     } catch (error: any) {
       console.error('Error joining open group:', error.message || error);
       return { data: null, error };

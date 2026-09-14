@@ -16,6 +16,30 @@ export const QUERY_KEYS = {
   allProfiles: () => ['allProfiles'] as const,
   notifications: (userId: string) => ['notifications', userId] as const,
   groupRequests: () => ['groupRequests'] as const,
+  // Platform lists take their filters as the second key part, so invalidating
+  // the first part alone refreshes every filtered and paged variant at once.
+  parishOverview: (filters?: object) => ['parishOverview', filters ?? {}] as const,
+  dioceses: () => ['dioceses'] as const,
+  platformProfiles: (filters?: object) => ['platformProfiles', filters ?? {}] as const,
+  globalGroups: (filters?: object) => ['globalGroups', filters ?? {}] as const,
+  auditLog: (filters?: object) => ['auditLog', filters ?? {}] as const,
+  bankAccounts: (parishId: string, activeOnly: boolean) =>
+    ['bankAccounts', parishId, activeOnly] as const,
+  celebrations: (parishId: string, scope: string) =>
+    ['celebrations', parishId, scope] as const,
+  celebration: (id: string) => ['celebration', id] as const,
+  celebrationWishes: (celebrationId: string) =>
+    ['celebrationWishes', celebrationId] as const,
+  celebrationSupport: (celebrationId: string) =>
+    ['celebrationSupport', celebrationId] as const,
+  pendingPayments: (parishId: string) => ['pendingPayments', parishId] as const,
+  parishSchedule: (parishId: string, kind?: string) =>
+    ['parishSchedule', parishId, kind ?? 'all'] as const,
+  parishReading: (parishId: string, dateKey: string) =>
+    ['parishReading', parishId, dateKey] as const,
+  parishReadings: (parishId: string) => ['parishReadings', parishId] as const,
+  parishTransfers: (parishId: string) => ['parishTransfers', parishId] as const,
+  myParishTransfers: (userId: string) => ['myParishTransfers', userId] as const,
   allGroupUpdates: () => ['allGroupUpdates'] as const,
   ads: (scope: string) => ['ads', scope] as const,
   ad: (id: string) => ['ads', id] as const,

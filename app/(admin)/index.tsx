@@ -46,11 +46,27 @@ const QUICK_ACTIONS = [
   },
   {
     icon: 'image-outline' as const,
-    label: 'Ads',
+    label: 'Ads & Celebrations',
     bg: '#EDE9FE',
     iconColor: '#7C3AED',
     gradient: Gradients.cardPurple,
     route: '/(modals)/admin-ads',
+  },
+  {
+    icon: 'time-outline' as const,
+    label: 'Schedules',
+    bg: '#DBEAFE',
+    iconColor: '#2563EB',
+    gradient: Gradients.heroBlue,
+    route: '/(modals)/admin-schedules',
+  },
+  {
+    icon: 'book-outline' as const,
+    label: 'Readings',
+    bg: '#FEE2E2',
+    iconColor: '#DC2626',
+    gradient: Gradients.cardGold,
+    route: '/(modals)/admin-daily-reading',
   },
 ] as const;
 
@@ -173,7 +189,11 @@ export default function AdminDashboard() {
           </Text>
           <View style={styles.quickRow}>
             {QUICK_ACTIONS.map((qa, i) => (
-              <Animated.View key={qa.label} entering={ZoomIn.delay(i * 50 + 140).duration(350)}>
+              <Animated.View
+                key={qa.label}
+                entering={ZoomIn.delay(i * 50 + 140).duration(350)}
+                style={styles.quickTileWrap}
+              >
                 <TouchableOpacity
                   style={styles.quickTile}
                   activeOpacity={0.8}
@@ -192,7 +212,7 @@ export default function AdminDashboard() {
                       styles.quickLabel,
                       { color: colors.textSecondary, fontFamily: typography.fontFamily.semiBold },
                     ]}
-                    numberOfLines={1}
+                    numberOfLines={2}
                   >
                     {qa.label}
                   </Text>
@@ -377,14 +397,21 @@ const styles = StyleSheet.create({
   // Quick actions
   quickRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    // Wraps to a second line rather than overflowing. The row previously held
+    // four fixed-width tiles and had no wrap or scroll, so anything past the
+    // fourth was clipped off-screen with no way to reach it.
+    flexWrap: 'wrap',
     paddingHorizontal: 20,
     paddingBottom: 4,
+    rowGap: 18,
     marginBottom: 20,
+  },
+  quickTileWrap: {
+    // Four per row at any screen width, so the tiles stay aligned in a grid.
+    width: '25%',
   },
   quickTile: {
     alignItems: 'center',
-    width: 70,
   },
   quickIconBox: {
     width: 58,

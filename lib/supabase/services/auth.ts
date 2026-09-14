@@ -1,5 +1,6 @@
 import { supaBaseClient } from '../client';
 import { AuthUser, RegisterPayload } from '@/context/AuthContext';
+import type { DutyRole, UserRole } from '../entities/types';
 
 export class AuthService {
 
@@ -201,6 +202,35 @@ export class AuthService {
       return { data: data as AuthUser[], error: null };
     } catch (error: any) {
       console.error(`Error fetching profiles for parish (${parishId}):`, error.message || error);
+      return { data: null, error };
+    }
+  }
+
+  /**
+   * Sets another member's access role and/or duty title.
+   *
+   * Routed through the `assign_parish_member_roles` database function rather
+   * than a direct update: it is the only path that enforces the parish
+   * boundary, keeps the last parish admin in place, and limits writes to
+   * those two columns. Pass `clearDutyRole` to remove a title.
+   */
+  async assignMemberRoles(
+    targetUserId: string,
+    updates: { role?: UserRole; dutyRole?: DutyRole | null }
+  ) {
+    try {
+      const clearDutyRole = 'dutyRole' in updates && updates.dutyRole === null;
+      const { data, error } = await supaBaseClient.rpc('assign_parish_member_roles', {
+        target_user_id: targetUserId,
+        new_role: updates.role ?? null,
+        new_duty_role: clearDutyRole ? null : updates.dutyRole ?? null,
+        clear_duty_role: clearDutyRole,
+      });
+
+      if (error) throw error;
+      return { data: data as AuthUser, error: null };
+    } catch (error: any) {
+      console.error(`Error assigning roles for member (${targetUserId}):`, error.message || error);
       return { data: null, error };
     }
   }

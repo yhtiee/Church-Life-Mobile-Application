@@ -88,6 +88,33 @@ export const SECURED_GROUPS: ChurchGroup[] = [
     icon: 'shield-outline',
     color: '#3F51B5',
   },
+  {
+    id: 'bishop',
+    name: 'Bishop',
+    shortName: 'Bishop',
+    description: 'The bishop of the diocese, exercising pastoral oversight of the parishes and clergy entrusted to his care.',
+    type: 'secured',
+    icon: 'ribbon-outline',
+    color: '#6B21A8',
+  },
+  {
+    id: 'clergy',
+    name: 'Clergy',
+    shortName: 'Clergy',
+    description: 'Ordained ministers serving the parish, including priests and deacons engaged in sacramental and pastoral ministry.',
+    type: 'secured',
+    icon: 'people-circle-outline',
+    color: '#1D3557',
+  },
+  {
+    id: 'religious',
+    name: 'Religious',
+    shortName: 'Religious',
+    description: 'Members of consecrated religious institutes, living under vows and serving the parish community in their charism.',
+    type: 'secured',
+    icon: 'rose-outline',
+    color: '#0F766E',
+  },
 ];
 
 export const ALL_GROUPS = [...OPEN_GROUPS, ...SECURED_GROUPS];
@@ -114,6 +141,15 @@ export function getGroupMetadata(groupName: string) {
   }
   if (name.includes('laity')) {
     return { shortName: 'Laity', icon: 'shield-outline', color: '#3F51B5', name: name };
+  }
+  if (name.includes('bishop')) {
+    return { shortName: 'Bishop', icon: 'ribbon-outline', color: '#6B21A8', name: name };
+  }
+  if (name.includes('clergy')) {
+    return { shortName: 'Clergy', icon: 'people-circle-outline', color: '#1D3557', name: name };
+  }
+  if (name.includes('religious')) {
+    return { shortName: 'Religious', icon: 'rose-outline', color: '#0F766E', name: name };
   }
   // Default fallback if no match found
   return { shortName: groupName.substring(0, 5), icon: 'people-outline', color: '#1D3557', name: name };

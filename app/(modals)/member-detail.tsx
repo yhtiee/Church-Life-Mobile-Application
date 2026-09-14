@@ -16,6 +16,8 @@ import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import GlobalLoader from '@/components/ui/GlobalLoader';
 import { AuthService } from '@/lib/supabase/services/auth';
+import { MemberRoleControls } from '@/components/admin/MemberRoleControls';
+import { DUTY_ROLE_LABELS } from '@/lib/supabase/entities/types';
 
 export default function MemberDetailModal() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -117,6 +119,14 @@ export default function MemberDetailModal() {
                     glow 
                   />
                 ) : null}
+                {member?.duty_role ? (
+                  <Badge
+                    label={DUTY_ROLE_LABELS[member.duty_role as keyof typeof DUTY_ROLE_LABELS]}
+                    variant="primary"
+                    size="sm"
+                    glow
+                  />
+                ) : null}
                 {joinedGroups.map((g) => {
                   const meta = getGroupMetadata(g.name);
                   return (
@@ -172,6 +182,13 @@ export default function MemberDetailModal() {
             <InfoRow label="Confirmation" value={member?.confirmationDate || 'Not recorded'} icon="flame-outline" isLast />
           </Card>
         </Animated.View>
+
+        {/* ── Roles (parish admins only) ── */}
+        {member && (
+          <Animated.View entering={FadeInDown.delay(340).duration(450)}>
+            <MemberRoleControls member={member} onUpdated={setMember} />
+          </Animated.View>
+        )}
 
       </ScrollView>
 
