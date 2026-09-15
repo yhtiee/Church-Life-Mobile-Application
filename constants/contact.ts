@@ -7,6 +7,13 @@
  */
 export const ADMIN_WHATSAPP = '2348000000000'; // TODO: replace with real admin number
 
+/**
+ * WhatsApp number for the platform super admin, shown on the register screen
+ * to people whose parish is not in the directory yet. Local format is fine;
+ * buildWhatsAppUrl converts it to international format.
+ */
+export const SUPER_ADMIN_WHATSAPP = '08131260740';
+
 /** Display-friendly version of the admin number (with +). */
 export const ADMIN_WHATSAPP_DISPLAY = `+${ADMIN_WHATSAPP}`;
 

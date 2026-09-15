@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Modal, FlatList } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Modal, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 import { useAlert } from '@/context/FeedbackContext';
@@ -150,7 +150,10 @@ export function PlatformPeople() {
       />
 
       <Modal visible={!!selected} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.backdrop}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.backdrop}
+        >
           <ScrollView contentContainerStyle={styles.sheetScroll} keyboardShouldPersistTaps="handled">
             <View
               style={[
@@ -310,7 +313,7 @@ export function PlatformPeople() {
               />
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

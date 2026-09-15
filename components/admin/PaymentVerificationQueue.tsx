@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -201,83 +201,88 @@ export function PaymentVerificationQueue() {
       )}
 
       <Modal visible={!!reviewing} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.backdrop}>
-          <View
-            style={[
-              styles.sheet,
-              { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-            ]}
-          >
-            <Text
-              style={{ fontSize: 17, color: colors.text, fontFamily: typography.fontFamily.bold }}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.backdrop}
+        >
+          <ScrollView contentContainerStyle={styles.sheetScroll} keyboardShouldPersistTaps="handled">
+            <View
+              style={[
+                styles.sheet,
+                { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+              ]}
             >
-              Verify payment
-            </Text>
-            <Text
-              style={{
-                fontSize: 13,
-                color: colors.textSecondary,
-                fontFamily: typography.fontFamily.regular,
-                marginTop: 6,
-                lineHeight: 19,
-              }}
-            >
-              {reviewing?.payer?.fullName ?? 'A member'} reported {reviewing?.currency}
-              {Number(reviewing?.amount ?? 0).toLocaleString()}. Confirm it against your bank
-              statement before approving.
-            </Text>
-
-            <View style={{ marginTop: 16 }}>
-              <Label label="Amount received" helperText="Change it if a different sum landed" />
-              <Input
-                value={confirmedAmount}
-                onChangeText={(v) => setConfirmedAmount(v.replace(/[^0-9.]/g, ''))}
-                keyboardType="decimal-pad"
-                leftIcon="cash-outline"
-              />
-            </View>
-
-            <View style={{ marginTop: 12 }}>
-              <Label label="Note" helperText="Optional" />
-              <Input
-                placeholder="Reference or reason"
-                value={note}
-                onChangeText={setNote}
-                multiline
-                numberOfLines={3}
-                style={{ height: 76, textAlignVertical: 'top' }}
-              />
-            </View>
-
-            <View style={styles.sheetActions}>
-              <Button
-                label="Reject"
-                onPress={() => decide(false)}
-                variant="secondary"
-                loading={isPending}
-                style={{ flex: 1 }}
-              />
-              <Button
-                label="Verify"
-                onPress={() => decide(true)}
-                loading={isPending}
-                style={{ flex: 1 }}
-              />
-            </View>
-
-            <TouchableOpacity onPress={() => setReviewing(null)} style={styles.cancel}>
+              <Text
+                style={{ fontSize: 17, color: colors.text, fontFamily: typography.fontFamily.bold }}
+              >
+                Verify payment
+              </Text>
               <Text
                 style={{
                   fontSize: 13,
-                  color: colors.textMuted,
-                  fontFamily: typography.fontFamily.medium,
+                  color: colors.textSecondary,
+                  fontFamily: typography.fontFamily.regular,
+                  marginTop: 6,
+                  lineHeight: 19,
                 }}
               >
-                Cancel
+                {reviewing?.payer?.fullName ?? 'A member'} reported {reviewing?.currency}
+                {Number(reviewing?.amount ?? 0).toLocaleString()}. Confirm it against your bank
+                statement before approving.
               </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+
+              <View style={{ marginTop: 16 }}>
+                <Label label="Amount received" helperText="Change it if a different sum landed" />
+                <Input
+                  value={confirmedAmount}
+                  onChangeText={(v) => setConfirmedAmount(v.replace(/[^0-9.]/g, ''))}
+                  keyboardType="decimal-pad"
+                  leftIcon="cash-outline"
+                />
+              </View>
+
+              <View style={{ marginTop: 12 }}>
+                <Label label="Note" helperText="Optional" />
+                <Input
+                  placeholder="Reference or reason"
+                  value={note}
+                  onChangeText={setNote}
+                  multiline
+                  numberOfLines={3}
+                  style={{ height: 76, textAlignVertical: 'top' }}
+                />
+              </View>
+
+              <View style={styles.sheetActions}>
+                <Button
+                  label="Reject"
+                  onPress={() => decide(false)}
+                  variant="secondary"
+                  loading={isPending}
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  label="Verify"
+                  onPress={() => decide(true)}
+                  loading={isPending}
+                  style={{ flex: 1 }}
+                />
+              </View>
+
+              <TouchableOpacity onPress={() => setReviewing(null)} style={styles.cancel}>
+                <Text
+                  style={{
+                    fontSize: 13,
+                    color: colors.textMuted,
+                    fontFamily: typography.fontFamily.medium,
+                  }}
+                >
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -298,7 +303,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 12,
   },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  sheetScroll: { flexGrow: 1, justifyContent: 'flex-end' },
   sheet: { padding: 22, paddingBottom: 30 },
   sheetActions: { flexDirection: 'row', gap: 12, marginTop: 20 },
   cancel: { alignItems: 'center', marginTop: 14 },

@@ -129,9 +129,14 @@ export default function SupportCelebrationScreen() {
       <ScreenHeader title="Send Support" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           {celebration && (
             <Animated.View entering={FadeInDown.duration(400)}>
               <Card elevation="sm" style={{ padding: 18, borderRadius: radius.lg }}>

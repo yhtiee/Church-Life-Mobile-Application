@@ -9,6 +9,8 @@ export interface Parish {
   diocese: string;
   state: string;
   country: string;
+  city?: string | null;
+  address?: string | null;
   founded?: string | null;
   patron?: string | null;
   bishop?: string | null;

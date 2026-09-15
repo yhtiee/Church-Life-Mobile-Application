@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, Animated, Dimensions,
+  KeyboardAvoidingView, Platform, Animated, Dimensions, Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
@@ -20,7 +20,11 @@ import { getGroupMetadata } from '@/constants/groups';
 import { useOpenGroupsQuery } from '@/hooks/queries/useGroups';
 import { useParishesQuery } from '@/hooks/queries/useParishes';
 import { supaBaseClient } from '@/lib/supabase/client';
-import { normalizePhoneForWhatsApp } from '@/constants/contact';
+import {
+  normalizePhoneForWhatsApp,
+  buildWhatsAppUrl,
+  SUPER_ADMIN_WHATSAPP,
+} from '@/constants/contact';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -135,6 +139,15 @@ export default function RegisterScreen() {
     }
   };
 
+  const handleContactSuperAdmin = () => {
+    const message = "Hello Super Admin, I'm trying to register on the ChurchLife app, but my parish is not listed in the directory. Please assist me with getting my parish added.";
+    const url = buildWhatsAppUrl(message, SUPER_ADMIN_WHATSAPP);
+    Linking.openURL(url).catch((err) => {
+      console.error('Failed to open WhatsApp URL:', err);
+      showToast(`Could not open WhatsApp. Please reach out to ${SUPER_ADMIN_WHATSAPP} directly.`, 'error');
+    });
+  };
+
   const progressWidth = progressAnim.interpolate({
     inputRange: [0, 1], outputRange: ['0%', '100%'],
   });
@@ -142,7 +155,7 @@ export default function RegisterScreen() {
   return (
     <ScreenWrapper edges={['top', 'left', 'right']}>
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
         style={{ flex: 1 }}
       >
@@ -351,6 +364,34 @@ export default function RegisterScreen() {
                 </View>
               )}
 
+              {noParish && (
+                <TouchableOpacity
+                  onPress={handleContactSuperAdmin}
+                  activeOpacity={0.85}
+                  style={[
+                    styles.whatsappCtaBox,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: '#25D366',
+                      borderRadius: radius.md,
+                    },
+                  ]}
+                >
+                  <View style={[styles.whatsappIconCircle, { backgroundColor: '#25D366' }]}>
+                    <Ionicons name="logo-whatsapp" size={20} color="#FFFFFF" />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={{ fontSize: 13, fontFamily: typography.fontFamily.bold, color: colors.text }}>
+                      Can’t find your parish?
+                    </Text>
+                    <Text style={{ fontSize: 12, fontFamily: typography.fontFamily.regular, color: colors.textSecondary, marginTop: 2 }}>
+                      Reach Super Admin on WhatsApp ({SUPER_ADMIN_WHATSAPP})
+                    </Text>
+                  </View>
+                  <Ionicons name="open-outline" size={16} color="#25D366" />
+                </TouchableOpacity>
+              )}
+
               {/* Group cards */}
               <Text style={[styles.fieldLabel, { fontFamily: typography.fontFamily.medium, color: colors.textSecondary, marginTop: 8 }]}>
                 Church Group *
@@ -436,6 +477,8 @@ const styles = StyleSheet.create({
   checkBadge: { position: 'absolute', top: 8, right: 8, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   checkRow: { flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1, marginBottom: 12 },
   noParishNote: { flexDirection: 'row', alignItems: 'flex-start', padding: 12, marginBottom: 8 },
+  whatsappCtaBox: { flexDirection: 'row', alignItems: 'center', padding: 12, borderWidth: 1.5, marginBottom: 16 },
+  whatsappIconCircle: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   errorBox: { flexDirection: 'row', alignItems: 'flex-start', padding: 12, marginBottom: 16 },
   loginLink: { alignItems: 'center', marginTop: 28 },
 });

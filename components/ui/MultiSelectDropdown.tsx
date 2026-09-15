@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   ScrollView,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -176,164 +177,173 @@ export function MultiSelectDropdown({
           <View style={styles.backdrop} />
         </TouchableWithoutFeedback>
 
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors.surface,
-              height: sheetHeight,
-              paddingBottom: insets.bottom + 8,
-            },
-          ]}
+        {/* The sheet is pinned to the bottom at a fixed height, so it has to
+            be lifted with padding. `height` shrinks the wrapper instead, which
+            pushes a bottom-pinned sheet down behind the keyboard. */}
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.sheetContainer}
+          pointerEvents="box-none"
         >
-          {/* Drag Handle */}
-          <View style={[styles.handle, { backgroundColor: colors.border }]} />
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.surface,
+                height: sheetHeight,
+                paddingBottom: insets.bottom + 8,
+              },
+            ]}
+          >
+            {/* Drag Handle */}
+            <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
-          {/* Header */}
-          <View style={[styles.sheetHeader, { borderBottomColor: colors.divider }]}>
-            <View>
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.semiBold,
-                  fontSize: 16,
-                  color: colors.text,
-                }}
-              >
-                {label ?? 'Select'}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: typography.fontFamily.regular,
-                  fontSize: 12,
-                  color: colors.textMuted,
-                  marginTop: 2,
-                }}
-              >
-                {selectedValues.length} selected
-              </Text>
-            </View>
-            <TouchableOpacity onPress={close} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="close" size={22} color={colors.icon} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Search Bar */}
-          {searchable && (
-            <View style={[styles.searchBar, { backgroundColor: colors.surfaceMuted }]}>
-              <Ionicons name="search-outline" size={16} color={colors.icon} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search groups..."
-                placeholderTextColor={colors.textMuted}
-                style={{
-                  flex: 1,
-                  marginLeft: 8,
-                  color: colors.text,
-                  fontFamily: typography.fontFamily.regular,
-                  fontSize: 15,
-                }}
-                autoFocus
-              />
-              {query.length > 0 && (
-                <TouchableOpacity onPress={() => setQuery('')}>
-                  <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          {/* Options List */}
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.value}
-            showsVerticalScrollIndicator={true}
-            scrollEnabled={true}
-            nestedScrollEnabled={true}
-            renderItem={({ item }) => {
-              const isSelected = selectedValues.includes(item.value);
-              return (
-                <TouchableOpacity
-                  onPress={() => handleToggle(item.value, item)}
-                  style={[
-                    styles.option,
-                    {
-                      backgroundColor: isSelected ? colors.primaryLight : 'transparent',
-                      borderBottomColor: colors.divider,
-                    },
-                  ]}
+            {/* Header */}
+            <View style={[styles.sheetHeader, { borderBottomColor: colors.divider }]}>
+              <View>
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.semiBold,
+                    fontSize: 16,
+                    color: colors.text,
+                  }}
                 >
-                  <View style={{ flex: 1 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                      {item.icon && (
-                        <Ionicons
-                          name={item.icon as any}
-                          size={16}
-                          color={isSelected ? colors.primary : colors.textSecondary}
-                        />
-                      )}
-                      <Text
-                        style={{
-                          color: isSelected ? colors.primary : colors.text,
-                          fontFamily: isSelected
-                            ? typography.fontFamily.semiBold
-                            : typography.fontFamily.regular,
-                          fontSize: 15,
-                          flex: 1,
-                        }}
-                      >
-                        {item.label}
-                      </Text>
-                    </View>
-                    {item.subtitle && (
-                      <Text
-                        style={{
-                          color: colors.textMuted,
-                          fontSize: 12,
-                          fontFamily: typography.fontFamily.regular,
-                          marginTop: 4,
-                          marginLeft: item.icon ? 24 : 0,
-                        }}
-                      >
-                        {item.subtitle}
-                      </Text>
-                    )}
-                  </View>
-                  <View
+                  {label ?? 'Select'}
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.regular,
+                    fontSize: 12,
+                    color: colors.textMuted,
+                    marginTop: 2,
+                  }}
+                >
+                  {selectedValues.length} selected
+                </Text>
+              </View>
+              <TouchableOpacity onPress={close} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={22} color={colors.icon} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Search Bar */}
+            {searchable && (
+              <View style={[styles.searchBar, { backgroundColor: colors.surfaceMuted }]}>
+                <Ionicons name="search-outline" size={16} color={colors.icon} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Search groups..."
+                  placeholderTextColor={colors.textMuted}
+                  style={{
+                    flex: 1,
+                    marginLeft: 8,
+                    color: colors.text,
+                    fontFamily: typography.fontFamily.regular,
+                    fontSize: 15,
+                  }}
+                  autoFocus
+                />
+                {query.length > 0 && (
+                  <TouchableOpacity onPress={() => setQuery('')}>
+                    <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {/* Options List */}
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item.value}
+              showsVerticalScrollIndicator={true}
+              scrollEnabled={true}
+              nestedScrollEnabled={true}
+              renderItem={({ item }) => {
+                const isSelected = selectedValues.includes(item.value);
+                return (
+                  <TouchableOpacity
+                    onPress={() => handleToggle(item.value, item)}
                     style={[
-                      styles.checkbox,
+                      styles.option,
                       {
-                        borderColor: isSelected ? colors.primary : colors.border,
-                        backgroundColor: isSelected ? colors.primary : 'transparent',
+                        backgroundColor: isSelected ? colors.primaryLight : 'transparent',
+                        borderBottomColor: colors.divider,
                       },
                     ]}
                   >
-                    {isSelected && (
-                      <Ionicons name="checkmark" size={14} color="#FFFFFF" />
-                    )}
-                  </View>
-                </TouchableOpacity>
-              );
-            }}
-          />
+                    <View style={{ flex: 1 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                        {item.icon && (
+                          <Ionicons
+                            name={item.icon as any}
+                            size={16}
+                            color={isSelected ? colors.primary : colors.textSecondary}
+                          />
+                        )}
+                        <Text
+                          style={{
+                            color: isSelected ? colors.primary : colors.text,
+                            fontFamily: isSelected
+                              ? typography.fontFamily.semiBold
+                              : typography.fontFamily.regular,
+                            fontSize: 15,
+                            flex: 1,
+                          }}
+                        >
+                          {item.label}
+                        </Text>
+                      </View>
+                      {item.subtitle && (
+                        <Text
+                          style={{
+                            color: colors.textMuted,
+                            fontSize: 12,
+                            fontFamily: typography.fontFamily.regular,
+                            marginTop: 4,
+                            marginLeft: item.icon ? 24 : 0,
+                          }}
+                        >
+                          {item.subtitle}
+                        </Text>
+                      )}
+                    </View>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        {
+                          borderColor: isSelected ? colors.primary : colors.border,
+                          backgroundColor: isSelected ? colors.primary : 'transparent',
+                        },
+                      ]}
+                    >
+                      {isSelected && (
+                        <Ionicons name="checkmark" size={14} color="#FFFFFF" />
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
 
-          {/* Empty State */}
-          {filtered.length === 0 && (
-            <View style={styles.emptyState}>
-              <Ionicons name="search" size={40} color={colors.textMuted} />
-              <Text
-                style={{
-                  color: colors.textMuted,
-                  fontFamily: typography.fontFamily.regular,
-                  fontSize: 14,
-                  marginTop: 8,
-                }}
-              >
-                No groups found
-              </Text>
-            </View>
-          )}
-        </View>
+            {/* Empty State */}
+            {filtered.length === 0 && (
+              <View style={styles.emptyState}>
+                <Ionicons name="search" size={40} color={colors.textMuted} />
+                <Text
+                  style={{
+                    color: colors.textMuted,
+                    fontFamily: typography.fontFamily.regular,
+                    fontSize: 14,
+                    marginTop: 8,
+                  }}
+                >
+                  No groups found
+                </Text>
+              </View>
+            )}
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -361,11 +371,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
 
-  sheet: {
+  sheetContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+  },
+
+  sheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: 'hidden',

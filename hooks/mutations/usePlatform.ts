@@ -31,6 +31,8 @@ export function usePlatformMutations() {
       diocese: string;
       state: string;
       country: string;
+      city?: string | null;
+      address?: string | null;
     }) => {
       const res = await platformService.saveParish(parish);
       if (res.error) throw res.error;

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -117,110 +118,119 @@ export function Dropdown({
         </TouchableWithoutFeedback>
 
         {/* Sheet */}
-        <View
-          style={[
-            styles.sheet,
-            {
-              backgroundColor: colors.surface,
-              height: sheetHeight,
-              paddingBottom: insets.bottom + 8,
-            },
-          ]}
+        {/* The sheet is pinned to the bottom at a fixed height, so it has to
+            be lifted with padding. `height` shrinks the wrapper instead, which
+            pushes a bottom-pinned sheet down behind the keyboard. */}
+        <KeyboardAvoidingView
+          behavior="padding"
+          style={styles.sheetContainer}
+          pointerEvents="box-none"
         >
-          {/* Drag handle */}
-          <View style={[styles.handle, { backgroundColor: colors.border }]} />
+          <View
+            style={[
+              styles.sheet,
+              {
+                backgroundColor: colors.surface,
+                height: sheetHeight,
+                paddingBottom: insets.bottom + 8,
+              },
+            ]}
+          >
+            {/* Drag handle */}
+            <View style={[styles.handle, { backgroundColor: colors.border }]} />
 
-          {/* Header */}
-          <View style={[styles.sheetHeader, { borderBottomColor: colors.divider }]}>
-            <Text
-              style={{
-                fontFamily: typography.fontFamily.semiBold,
-                fontSize: 16,
-                color: colors.text,
-              }}
-            >
-              {label ?? 'Select'}
-            </Text>
-            <TouchableOpacity onPress={close} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-              <Ionicons name="close" size={22} color={colors.icon} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Search */}
-          {searchable && (
-            <View style={[styles.searchBar, { backgroundColor: colors.surfaceMuted }]}>
-              <Ionicons name="search-outline" size={16} color={colors.icon} />
-              <TextInput
-                value={query}
-                onChangeText={setQuery}
-                placeholder="Search..."
-                placeholderTextColor={colors.textMuted}
+            {/* Header */}
+            <View style={[styles.sheetHeader, { borderBottomColor: colors.divider }]}>
+              <Text
                 style={{
-                  flex: 1,
-                  marginLeft: 8,
+                  fontFamily: typography.fontFamily.semiBold,
+                  fontSize: 16,
                   color: colors.text,
-                  fontFamily: typography.fontFamily.regular,
-                  fontSize: 15,
                 }}
-                autoFocus
-              />
+              >
+                {label ?? 'Select'}
+              </Text>
+              <TouchableOpacity onPress={close} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Ionicons name="close" size={22} color={colors.icon} />
+              </TouchableOpacity>
             </View>
-          )}
 
-          {/* Options list */}
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.value}
-            showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              const isSelected = item.value === value;
-              return (
-                <TouchableOpacity
-                  onPress={() => {
-                    onChange(item.value, item);
-                    close();
+            {/* Search */}
+            {searchable && (
+              <View style={[styles.searchBar, { backgroundColor: colors.surfaceMuted }]}>
+                <Ionicons name="search-outline" size={16} color={colors.icon} />
+                <TextInput
+                  value={query}
+                  onChangeText={setQuery}
+                  placeholder="Search..."
+                  placeholderTextColor={colors.textMuted}
+                  style={{
+                    flex: 1,
+                    marginLeft: 8,
+                    color: colors.text,
+                    fontFamily: typography.fontFamily.regular,
+                    fontSize: 15,
                   }}
-                  style={[
-                    styles.option,
-                    {
-                      backgroundColor: isSelected ? colors.primaryLight : 'transparent',
-                      borderBottomColor: colors.divider,
-                    },
-                  ]}
-                >
-                  <View style={{ flex: 1 }}>
-                    <Text
-                      style={{
-                        color: isSelected ? colors.primary : colors.text,
-                        fontFamily: isSelected
-                          ? typography.fontFamily.semiBold
-                          : typography.fontFamily.regular,
-                        fontSize: 15,
-                      }}
-                    >
-                      {item.label}
-                    </Text>
-                    {item.subtitle && (
+                  autoFocus
+                />
+              </View>
+            )}
+
+            {/* Options list */}
+            <FlatList
+              data={filtered}
+              keyExtractor={(item) => item.value}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => {
+                const isSelected = item.value === value;
+                return (
+                  <TouchableOpacity
+                    onPress={() => {
+                      onChange(item.value, item);
+                      close();
+                    }}
+                    style={[
+                      styles.option,
+                      {
+                        backgroundColor: isSelected ? colors.primaryLight : 'transparent',
+                        borderBottomColor: colors.divider,
+                      },
+                    ]}
+                  >
+                    <View style={{ flex: 1 }}>
                       <Text
                         style={{
-                          color: colors.textMuted,
-                          fontSize: 12,
-                          fontFamily: typography.fontFamily.regular,
-                          marginTop: 2,
+                          color: isSelected ? colors.primary : colors.text,
+                          fontFamily: isSelected
+                            ? typography.fontFamily.semiBold
+                            : typography.fontFamily.regular,
+                          fontSize: 15,
                         }}
                       >
-                        {item.subtitle}
+                        {item.label}
                       </Text>
+                      {item.subtitle && (
+                        <Text
+                          style={{
+                            color: colors.textMuted,
+                            fontSize: 12,
+                            fontFamily: typography.fontFamily.regular,
+                            marginTop: 2,
+                          }}
+                        >
+                          {item.subtitle}
+                        </Text>
+                      )}
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
                     )}
-                  </View>
-                  {isSelected && (
-                    <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -244,12 +254,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
   },
 
-  // Bottom sheet
-  sheet: {
+  // Bottom sheet container
+  sheetContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+  },
+  sheet: {
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: 'hidden',

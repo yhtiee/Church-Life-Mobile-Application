@@ -15,7 +15,7 @@ import { PlatformAudit } from '@/components/platform/PlatformAudit';
 type Section = 'parishes' | 'people' | 'groups' | 'activity';
 
 const SECTIONS: { key: Section; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { key: 'parishes', label: 'Parishes', icon: 'business-outline' },
+  // { key: 'parishes', label: 'Parishes', icon: 'business-outline' },
   { key: 'people', label: 'People', icon: 'people-outline' },
   { key: 'groups', label: 'Groups', icon: 'albums-outline' },
   { key: 'activity', label: 'Activity', icon: 'time-outline' },
@@ -33,7 +33,7 @@ export default function PlatformScreen() {
   const { colors, typography, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
-  const [section, setSection] = useState<Section>('parishes');
+  const [section, setSection] = useState<Section>('people');
 
   if (!user?.is_super_admin) {
     return (
@@ -107,7 +107,7 @@ export default function PlatformScreen() {
       </View>
 
       <Animated.View key={section} entering={FadeInDown.duration(300)} style={{ flex: 1 }}>
-        {section === 'parishes' && <PlatformParishes />}
+        {/* {section === 'parishes' && <PlatformParishes />} */}
         {section === 'people' && <PlatformPeople />}
         {section === 'groups' && <PlatformGroups />}
         {section === 'activity' && <PlatformAudit />}

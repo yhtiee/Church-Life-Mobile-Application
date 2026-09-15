@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -476,82 +476,94 @@ export default function FinancesScreen() {
         animationType="fade"
         onRequestClose={closeActionModal}
       >
-        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
-            {actionModal.type === 'fulfill' ? (
-              <>
-                <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
-                  Record Fulfillment
-                </Text>
-                <Text style={[styles.modalDescription, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-                  Enter the actual amount received for this {actionModal.itemType}
-                </Text>
-                <Input
-                  placeholder="Enter fulfilled amount"
-                  value={fulfilledAmount}
-                  onChangeText={setFulfilledAmount}
-                  keyboardType="numeric"
-                  leftIcon="cash-outline"
-                />
-                <View style={styles.modalActions}>
-                  <Button
-                    label="Record"
-                    onPress={handleFulfill}
-                    fullWidth
-                    loading={fulfilling || fulfillingPledge}
-                    disabled={!fulfilledAmount}
-                    size="lg"
-                    style={{ marginBottom: 8 }}
+        {/* Lifts the sheet above the keyboard so the amount and reason fields
+            stay visible while typing. */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
+        >
+          <ScrollView
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end', width: '100%' }}
+            style={{ width: '100%' }}
+          >
+            <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
+              {actionModal.type === 'fulfill' ? (
+                <>
+                  <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
+                    Record Fulfillment
+                  </Text>
+                  <Text style={[styles.modalDescription, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+                    Enter the actual amount received for this {actionModal.itemType}
+                  </Text>
+                  <Input
+                    placeholder="Enter fulfilled amount"
+                    value={fulfilledAmount}
+                    onChangeText={setFulfilledAmount}
+                    keyboardType="numeric"
+                    leftIcon="cash-outline"
                   />
-                  <Button
-                    label="Cancel"
-                    onPress={closeActionModal}
-                    variant="ghost"
-                    fullWidth
-                    size="lg"
+                  <View style={styles.modalActions}>
+                    <Button
+                      label="Record"
+                      onPress={handleFulfill}
+                      fullWidth
+                      loading={fulfilling || fulfillingPledge}
+                      disabled={!fulfilledAmount}
+                      size="lg"
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Button
+                      label="Cancel"
+                      onPress={closeActionModal}
+                      variant="ghost"
+                      fullWidth
+                      size="lg"
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
+                    Reject {actionModal.itemType === 'donation' ? 'Donation' : 'Pledge'}
+                  </Text>
+                  <Text style={[styles.modalDescription, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
+                    Please provide a reason for rejection
+                  </Text>
+                  <TextInput
+                    placeholder="Rejection reason..."
+                    value={rejectionReason}
+                    onChangeText={setRejectionReason}
+                    multiline
+                    numberOfLines={4}
+                    style={[styles.textArea, { borderColor: colors.border, color: colors.text }]}
+                    placeholderTextColor={colors.textMuted}
                   />
-                </View>
-              </>
-            ) : (
-              <>
-                <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.extraBold }]}>
-                  Reject {actionModal.itemType === 'donation' ? 'Donation' : 'Pledge'}
-                </Text>
-                <Text style={[styles.modalDescription, { color: colors.textSecondary, fontFamily: typography.fontFamily.regular }]}>
-                  Please provide a reason for rejection
-                </Text>
-                <TextInput
-                  placeholder="Rejection reason..."
-                  value={rejectionReason}
-                  onChangeText={setRejectionReason}
-                  multiline
-                  numberOfLines={4}
-                  style={[styles.textArea, { borderColor: colors.border, color: colors.text }]}
-                  placeholderTextColor={colors.textMuted}
-                />
-                <View style={styles.modalActions}>
-                  <Button
-                    label="Reject"
-                    onPress={handleReject}
-                    fullWidth
-                    loading={rejecting || rejectingPledge}
-                    disabled={!rejectionReason}
-                    variant="danger"
-                    size="lg"
-                    style={{ marginBottom: 8 }}
-                  />
-                  <Button
-                    label="Cancel"
-                    onPress={closeActionModal}
-                    variant="ghost"
-                    fullWidth
-                    size="lg"
-                  />
-                </View>
-              </>
-            )}
-          </View>
-        </View>
+                  <View style={styles.modalActions}>
+                    <Button
+                      label="Reject"
+                      onPress={handleReject}
+                      fullWidth
+                      loading={rejecting || rejectingPledge}
+                      disabled={!rejectionReason}
+                      variant="danger"
+                      size="lg"
+                      style={{ marginBottom: 8 }}
+                    />
+                    <Button
+                      label="Cancel"
+                      onPress={closeActionModal}
+                      variant="ghost"
+                      fullWidth
+                      size="lg"
+                    />
+                  </View>
+                </>
+              )}
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Floating Add Button ── */}

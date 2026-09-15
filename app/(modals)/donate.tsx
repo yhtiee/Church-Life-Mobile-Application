@@ -23,6 +23,7 @@ const CATEGORIES = [
   { label: 'Harvest/Bazaar', value: 'Harvest' },
   { label: 'Building Fund', value: 'Building Fund' },
   { label: 'Charity/Poor Box', value: 'Charity' },
+  { label: 'Support App', value: 'Support App' },
 ];
 
 export default function DonateScreen() {
@@ -139,9 +140,14 @@ export default function DonateScreen() {
       <ScreenHeader title="Support the Parish" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
           <Animated.View entering={FadeInDown.duration(400)}>
             <Card elevation="sm" style={{ padding: 16, borderRadius: radius.lg }}>
               <View style={styles.noteHeader}>

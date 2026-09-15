@@ -104,6 +104,8 @@ export class PlatformService {
     diocese: string;
     state: string;
     country: string;
+    city?: string | null;
+    address?: string | null;
   }) {
     try {
       const { data, error } = await supaBaseClient.rpc('sa_save_parish', {
@@ -112,6 +114,8 @@ export class PlatformService {
         parish_state: parish.state,
         parish_country: parish.country,
         parish_id: parish.id ?? null,
+        parish_city: parish.city ?? null,
+        parish_address: parish.address ?? null,
       });
 
       if (error) throw error;

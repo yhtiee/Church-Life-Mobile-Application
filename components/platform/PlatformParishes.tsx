@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, FlatList } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@/context/ThemeContext';
 import { useAlert } from '@/context/FeedbackContext';
@@ -31,11 +31,20 @@ interface Draft {
   id?: string;
   name: string;
   diocese: string;
+  city: string;
   state: string;
+  address: string;
   country: string;
 }
 
-const EMPTY: Draft = { name: '', diocese: '', state: '', country: 'Nigeria' };
+const EMPTY: Draft = {
+  name: '',
+  diocese: '',
+  city: '',
+  state: '',
+  address: '',
+  country: 'Nigeria',
+};
 
 /** Create and edit parishes, with the counts that show which ones are stalled. */
 export function PlatformParishes() {
@@ -75,7 +84,9 @@ export function PlatformParishes() {
       id: row.parish_id,
       name: full?.name ?? row.parish_name,
       diocese: full?.diocese ?? row.diocese,
+      city: full?.city ?? '',
       state: full?.state ?? '',
+      address: full?.address ?? '',
       country: full?.country ?? '',
     });
   };
@@ -99,7 +110,9 @@ export function PlatformParishes() {
         id: draft.id ?? null,
         name: draft.name,
         diocese: draft.diocese,
+        city: draft.city,
         state: draft.state,
+        address: draft.address,
         country: draft.country,
       });
       setDraft(null);
@@ -206,7 +219,10 @@ export function PlatformParishes() {
       />
 
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.backdrop}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.backdrop}
+        >
           <ScrollView contentContainerStyle={styles.sheetScroll} keyboardShouldPersistTaps="handled">
             <View
               style={[
@@ -242,11 +258,29 @@ export function PlatformParishes() {
               </View>
 
               <View style={styles.field}>
+                <Label label="City" helperText="Optional" />
+                <Input
+                  placeholder="Effurun"
+                  value={draft?.city ?? ''}
+                  onChangeText={(v) => setDraft((d) => (d ? { ...d, city: v } : d))}
+                />
+              </View>
+
+              <View style={styles.field}>
                 <Label label="State" />
                 <Input
                   placeholder="Delta"
                   value={draft?.state ?? ''}
                   onChangeText={(v) => setDraft((d) => (d ? { ...d, state: v } : d))}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Label label="Address" helperText="Optional. Street address parishioners can navigate to" />
+                <Input
+                  placeholder="1 Mission Road"
+                  value={draft?.address ?? ''}
+                  onChangeText={(v) => setDraft((d) => (d ? { ...d, address: v } : d))}
                 />
               </View>
 
@@ -275,7 +309,7 @@ export function PlatformParishes() {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -218,7 +218,10 @@ export default function AdminBankAccountsScreen() {
       </ScrollView>
 
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.backdrop}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.backdrop}
+        >
           <ScrollView
             contentContainerStyle={styles.sheetScroll}
             keyboardShouldPersistTaps="handled"
@@ -321,7 +324,7 @@ export default function AdminBankAccountsScreen() {
               </View>
             </View>
           </ScrollView>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <GlobalLoader visible={isLoading} />

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTheme } from '@/context/ThemeContext';
@@ -242,65 +242,70 @@ export default function AdminSchedulesScreen() {
       </ScrollView>
 
       <Modal visible={!!draft} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.backdrop}>
-          <View
-            style={[
-              styles.sheet,
-              { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
-            ]}
-          >
-            <Text
-              style={{
-                fontSize: 17,
-                color: colors.text,
-                fontFamily: typography.fontFamily.bold,
-                marginBottom: 16,
-              }}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.backdrop}
+        >
+          <ScrollView contentContainerStyle={styles.sheetScroll} keyboardShouldPersistTaps="handled">
+            <View
+              style={[
+                styles.sheet,
+                { backgroundColor: colors.surface, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+              ]}
             >
-              {draft?.id ? 'Edit entry' : 'New entry'}
-            </Text>
+              <Text
+                style={{
+                  fontSize: 17,
+                  color: colors.text,
+                  fontFamily: typography.fontFamily.bold,
+                  marginBottom: 16,
+                }}
+              >
+                {draft?.id ? 'Edit entry' : 'New entry'}
+              </Text>
 
-            <Label label={isMass ? 'Day' : 'Name'} />
-            <Input
-              placeholder={isMass ? 'Sunday' : 'Eucharistic Adoration'}
-              value={draft?.label ?? ''}
-              onChangeText={(v) => setDraft((d) => (d ? { ...d, label: v } : d))}
-            />
-
-            {isMass ? (
-              <>
-                <Label label="Times" helperText="Separate each with a comma" />
-                <Input
-                  placeholder="6:00 AM, 8:30 AM, 6:00 PM"
-                  value={draft?.times ?? ''}
-                  onChangeText={(v) => setDraft((d) => (d ? { ...d, times: v } : d))}
-                />
-              </>
-            ) : (
-              <>
-                <Label label="Details" />
-                <Input
-                  placeholder="When it happens and anything members should know"
-                  value={draft?.details ?? ''}
-                  onChangeText={(v) => setDraft((d) => (d ? { ...d, details: v } : d))}
-                  multiline
-                  numberOfLines={4}
-                  style={{ height: 100, textAlignVertical: 'top' }}
-                />
-              </>
-            )}
-
-            <View style={styles.sheetActions}>
-              <Button
-                label="Cancel"
-                onPress={() => setDraft(null)}
-                variant="secondary"
-                style={{ flex: 1 }}
+              <Label label={isMass ? 'Day' : 'Name'} />
+              <Input
+                placeholder={isMass ? 'Sunday' : 'Eucharistic Adoration'}
+                value={draft?.label ?? ''}
+                onChangeText={(v) => setDraft((d) => (d ? { ...d, label: v } : d))}
               />
-              <Button label="Save" onPress={save} loading={busy} style={{ flex: 1 }} />
+
+              {isMass ? (
+                <>
+                  <Label label="Times" helperText="Separate each with a comma" />
+                  <Input
+                    placeholder="6:00 AM, 8:30 AM, 6:00 PM"
+                    value={draft?.times ?? ''}
+                    onChangeText={(v) => setDraft((d) => (d ? { ...d, times: v } : d))}
+                  />
+                </>
+              ) : (
+                <>
+                  <Label label="Details" />
+                  <Input
+                    placeholder="When it happens and anything members should know"
+                    value={draft?.details ?? ''}
+                    onChangeText={(v) => setDraft((d) => (d ? { ...d, details: v } : d))}
+                    multiline
+                    numberOfLines={4}
+                    style={{ height: 100, textAlignVertical: 'top' }}
+                  />
+                </>
+              )}
+
+              <View style={styles.sheetActions}>
+                <Button
+                  label="Cancel"
+                  onPress={() => setDraft(null)}
+                  variant="secondary"
+                  style={{ flex: 1 }}
+                />
+                <Button label="Save" onPress={save} loading={busy} style={{ flex: 1 }} />
+              </View>
             </View>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       <GlobalLoader visible={isLoading} />
@@ -315,7 +320,8 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   itemCopy: { flex: 1 },
   itemActions: { flexDirection: 'row', gap: 16, paddingTop: 2 },
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
+  sheetScroll: { flexGrow: 1, justifyContent: 'flex-end' },
   sheet: { padding: 22, paddingBottom: 36 },
   sheetActions: { flexDirection: 'row', gap: 12, marginTop: 22 },
 });

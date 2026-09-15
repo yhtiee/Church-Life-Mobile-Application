@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, Alert, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import Animated, { FadeInDown } from 'react-native-reanimated';
@@ -383,51 +383,60 @@ export default function GroupsAdminScreen() {
         transparent
         animationType="slide"
       >
-        <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
-                Create Secured Group
-              </Text>
-              <TouchableOpacity onPress={() => setCreateGroupModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
-              placeholder="Group Name"
-              placeholderTextColor={colors.textMuted}
-              value={groupName}
-              onChangeText={setGroupName}
-            />
-
-            <TextInput
-              style={[styles.modalInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface, height: 100 }]}
-              placeholder="Group Description (optional)"
-              placeholderTextColor={colors.textMuted}
-              value={groupDescription}
-              onChangeText={setGroupDescription}
-              multiline
-            />
-
-            <View style={{ gap: 12 }}>
-              <Button
-                label={createGroupMutation.isPending ? 'Creating...' : 'Create Group'}
-                onPress={handleCreateGroup}
-                disabled={createGroupMutation.isPending}
-              />
-              <TouchableOpacity
-                onPress={() => setCreateGroupModal(false)}
-                style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.text, fontFamily: typography.fontFamily.semiBold }}>
-                  Cancel
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.5)' }]}
+        >
+          <ScrollView
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+          >
+            <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+              <View style={styles.modalHeader}>
+                <Text style={[styles.modalTitle, { color: colors.text, fontFamily: typography.fontFamily.bold }]}>
+                  Create Secured Group
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity onPress={() => setCreateGroupModal(false)}>
+                  <Ionicons name="close" size={24} color={colors.text} />
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={[styles.modalInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface }]}
+                placeholder="Group Name"
+                placeholderTextColor={colors.textMuted}
+                value={groupName}
+                onChangeText={setGroupName}
+              />
+
+              <TextInput
+                style={[styles.modalInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.surface, height: 100 }]}
+                placeholder="Group Description (optional)"
+                placeholderTextColor={colors.textMuted}
+                value={groupDescription}
+                onChangeText={setGroupDescription}
+                multiline
+              />
+
+              <View style={{ gap: 12 }}>
+                <Button
+                  label={createGroupMutation.isPending ? 'Creating...' : 'Create Group'}
+                  onPress={handleCreateGroup}
+                  disabled={createGroupMutation.isPending}
+                />
+                <TouchableOpacity
+                  onPress={() => setCreateGroupModal(false)}
+                  style={[styles.cancelButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  <Text style={{ color: colors.text, fontFamily: typography.fontFamily.semiBold }}>
+                    Cancel
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* ── Group Details Modal ── */}
